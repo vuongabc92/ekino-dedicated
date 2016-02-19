@@ -1,0 +1,241 @@
+<?php
+
+/**
+ * Define the numbers of content is need to loaded.
+ */
+if (!defined('V2_NEW_MORE_VENUES')) {
+  define('V2_NEW_MORE_VENUES', 9);
+}
+
+/**
+ * Implement hook_block_info()
+ */
+function v2_venues_block_info() {
+
+  $blocks['venues'] = array(
+    'info' => t('Venues block'),
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implement hook_block_view
+ * @param type $delta
+ * @return type
+ */
+function v2_venues_block_view($delta = '', $share = array()) {
+  $block = array();
+  switch ($delta) {
+    case 'venues':
+      global $language;
+      $build = get_venues();
+      $vocabulary = taxonomy_vocabulary_machine_name_load('venue_filter');
+      $v_terms = taxonomy_term_load_multiple(FALSE, array('vid' => $vocabulary->vid, 'language' => $language->language));
+      $terms = array();
+      foreach ($v_terms as $term) {
+        if (taxonomy_select_nodes($term->tid)) {
+          $terms[] = $term;
+        }
+      }
+      $block['content'] = theme('list_venues', array('build' => $build, 'taxonomy' => $terms, 'share' => $share));
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implements Hook menu.
+ * @return type
+ */
+function v2_venues_menu() {
+
+  $items['venues-load-ajax'] = array(
+    'title' => 'Tips',
+    'page callback' => 'load_more_venues',
+    'access callback' => TRUE,
+  );
+  $items['venues-load-ajax-category/%'] = array(
+    'title' => 'Venues',
+    'page arguments' => array(1),
+    'page callback' => 'load_filter_category_venues',
+    'access callback' => TRUE,
+  );
+  return $items;
+}
+
+/**
+ * Load more news
+ * @return page
+ */
+function load_more_venues() {
+  $results = get_venues();
+  $content = array();
+  $nodes = $results['nodes'];
+  $page = $_GET['page'];
+  $remain = count($nodes);
+
+  if ($nodes) :
+    foreach ($nodes as $node) :
+      $rendered_node = drupal_render(node_view($node, 'full'));
+      $content[] = $rendered_node;
+    endforeach;
+  endif;
+  $limit_item = V2_NEW_MORE_VENUES;
+
+  if ($page >= 1) {
+    $count_item = ($page * $limit_item) + count($nodes);
+  }
+  if ($page == 0) {
+    $count_item = $remain;
+  }
+
+  if ($page == ($results['max_page'] - 1)) {
+    $remain = 0;
+  }
+  
+  $count_venues = $results['total'] > 0 ? format_plural($results['total'], '1 '._hs_resource_get('venue','plain', FALSE, FALSE), '@count '._hs_resource_get('venues','plain', FALSE, FALSE)) : '';  
+  $resource_name = format_plural($results['total'], 'venue', 'venues');
+  $content_count = '<p class="filter-title"><span data-num-result="" class="product-number">'.$count_venues.'</span></p>';
+  $count_content_venues = hs_resource_contextual_link($resource_name, $content_count, 'filter-title'); 
+  $json = array(
+    'status' => 'ok',
+    'data-loadmore' => url('venues-load-ajax'),
+    'remain' => $remain,
+    'num-items' => $count_content_venues,
+    'content' => $content,
+  );
+  return drupal_json_output($json);
+  die;
+}
+
+/**
+ * Implement hook_theme()
+ */
+function v2_venues_theme() {
+  return array(
+    'list_venues' => array(
+      'template' => 'templates/list_venues',
+      'variables' => array('build' => NULL),
+    ),
+  );
+}
+
+/**
+ * Get champagne rituals.
+ */
+function get_venues() {
+  global $language;
+  $limit = V2_NEW_MORE_VENUES;
+  // Get item page .
+  $query = db_select('node', 'n');
+  $query->leftJoin('field_revision_field_venues_location', 'a', 'a.entity_id = n.nid');
+  $query->fields('n', array('nid'))
+      ->condition('n.type', 'venues')
+      ->condition('n.language', $language->language);
+  $query->condition('n.status', 1)
+      ->orderBy('nid', 'DESC');
+
+  $query = $query->extend('PagerDefault');
+  $total_items = $query->getCountQuery()->execute()->fetchField();
+  $query->limit($limit);
+  $result = $query->execute()->fetchCol();
+
+  // Get sum pager.
+  $max_page = ceil($total_items / $limit);
+  $build = array();
+  if (!empty($result)) {
+    $nodes = node_load_multiple($result);
+    $build = array(
+      'nodes' => $nodes,
+      'pager' => array(
+        '#theme' => 'pager',
+      ),
+      'max_page' => $max_page,
+      'total' => $total_items,
+    );
+  }
+  return $build;
+}
+
+function get_venues_category($tid) {
+  global $language;
+  $limit = V2_NEW_MORE_VENUES;
+  // Get item page .
+  $query = db_select('node', 'n');
+  $query->leftJoin('field_revision_field_venues_location', 'a', 'a.entity_id = n.nid');
+  $query->fields('n', array('nid'))
+      ->condition('n.type', 'venues')
+      ->condition('n.language', $language->language);
+  $query->condition('a.field_venues_location_tid', $tid);
+
+  $query->condition('n.status', 1)
+      ->orderBy('nid', 'DESC');
+
+  $query = $query->extend('PagerDefault');
+  $total_items = $query->getCountQuery()->execute()->fetchField();
+  $query->limit($limit);
+  $result = $query->execute()->fetchCol();
+
+  // Get sum pager.
+  $max_page = ceil($total_items / $limit);
+  $build = array();
+  if (!empty($result)) {
+    $nodes = node_load_multiple($result);
+    $build = array(
+      'nodes' => $nodes,
+      'pager' => array(
+        '#theme' => 'pager',
+      ),
+      'max_page' => $max_page,
+      'total' => $total_items,
+    );
+  }
+  return $build;
+}
+
+/**
+ * Load more news
+ * @return page
+ */
+function load_filter_category_venues($tid) {
+  $results = get_venues_category($tid);
+  $content = array();
+  $nodes = $results['nodes'];
+  $page = $_GET['page'];
+  $remain = count($nodes);
+
+  if ($nodes) :
+    foreach ($nodes as $node) :
+      $rendered_node = drupal_render(node_view($node, 'full'));
+      $content[] = $rendered_node;
+    endforeach;
+  endif;
+
+  $limit_item = V2_NEW_MORE_VENUES;
+
+  if ($page >= 1) {
+    $count_item = ($page * $limit_item) + count($nodes);
+  }
+  if ($page == 0) {
+    $count_item = $remain;
+  }
+
+  if ($page == ($results['max_page'] - 1)) {
+    $remain = 0;
+  }
+  
+  $count_venues = $results['total'] > 0 ? format_plural($results['total'], '1 '._hs_resource_get('venue','plain', FALSE, FALSE), '@count '._hs_resource_get('venues','plain', FALSE, FALSE)): '';
+  $resource_name = format_plural($results['total'], 'venue', 'venues');
+  $content_count = '<p class="filter-title"><span data-num-result="" class="product-number">'.$count_venues.'</span></p>';
+  $count_content_venues = hs_resource_contextual_link($resource_name, $content_count, 'filter-title'); 
+  $json = array(
+    'status' => 'ok',
+    'data-loadmore' => url('venues-load-ajax-category/' . $tid),
+    'remain' => $remain,
+    'num-items' => $count_content_venues,
+    'content' => $content,
+  );
+  return drupal_json_output($json);
+  die;
+}

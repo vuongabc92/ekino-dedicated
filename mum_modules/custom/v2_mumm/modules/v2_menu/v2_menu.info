@@ -1,0 +1,12 @@
+name = V2 Menu
+description = This module manage menu for page
+core = 7.x
+package = V2 Development
+dependencies[] = features
+dependencies[] = menu
+dependencies[] = mumm_country
+dependencies[] = v2_search
+features[features_api][] = api:2
+features[menu_custom][] = menu-doormat
+
+project path = sites/default/modules

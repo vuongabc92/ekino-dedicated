@@ -1,0 +1,172 @@
+<?php
+
+/**
+ * Implements hook_node_view_alter()
+ */
+function v2_products_node_view_alter(&$build) {
+  if (isset($build['#node']) && $build['#view_mode'] == 'full') {
+    $node = $build['#node'];
+    if (!empty($node->nid)) {
+      $build['#contextual_links']['node'] = array('node', array($node->nid));
+    }
+  }
+}
+
+/**
+ * Implement hook_block_info()
+ */
+function v2_products_block_info() {
+
+  $blocks['collections'] = array(
+    'info' => t('Collections'),
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements Hook menu.
+ * @return type
+ */
+function v2_products_menu() {
+
+  $items['filter-collections/%'] = array(
+    'title' => 'Tips',
+    'description' => 'Filter collections',
+    'page arguments' => array(1),
+    'page callback' => 'v2_mumm_blocks_collection_filter_category',
+    'access callback' => TRUE,
+  );
+
+  return $items;
+}
+
+/**
+ * Implement hook_menu_alter()
+ * @param array $items
+ */
+function v2_products_menu_alter(&$items) {
+  $items['node/%node/translate']['context'] = MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE;
+}
+
+/**
+ * Implement hook_block_view
+ * @param type $delta
+ * @return type
+ */
+function v2_products_block_view($delta = '', $share = array()) {
+  $block = array();
+
+  switch ($delta) {
+    case 'collections':
+      $block['content'] = v2_mumm_blocks_collection_page_view($share);
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Function filter product
+ * @global type $language
+ * @param type $tid
+ * @return type
+ */
+function v2_mumm_blocks_collection_filter_category($tid) {
+  global $language;
+  $terms = array();
+  $results = array();
+  if ($tid == 'all') {
+    $vocabulary = taxonomy_vocabulary_machine_name_load('champagne_categories');
+    $terms = taxonomy_term_load_multiple(FALSE, array('vid' => $vocabulary->vid));
+  }
+  else {
+    $terms[] = taxonomy_term_load($tid);
+  }
+  $count_product = 0;
+  foreach ($terms as $term) {
+    if ($term->language == $language->language) {
+      $node_products = taxonomy_select_nodes($term->tid, FALSE, FALSE, array('t.weight' => 'ASC'));
+      if ($node_products) {
+        $results[] = array('entity' => 'taxonomy', 'taxonomy' => $term);
+        foreach ($node_products as $node_product) {
+          $node = node_load($node_product);
+          $results[] = array('entity' => 'node', 'node' => $node);
+          $count_product++;
+        }
+      }
+    }
+  }
+  $count_product = $count_product > 0 ? format_plural($count_product, '1 '._hs_resource_get('Product','plain', FALSE, FALSE), '@count '._hs_resource_get('Products','plain', FALSE, FALSE)): '';
+  $resource_name = format_plural($count_product, 'Product', 'Products');
+  $count_product = '<p class="filter-title"><span data-num-result="" class="product-number">'.$count_product.'</span></p>';
+  $count_product = hs_resource_contextual_link($resource_name, $count_product, 'filter-title');
+  $content = array();
+  $content[] = theme('blocks_collection_filter', array('results' => $results));
+  $json = array(
+    'num-items' => $count_product,
+    'content' => $content,
+  );
+  return drupal_json_output($json);
+  die;
+}
+
+/**
+ * Function load items product champange
+ * @global type $language
+ * @return type
+ */
+function v2_mumm_blocks_collection_page_view($share) {
+  global $language;
+  $vocabulary = taxonomy_vocabulary_machine_name_load('champagne_categories');
+  $terms = taxonomy_term_load_multiple(FALSE, array('vid' => $vocabulary->vid));
+  $results = array();
+  $count_product = 0;
+  foreach ($terms as $term) {
+    if ($term->language == $language->language) {
+      $node_products = taxonomy_select_nodes($term->tid, FALSE, FALSE, array('t.weight' => 'ASC'));
+      if ($node_products) {
+        $results[] = array('entity' => 'taxonomy', 'taxonomy' => $term);
+        foreach ($node_products as $node_product) {
+          $node = node_load($node_product);
+          $results[] = array('entity' => 'node', 'node' => $node);
+          $count_product++;
+        }
+      }
+    }
+  }
+  $resource_name = format_plural($count_product, 'Product', 'Products');
+  $count_product_content = $count_product > 0 ? format_plural($count_product, '1 '._hs_resource_get('Product','plain', FALSE, FALSE), '@count '._hs_resource_get('Products','plain', FALSE, FALSE)) : '';
+  return theme('blocks_collection_page', array('results' => $results, 'count_product' => $count_product_content, 'resource_name' => $resource_name, 'share' => $share, 'count_product_number' => $count_product));
+}
+
+/**
+ * Implement hook_theme()
+ */
+function v2_products_theme() {
+  return array(
+    'blocks_collection_page' => array(
+      'template' => 'templates/blocks-collection-page',
+      'variables' => array('results' => NULL, 'count_product' => NULL, 'resource_name' => NULL, 'share' => NULL, 'count_product_number' => NULL),
+    ),
+    'blocks_collection_filter' => array(
+      'template' => 'templates/blocks-collection-filter',
+      'variables' => array('results' => NULL, 'count_product' => NULL),
+    ),
+  );
+}
+
+/**
+ * Implements hook_contextual_links_view_alter().
+ */
+function v2_products_contextual_links_view_alter(&$element, &$items) {
+  if (isset($element['#contextual_links']['taxonomy'][0])) {
+    $taxonomy = $element['#contextual_links']['taxonomy'];
+    if ($taxonomy[0] == 'taxonomy/term' && isset($taxonomy[1][0]) && user_access('administer taxonomy')) {
+      $url = $taxonomy[0] . '/' . $taxonomy[1][0] . '/edit';
+      $element['#links']['edit-term'] = array(
+        'title' => t('Edit term'),
+        'href' => url($url, array('absolute' => TRUE, 'query' => array('destination' => current_path()))),
+      );
+    }
+  }
+}

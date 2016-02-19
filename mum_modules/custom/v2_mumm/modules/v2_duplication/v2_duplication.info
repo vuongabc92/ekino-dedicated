@@ -1,0 +1,8 @@
+name = V2 Duplication of content
+description = Provides the functionality to duplicate content.
+package = V2 Development
+core = 7.x
+
+dependencies[] = pathauto
+
+configure = admin/config/content/duplication

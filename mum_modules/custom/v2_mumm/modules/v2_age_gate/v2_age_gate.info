@@ -1,0 +1,9 @@
+name = V2 Age Gate
+description = Deny access to the site when the user is not old enough.
+package = V2 Development
+core = 7.x
+
+dependencies[] = mumm_country
+dependencies[] = mumm_helpers
+
+configure = admin/config/user-interface/age-gate

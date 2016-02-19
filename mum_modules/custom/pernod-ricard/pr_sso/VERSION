@@ -1,0 +1,11 @@
+VERSION DETAILS
+
+VERSION 0.2
+-----------
+- Delete pr_sso_allowed_users to provide an automatic check of Drupal users.
+- Provide compatibility with pr_securesite
+
+VERSION 0.1
+-----------
+First version
+

@@ -1,0 +1,67 @@
+<?php
+
+/**
+ * @file
+ * The v2 module to provide function manage list tip
+ */
+/**
+ * Define the numbers of content is need to loaded.
+ */
+if (!defined('V2_LIST_TIP_LIMIT')) {
+  define('V2_LIST_TIP_LIMIT', 9);
+}
+
+/**
+ * Implements Hook menu.
+ * @return type
+ */
+function v2_list_tip_menu() {  
+  $items['load-more-champagne-tips'] = array(
+    'title' => 'Tips',
+    'description' => 'Manage tips',
+    'page callback' => 'load_more_champagne_rituals',
+    'access callback' => TRUE,
+    'file' => 'v2_list_tip.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Impletements hook_theme
+ * @return array
+ */
+function v2_list_tip_theme() {
+  $themes['v2_champagne_rituals_page'] = array(
+    'template' => 'templates/v2-champagne-rituals-page', // see MUMM templates folder
+    'variables' => array(),
+  );
+  return $themes;
+}
+
+/**
+ * Implement hook_block_info()
+ */
+function v2_list_tip_block_info() {
+
+  $blocks['list_tip'] = array(
+    'info' => t('List tip'),
+  );
+
+  return $blocks;
+}
+/**
+ * Implement hook_block_view
+ * @param type $delta
+ * @return type
+ */
+function v2_list_tip_block_view($delta = '', $share = array()) {
+  $block = array();
+
+  switch ($delta) {
+    case 'list_tip':
+      module_load_include('inc', 'v2_list_tip', 'v2_list_tip.admin');
+      $block['content'] = page_champagne_rituals($share);
+      break;
+  }
+  return $block;
+}

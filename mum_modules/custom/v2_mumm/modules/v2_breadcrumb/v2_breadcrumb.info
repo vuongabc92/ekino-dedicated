@@ -1,0 +1,5 @@
+name = V2 Breadcrumb
+description = Integrate the search feature.
+package = V2 Development
+version = "7.1x"
+core = 7.x

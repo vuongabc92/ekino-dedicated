@@ -1,0 +1,342 @@
+<?php
+
+function v2_feeds_schema()
+{
+    $schema['social_feeds'] = array(
+        'description' => t('The table containing all specified social feeds.'),
+        'fields' => array(
+            'sfid' => array(
+                'description' => t('The primary identifier for a social feed.'),
+                'type' => 'serial',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'identifier' => array(
+                'description' => t('The unique identifier of the feed, like the Facebook object ID.'),
+                'type' => 'varchar',
+                'length' => 100,
+                'not null' => TRUE,
+            ),
+            'type' => array(
+                'description' => t('The type of feed.'),
+                'type' => 'varchar',
+                'length' => 50,
+                'not null' => TRUE,
+            ),
+            'name' => array(
+                'description' => 'The name for this feed. Typically the username.',
+                'type' => 'varchar',
+                'length' => 100,
+                'not null' => TRUE,
+                'default' => '',
+            ),
+            'channel' => array(
+                'description' => 'The channel for this feed. Either "official" or "hashtag".',
+                'type' => 'varchar',
+                'length' => 20,
+                'not null' => TRUE,
+                'default' => 'official',
+            ),
+            'status' => array(
+                'description' =>
+                    'Flag that indicates if the feed has been activated. ' .
+                    'A value of FALSE means there is an issue with authentication or permissions.',
+                'type' => 'int',
+                'size' => 'tiny',
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+            'uid' => array(
+                'description' => 'The {users}.uid created this feed.',
+                'type' => 'int',
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+            'since_id' => array(
+                'description' => 'The id of the last retrieved item of this feed.',
+                'type' => 'int',
+                'size' => 'big',
+                'default' => 0,
+            ),
+            'created' => array(
+                'description' => 'The Unix timestamp when the feed was created.',
+                'type' => 'int',
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+            'changed' => array(
+                'description' => 'The Unix timestamp when the feed was most recently updated.',
+                'type' => 'int',
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+        ),
+        'primary key' => array('sfid'),
+        'indexes' => array(
+            'social_feeds_changed' => array('changed'),
+            'social_feeds_status' => array('status'),
+            'social_feeds_channel' => array('channel'),
+        ),
+        'foreign keys' => array(
+            'uid' => array('users' => 'uid'),
+        ),
+    );
+
+    $schema['social_feed_credentials'] = array(
+        'description' => t('The table containing the required credentials for authentication.'),
+        'fields' => array(
+            'sfid' => array(
+                'description' => t('The {social_feeds}.sfid this key is linked to.'),
+                'type' => 'int',
+                'not null' => TRUE,
+            ),
+            'attribute' => array(
+                'description' => t('The key name for this credential pair.'),
+                'type' => 'varchar',
+                'length' => 60,
+                'not null' => TRUE,
+            ),
+            'value' => array(
+                'description' => t('The value for this credential pair.'),
+                'type' => 'text',
+                'not null' => TRUE,
+            ),
+            'uid' => array(
+                'description' => 'The {users}.uid that stored this key.',
+                'type' => 'int',
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+            'created' => array(
+                'description' => 'The Unix timestamp when the feed was created.',
+                'type' => 'int',
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+            'changed' => array(
+                'description' => 'The Unix timestamp when the feed was most recently updated.',
+                'type' => 'int',
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+        ),
+        'primary key' => array('sfid', 'attribute'),
+        'foreign keys' => array(
+            'sfid' => array('social_feeds' => 'sfid'),
+            'uid' => array('users' => 'uid'),
+        ),
+    );
+
+    $schema['social_feed_countries'] = array(
+        'description' => t('The table linking countries to social feeds.'),
+        'fields' => array(
+            'sfid' => array(
+                'description' => t('The {social_feed}.sfid identifier.'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'alias' => array(
+                'description' => t('An optional alias for the social feed.'),
+                'type' => 'varchar',
+                'length' => 50,
+                'default' => NULL,
+            ),
+            'language' => array(
+                'description' => t('The {languages}.language key.'),
+                'type' => 'varchar',
+                'length' => 12,
+                'not null' => TRUE,
+            ),
+            'uid' => array(
+                'description' => 'The {users}.uid of the admin that added this feed for his/her country.',
+                'type' => 'int',
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+            'created' => array(
+                'description' => 'The Unix timestamp when this feed was linked to the country.',
+                'type' => 'int',
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+        ),
+        'primary key' => array('sfid', 'language'),
+        'foreign keys' => array(
+            'language' => array('languages' => 'language'),
+            'uid' => array('users' => 'uid'),
+        ),
+    );
+
+    $schema['social_feed_items'] = array(
+        'description' => t('The table containing fetched entries for social feeds.'),
+        'fields' => array(
+            'sfiid' => array(
+                'description' => t('The primary identifier for the social feed item.'),
+                'type' => 'serial',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'sfid' => array(
+                'description' => t('The {social_feed}.sfid identifier.'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'guid' => array(
+                'description' => t('The unique identifier on the network.'),
+                'type' => 'varchar',
+                'length' => 42,
+                'not null' => TRUE,
+            ),
+            'message' => array(
+                'description' => t('The message.'),
+                'type' => 'text',
+                'not null' => TRUE,
+            ),
+            'username' => array(
+                'description' => t('The name of the user who posted this message on social media.'),
+                'type' => 'varchar',
+                'length' => 150,
+                'default' => NULL,
+            ),
+            'uid' => array(
+                'description' => t('The social network identifier of the user who posted this message on social media.'),
+                'type' => 'varchar',
+                'length' => 150,
+                'required' => TRUE,
+            ),
+            'media_url' => array(
+                'description' => t('An optional link to the media to be displayed.'),
+
+                // http://stackoverflow.com/a/219664
+                // < MySQL 5.0.3 use TEXT
+                //'type' => 'text',
+
+                // >= MySQL 5.0.3 use VARCHAR(2083)
+                'type' => 'varchar',
+                'length' => 2083,
+
+                'default' => NULL,
+            ),
+            'url' => array(
+                'description' => t('A link to the item on the social network.'),
+                'type' => 'varchar',
+                'length' => 2083,
+                'default' => NULL,
+            ),
+            'created' => array(
+                'description' => 'The Unix timestamp when the feed item was originally posted.',
+                'type' => 'int',
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+        ),
+        'primary key' => array('sfiid'),
+        'foreign keys' => array(
+            'sfid' => array('social_feed' => 'sfid'),
+        ),
+    );
+
+    $schema['social_feed_country_items'] = array(
+        'description' => t('The table containing published social feed items for a country.'),
+        'fields' => array(
+            'sfiid' => array(
+                'description' => t('The {social_feed_items}.sfiid identifier'),
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'language' => array(
+                'description' => t('The {languages}.language key.'),
+                'type' => 'varchar',
+                'length' => 12,
+                'not null' => TRUE,
+            ),
+            'uid' => array(
+                'type' => 'int',
+                'not null' => TRUE,
+                'default' => 0,
+                'description' => "The creator's {users}.id.",
+            ),
+            'created' => array(
+                'description' => 'The Unix timestamp when the node was created.',
+                'type' => 'int',
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+        ),
+        'primary key' => array('sfiid', 'language'),
+        'foreign keys' => array(
+            'sfiid' => array('social_feed_items' => 'sfiid'),
+            'language' => array('languages' => 'language'),
+            'uid' => array('users' => 'uid'),
+        ),
+    );
+
+    return $schema;
+}
+
+/**
+ * Add username and link to social feed items, and provide optional alias for social feed subscriptions.
+ */
+function v2_feeds_update_7001()
+{
+    $schema = v2_feeds_schema();
+
+    db_add_field('social_feed_countries', 'alias', $schema['social_feed_countries']['fields']['alias']);
+
+    db_add_field('social_feed_items', 'username', $schema['social_feed_items']['fields']['username']);
+    db_add_field('social_feed_items', 'uid',      $schema['social_feed_items']['fields']['uid']);
+    db_add_field('social_feed_items', 'url',      $schema['social_feed_items']['fields']['url']);
+}
+
+/**
+ * Add guid to social feed items and since id for twitter to social feeds
+ */
+function v2_feeds_update_7002()
+{
+    $schema = v2_feeds_schema();
+
+    db_add_field('social_feed_items', 'guid', $schema['social_feed_items']['fields']['guid']);    
+
+    db_add_field('social_feeds', 'since_id', $schema['social_feeds']['fields']['since_id']);
+}
+
+/**
+ * Update database for hashtag feed support.
+ */
+function v2_feeds_update_7003()
+{
+    // Update the database schema.
+    $schema = v2_feeds_schema();
+
+    db_add_field('social_feeds', 'name', $schema['social_feeds']['fields']['name']);
+    db_add_field('social_feeds', 'channel', $schema['social_feeds']['fields']['channel']);
+    db_add_field('social_feeds', 'status', $schema['social_feeds']['fields']['status']);
+
+    db_add_index('social_feeds', 'social_feeds_channel', array('channel'));
+    db_add_index('social_feeds', 'social_feeds_status', array('status'));
+    db_add_index('social_feeds', 'social_feeds_changed', array('changed'));
+
+    // Mark the current feeds as validated.
+    db_query('UPDATE social_feeds SET status = 1')->execute();
+}
+
+/**
+ * Update the length of the {social_feeds}.name field to match the length of the {social_feeds}.identifier field.
+ */
+function v2_feeds_update_7004()
+{
+  $schema = v2_feeds_schema();
+  db_change_field('social_feeds', 'name', 'name', $schema['social_feeds']['fields']['name']);
+}
+
+/**
+ * Update the social_feed_items
+ */
+function v2_feeds_update_7005() {
+  db_query('ALTER TABLE social_feed_items CHANGE message message LONGTEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL')->execute();
+}
+
+

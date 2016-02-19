@@ -1,0 +1,280 @@
+<?php
+
+/**
+ * Implements hook_block_info().
+ */
+function v2_menu_block_info() {
+  $blocks['mumm-doormat-country-switcher'] = array(
+    'info' => t('Country switcher with regions'),
+    'visibility' => BLOCK_VISIBILITY_NOTLISTED,
+  );
+  $blocks['new-main-menu-footer'] = array(
+    'info' => t('New Main menu in footer'),
+  );
+  $blocks['menu-popup'] = array(
+    'info' => t('Menu popup'),
+  );
+  $blocks['country-switcher-popup'] = array(
+    'info' => t('Country switcher with regions popup'),
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_info_alter().
+ */
+function v2_menu_block_info_alter(&$blocks) {
+//
+//  if (isset($blocks['menu']['menu-doormat'])) {
+//    $blocks['menu']['menu-doormat']['status'] = true;
+//    $blocks['menu']['menu-doormat']['region'] = 'footer_menu';
+//  }
+//  if (isset($blocks['v2_menu']['mumm-doormat-country-switcher'])) {
+//    $blocks['v2_menu']['mumm-doormat-country-switcher']['status'] = true;
+//    $blocks['v2_menu']['mumm-doormat-country-switcher']['region'] = 'footer_country';
+//  }
+//  if (isset($blocks['v2_menu']['new-main-menu-footer'])) {
+//    $blocks['v2_menu']['new-main-menu-footer']['status'] = true;
+//    $blocks['v2_menu']['new-main-menu-footer']['region'] = 'footer_sitemap';
+//  }
+//  if (isset($blocks['menu']['menu-header'])) {
+//    $blocks['menu']['menu-header']['status'] = true;
+//    $blocks['menu']['menu-header']['region'] = 'header_menu_right';
+//  }
+//  if (isset($blocks['menu']['menu-new-main-menu'])) {
+//    $blocks['menu']['menu-new-main-menu']['status'] = true;
+//    $blocks['menu']['menu-new-main-menu']['region'] = 'header_main_menu';
+//  }
+//  if (isset($blocks['v2_menu']['menu-popup'])) {
+//    $blocks['v2_menu']['menu-popup']['status'] = true;
+//    $blocks['v2_menu']['menu-popup']['region'] = 'popup';
+//  }
+//  if (isset($blocks['v2_menu']['country-switcher-popup'])) {
+//    $blocks['v2_menu']['country-switcher-popup']['status'] = true;
+//    $blocks['v2_menu']['country-switcher-popup']['region'] = 'popup';
+//  }
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function v2_menu_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'mumm-doormat-country-switcher':
+      $block['content'] = _v2_menu_region_country_switcher(NULL, 'footer_country');
+      break;
+    case 'country-switcher-popup':
+      $block['content'] = _v2_menu_region_country_switcher(NULL, 'popup');
+      break;
+    case 'new-main-menu-footer':
+      $menu_arr = array('menu-new-main-menu');
+      $block['content'] = v2_menu_get_menu('v2_menu_new_main_menu_footer', $menu_arr);
+      break;
+    case 'menu-popup':
+      $menu_arr = array('menu-new-main-menu', 'menu-header');
+      $block['content'] = v2_menu_get_menu('v2_menu_menu_popup', $menu_arr);
+      break;
+  }
+
+  return $block;
+}
+
+/**
+ * Implements hook_block_view_alter().
+ */
+function v2_menu_block_view_alter(&$data, $block) {
+  if ($block->delta === 'menu-doormat') {
+    $data['title'] = '<none>';
+
+    // Render a link for toggling the language switcher.
+    $data['content']['language_switcher_toggle'] = array(
+      '#theme' => 'menu_link__menu_doormat',
+      '#title' => _hs_resource_get('doormat_menu_footer_text', 'plain', FALSE, FALSE),
+      '#href' => 'javascript;',
+      '#below' => array(),
+      '#change_location' => TRUE,
+      '#localized_options' => array(
+      ),
+      '#weight' => 9999,
+    );
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function v2_menu_theme($existing, $type, $theme, $path) {
+  $themes['v2_menu_country_switcher'] = array(
+    'template' => 'templates/v2_menu-doormat-country-switcher', // see MUMM templates folder
+    'variables' => array(
+      'block_region' => array(),
+      'regions' => array(),
+      'links_per_region' => array(),
+    ),
+  );
+  $themes['v2_menu_new_main_menu_footer'] = array(
+    'template' => 'templates/v2_menu-new-main-menu-footer', // see MUMM templates folder
+    'variables' => array(),
+  );
+  $themes['v2_menu_menu_popup'] = array(
+    'template' => 'templates/v2_menu-menu-popup', // see MUMM templates folder
+    'variables' => array(),
+  );
+  return $themes;
+}
+
+function _v2_menu_language_switcher($path = NULL) {
+  if (!drupal_multilingual()) {
+    return array();
+  }
+
+  if (NULL === $path) {
+    $path = drupal_is_front_page() ? '<front>' : current_path();
+  }
+
+  $links = language_negotiation_get_switch_links('language', $path);
+  $links->links = array_filter($links->links, function ($link) {
+    return $link['language']->enabled;
+  });
+
+  $build = array(
+    '#theme' => 'links__locale_block',
+    '#links' => $links->links,
+    '#attributes' => array(
+      'class' => array('language-switcher'),
+    ),
+  );
+
+  return $build;
+}
+
+function _v2_menu_country_switcher($path = NULL) {
+  return _v2_menu_language_switcher($path);
+}
+
+function _v2_menu_region_country_switcher($path = NULL, $block_region) {
+  if (!drupal_multilingual()) {
+    return array();
+  }
+
+  if (NULL === $path) {
+    $path = drupal_is_front_page() ? '<front>' : current_path();
+  }
+  // Get nid for path.
+  $nid = mumm_helpers_get_nid_from_path($path);
+  // Get country.
+  $country_vocabulary = taxonomy_vocabulary_machine_name_load('countries');
+  $country_terms = taxonomy_get_tree($country_vocabulary->vid, 0, NULL, TRUE);
+  $country_options = $country_option_language = array();
+  $href = '<front>';
+  foreach ($country_terms as $country_term) {
+    $wrapper = entity_metadata_wrapper('taxonomy_term', $country_term);
+    $country_code = strtolower($wrapper->field_country_code->value());
+    $region_term_id = $language_associated = '';
+    if ($country_term->field_region_selection && count($country_term->field_region_selection)) {
+      $region_term_id = $country_term->field_region_selection[LANGUAGE_NONE][0]['tid'];
+    }
+
+    if ($country_term->field_language_associated && count($country_term->field_language_associated)) {
+      $language_associated = $country_term->field_language_associated[LANGUAGE_NONE][0]['value'];
+    }
+
+    // Codition language associtaed.
+    if ($language_associated) {
+      $country_language = v2_menu_get_language_object($language_associated);
+    }
+    else {
+      $country_language = _mumm_country_get_language_object($country_code, NULL, FALSE);
+    }
+    
+    // Condition node translate.
+    if (is_numeric($nid) && ($node = node_load($nid)) && ($translated_node = mumm_helpers_get_translated_node($node, $country_language->language))
+    ) {
+      if ($translated_node->nid !== $node->nid){              
+        $href =  sprintf('node/%d', $translated_node->nid);  // Seems like we have a translation.
+      }
+      
+    }
+
+    $country_option_language[$country_code] = $country_term->name;
+    if ($region_term_id) {
+      $region_term = taxonomy_term_load($region_term_id);
+      if ($region_term && $region_term->name !== 'International') {
+        $region_name = $region_term->weight . '_' . $region_term->name;
+        $country_options[$region_name][$country_code]['name'] = $country_term->name;
+        $country_options[$region_name][$country_code]['href'] = $href;
+        $country_options[$region_name][$country_code]['language'] = $country_language;
+        
+      }
+    }
+  }
+  ksort($country_options);
+  // Add a extra column 'International'.
+  // Condition node translate.
+  if (is_numeric($nid) && ($node = node_load($nid)) && ($translated_node = mumm_helpers_get_translated_node($node, 'en'))
+  ) {
+    if ($translated_node->nid !== $node->nid){
+        $href =  sprintf('node/%d', $translated_node->nid);  // Seems like we have a translation.
+      }
+  }
+  $country_options['_International']['en']['name'] = 'English';
+  $country_options['_International']['en']['href'] = $href;
+  $country_options['_International']['en']['language'] = _mumm_country_get_language_object('en', NULL, FALSE);
+  return array(
+    '#theme' => 'v2_menu_country_switcher',
+    '#block_region' => $block_region,
+    '#regions' => '',
+    '#links_per_region' => $country_options,
+  );
+}
+
+/**
+ * Get menu
+ * @param type $template
+ * @return type
+ */
+function v2_menu_get_menu($template, $menu_arr) {
+  $list_menu = array();
+  foreach ($menu_arr as $item) {
+    $menu_tree = menu_tree_all_data($item);
+    $menu_expainded = menu_tree_output($menu_tree);
+    $list_menu[$item] = $menu_expainded;
+  }
+  return theme($template, array('list_menu' => $list_menu));
+}
+
+/*
+ * Implements hook_menu ().
+ */
+
+function v2_menu_menu() {
+  $items['admin/config/user-interface/logo'] = array(
+    'title' => 'Logo header and footer',
+    'description' => 'Manage logo for header and footer.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('v2_menu_form_logo'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'v2_menu.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Get language object from language code.
+ * @param type $language_code
+ * @return type
+ */
+function v2_menu_get_language_object($language_code) {
+  if ($language_code) {
+    $query = db_select('languages', 'l')
+        ->fields('l')
+        ->condition('l.language', $language_code)
+        ->condition('l.enabled', TRUE)
+        ->orderBy('weight', 'ASC');
+    $country_language = $query->execute()->fetchAll();
+    return $country_language[0];
+  }
+}

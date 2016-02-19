@@ -1,0 +1,21 @@
+name = V2 Feeds
+description = Provides the social Wall of Victories, including administration.
+core = 7.x
+package = V2 Development
+
+dependencies[] = image
+dependencies[] = imagecache_external
+dependencies[] = features
+
+dependencies[] = hs_resource
+dependencies[] = mumm_country
+dependencies[] = mumm_social
+
+configure = admin/config/user-interface/wall-of-victories
+
+files[] = v2_feeds.inc
+files[] = twitteroauth/OAuth.php
+files[] = twitteroauth/twitteroauth.php
+
+features[features_api][] = api:2
+features[image][] = v2_feeds_thumbnail

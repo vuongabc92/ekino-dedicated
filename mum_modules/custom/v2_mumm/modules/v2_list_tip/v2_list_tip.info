@@ -1,0 +1,5 @@
+name = V2 list tips
+description = This module manage content list tip
+package = V2 Development
+version = "7.1x"
+core = 7.x

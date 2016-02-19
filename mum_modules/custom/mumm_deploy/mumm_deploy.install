@@ -1,0 +1,25 @@
+<?php
+
+/**
+ * Update the content type Timeline item to match with the new blocks.
+ */
+function mumm_deploy_update_7102() {
+
+  // Get the contents of the .sql file.
+  $sql = file_get_contents(drupal_get_path('module', 'mumm_deploy') . '/mumm-292.sql');
+  // Split into individual statements based on new lines.
+  $statements = explode('-----', $sql);
+
+  if ($statements) {
+    foreach ($statements as $query) {
+      $query = trim($query);
+      try {
+        db_query($query);
+      }
+      catch (Exception $ex) {
+        // Log drupal.
+        watchdog('deploy_error_mumm-292', '<pre>Error query ' . $query . ' <br /> ' . $ex->getTraceAsString() . '</pre>');
+      }
+    }
+  }
+}

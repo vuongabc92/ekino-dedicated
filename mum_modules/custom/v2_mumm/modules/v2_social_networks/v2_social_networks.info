@@ -1,0 +1,5 @@
+name = V2 Social networks
+description = This module manage social networks sharing
+package = V2 Development
+version = "7.1x"
+core = 7.x

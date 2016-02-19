@@ -1,0 +1,1147 @@
+<?php
+
+include_once 'v2_feeds.features.inc';
+include_once 'v2_feeds.pages.inc';
+
+if (!defined('v2_feeds_GALLERY_ITEM_COUNT'))
+  define('v2_feeds_GALLERY_ITEM_COUNT', 10);
+if (!defined('v2_feeds_CF_ITEM_ID'))
+  define('v2_feeds_CF_ITEM_ID', 'wall_of_victories');
+if (!defined('v2_feeds_VAR_SLUG'))
+  define('v2_feeds_VAR_SLUG', 'v2_feeds');
+if (!defined('V2_FEEDS_MORE_ARTICLE')) {
+  define('V2_FEEDS_MORE_ARTICLE', 10);
+}
+
+/**
+ *  Implements hook_hook_info().
+ */
+function v2_feeds_hook_info() {
+  $hooks['cron'] = array('group' => 'cron');
+
+  return $hooks;
+}
+
+/**
+ *  Implements hook_menu().
+ */
+function v2_feeds_menu() {
+  $items = array();
+
+  $items['feeds-social/filter/%'] = array(
+    'title' => 'filter',
+    'page callback' => 'v2_feeds_page_filter_type',
+    'page arguments' => array(2),
+    'access arguments' => array('access content'),
+  );
+
+  $items['feeds-social/loadmore/%'] = array(
+    'title' => 'load more',
+    'page callback' => 'v2_feeds_page_filter_type_load_more',
+    'page arguments' => array(2),
+    'access arguments' => array('access content'),
+  );
+
+  // region Content management
+
+  $items['admin/config/user-interface/wall-of-victories'] = array(
+    'title' => 'Wall of Victories',
+    'description' => 'Administer published content and feeds for your country\'s Wall of Victories.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('v2_feeds_admin_content', 'official'),
+    'access callback' => 'v2_feeds_access',
+    'access arguments' => array('manage country social wall'),
+    'file' => 'v2_feeds.admin.inc',
+  );
+
+  $items['admin/config/user-interface/wall-of-victories/official'] = array(
+    'title' => 'Official',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -5,
+  );
+
+  $items['admin/config/user-interface/wall-of-victories/hashtags'] = array(
+    'title' => 'Third Party hashtags',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('v2_feeds_admin_content', 'hashtag'),
+    'access callback' => 'v2_feeds_access',
+    'access arguments' => array('manage country social wall'),
+    'file' => 'v2_feeds.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/config/user-interface/wall-of-victories/published'] = array(
+    'title' => 'Published',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('v2_feeds_admin_content', 'published'),
+    'access callback' => 'v2_feeds_access',
+    'access arguments' => array('manage country social wall'),
+    'file' => 'v2_feeds.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 5,
+  );
+
+  // endregion Content management
+  // region Feed management
+
+  $items['admin/config/user-interface/wall-of-victories/feeds'] = array(
+    'title' => 'Manage social feeds',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('v2_feeds_admin_feeds'),
+    'access callback' => 'v2_feeds_access',
+    'access arguments' => array('manage country social feeds'),
+    'file' => 'v2_feeds.admin.inc',
+    'type' => MENU_LOCAL_ACTION,
+  );
+
+  $items['admin/config/user-interface/wall-of-victories/feeds/subscribe'] = array(
+    'title' => 'Subscribe to feed',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('v2_feeds_admin_feed_subscribe'),
+    'access callback' => 'v2_feeds_access',
+    'access arguments' => array('manage country social feeds'),
+    'file' => 'v2_feeds.admin.inc',
+    'type' => MENU_LOCAL_ACTION,
+  );
+
+  $items['admin/config/user-interface/wall-of-victories/feeds/unsubscribe/%'] = array(
+    'title' => 'Unsubscribe from feed',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('v2_feeds_admin_feed_unsubscribe_confirm', 6),
+    'access callback' => 'v2_feeds_access',
+    'access arguments' => array('manage country social feeds'),
+    'file' => 'v2_feeds.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/config/user-interface/wall-of-victories/feeds/item/%/publish'] = array(
+    'title' => 'Unsubscribe from feed',
+    'page callback' => 'v2_feeds_admin_wall_item_publish',
+    'page arguments' => array(6),
+    'access callback' => 'v2_feeds_access',
+    'access arguments' => array('manage country social feeds'),
+    'file' => 'v2_feeds.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/config/user-interface/wall-of-victories/feeds/item/%/unpublish'] = array(
+    'title' => 'Unsubscribe from feed',
+    'page callback' => 'v2_feeds_admin_wall_item_publish',
+    'page arguments' => array(6, FALSE),
+    'access callback' => 'v2_feeds_access',
+    'access arguments' => array('manage country social feeds'),
+    'file' => 'v2_feeds.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  // endregion Feed management
+
+  return $items;
+}
+
+function v2_feeds_access($permission, $account = NULL) {
+  if (!user_access($permission, $account)) {
+    return FALSE;
+  }
+
+  if (NULL === mumm_country_get_user_country_code($account)) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ *  Implements hook_permission().
+ */
+function v2_feeds_permission() {
+  $perms = array();
+  $perms['manage country social wall']['title'] = t('Manage Wall of Victory');
+  $perms['manage country social feeds']['title'] = t('Manage social feeds');
+
+  return $perms;
+}
+
+/**
+ *  Implements hook_theme().
+ */
+function v2_feeds_theme() {
+  $path = drupal_get_path('module', 'v2_feeds') . '/templates';
+
+  $themes = array();
+
+  $themes['v2_feeds'] = array(
+    'template' => 'v2_feeds',
+    'path' => $path,
+    'variables' => array(
+      'items' => array(),
+    ),
+  );
+
+  $themes['v2_feeds_load_ajax'] = array(
+    'template' => 'v2_feeds_load_ajax',
+    'path' => $path,
+    'variables' => array(
+      'items' => array(),
+    ),
+  );
+
+  $themes['v2_feeds_load_ajax_load_more'] = array(
+    'template' => 'v2_feeds_load_ajax_load_more',
+    'path' => $path,
+    'variables' => array(
+      'items' => array(),
+    ),
+  );
+
+  $themes['v2_feeds_item'] = array(
+    'template' => 'v2-feeds-item',
+    'path' => $path,
+    'pattern' => 'v2_feeds_item__',
+    'variables' => array(
+      'message' => NULL,
+      'feed_type' => NULL,
+      'url' => NULL,
+      'media_url' => NULL,
+      'published' => 0,
+    ),
+  );
+
+  $themes['v2_feeds_item__teaser'] = array(
+    'template' => 'v2-feeds-item--teaser',
+    'path' => $path,
+    'variables' => array(
+      'message' => NULL,
+      'feed_type' => NULL,
+      'url' => NULL,
+      'media_url' => NULL,
+      'published' => 0,
+    ),
+  );
+
+  $themes['v2_feeds_item__teaser'] = array(
+    'template' => 'v2-feeds-item--teaser',
+    'path' => $path,
+    'variables' => array(
+      'message' => NULL,
+      'username' => NULL,
+      'feed_type' => NULL,
+      'url' => NULL,
+      'media_url' => NULL,
+      'published' => 0,
+      'highlighted' => FALSE,
+    ),
+  );
+
+  foreach (v2_feeds_feed_types() as $type => $description) {
+    $tpl_name = 'v2_feeds_item__' . $type;
+    $tpl_file = strtr($tpl_name, '_', '-');
+
+    if (file_exists(sprintf('%s/%s.tpl.php', $path, $tpl_file))) {
+      $themes[$tpl_name] = array(
+        'template' => $tpl_file,
+        'path' => $themes['v2_feeds_item']['path'],
+        'variables' => $themes['v2_feeds_item']['variables'],
+      );
+    }
+  }
+
+  $themes['v2_feeds_teaser_gallery'] = array(
+    'template' => 'v2_feeds_teaser_gallery',
+    'path' => $path,
+    'variables' => array(
+      'recent_items' => array(),
+      'highlighted_item' => NULL,
+      'link_path' => 'wall-of-victories',
+    ),
+  );
+
+  return $themes;
+}
+
+function v2_feeds_preprocess_v2_feeds_item(&$vars) {
+  // Allow dynamic template selection based on feed type.
+  $vars['theme_hook_suggestions'][] = 'v2_feeds_item';
+  $vars['theme_hook_suggestions'][] = 'v2_feeds_item__' . $vars['feed_type'];
+
+  // Make links clickable in the message.
+  $filter['settings']['filter_url_length'] = 496;
+  $vars['message'] = _filter_url($vars['message'], (object) $filter);
+
+  // @todo process hashtags and other stuff
+  v2_feeds_hook($vars['feed_type'], 'preprocess_v2_feeds_item', $vars);
+}
+
+function v2_feeds_preprocess_v2_feeds_item__teaser(&$vars) {
+  // @todo remove duplicate code
+  // Make links clickable in the message.
+  $filter['settings']['filter_url_length'] = 496;
+  $vars['message'] = _filter_url($vars['message'], (object) $filter);
+
+  v2_feeds_hook($vars['feed_type'], 'preprocess_v2_feeds_item', $vars);
+}
+
+function v2_feeds_block_view_teaser() {
+  global $language;
+
+  $country_code = mumm_country_code_from_locale($language);
+
+  $items = v2_feeds_get_wall_items($country_code, v2_feeds_GALLERY_ITEM_COUNT, 0, array(
+    'has_media' => TRUE,
+  ));
+
+  if (empty($items)) {
+    // No items were published, so there is no need to display the teaser block.
+    // Return an empty build array.
+    return array();
+  }
+
+  $feed_type = 'twitter';
+  $last_published_item = v2_feeds_get_wall_items($country_code, 1, 0, array(
+    'type' => $feed_type,
+  ));
+
+  $highlighted_item = array();
+  if ($last_published_item) {
+    $last_published_item = reset($last_published_item);
+
+    $highlighted_item = array(
+      '#item' => $last_published_item,
+      '#theme' => 'v2_feeds_item__teaser',
+      '#message' => $last_published_item['message'],
+      '#username' => $last_published_item['username'],
+      '#media_url' => $last_published_item['media_url'],
+      '#feed_type' => $last_published_item['feed_type'],
+      '#url' => $last_published_item['url'],
+      '#published' => $last_published_item['published'],
+      '#highlighted' => TRUE,
+    );
+  }
+
+  $build = array(
+    '#theme' => 'v2_feeds_teaser_gallery',
+    '#recent_items' => $items,
+    '#highlighted_item' => $highlighted_item,
+  );
+
+  return $build;
+}
+
+/**
+ *  Implements hook_libraries_info().
+ */
+function v2_feeds_libraries_info() {
+  $libraries['facebook-php-sdk'] = array(
+    'name' => 'Facebook PHP SDK',
+    'vendor url' => 'http://developers.facebook.com',
+    'download url' => 'https://github.com/facebook/facebook-php-sdk-v4/archive/4.0-dev.zip',
+    'version arguments' => array(
+      'file' => 'src/Facebook/FacebookRequest.php',
+      'pattern' => '@const VERSION = \'([0-9.]+)\';@',
+      'lines' => 50,
+    ),
+    'files' => array(
+      'php' => array(
+        'autoload.php',
+      ),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
+ * @param string|object|null $language
+ * @return mixed
+ */
+function v2_feeds_get_feeds($language = NULL, $channel) {
+  $query = db_select('social_feeds', 'f');
+  $query->fields('f');
+  if ($channel) {
+    $query->condition('f.channel', $channel);
+  }
+  if ($language) {
+    $lang_code = is_object($language) ? $language->language : $language;
+
+    $query->join('social_feed_countries', 'ci', 'ci.sfid = f.sfid');
+    $query->condition('ci.language', $lang_code);
+    $query->addField('ci', 'alias');
+  }
+
+  $res = $query->execute()->fetchAllAssoc('sfid', PDO::FETCH_OBJ);
+  return $res;
+}
+
+function v2_feeds_get_feed_credentials($feed, $key = NULL, $default = NULL) {
+  $sfid = is_object($feed) ? $feed->sfid : $feed;
+
+  $credentials = db_select('social_feed_credentials', 'sc')
+      ->fields('sc', array('attribute', 'value'))
+      ->condition('sfid', $sfid)
+      ->execute()
+      ->fetchAllKeyed(0);
+
+  if ($key) {
+    return isset($credentials[$key]) ? $credentials[$key] : $default;
+  }
+
+  return $credentials;
+}
+
+function v2_feeds_set_feed_credentials($feed, array $credentials = NULL) {
+  global $user;
+
+  $sfid = is_object($feed) ? $feed->sfid : $feed;
+
+  $transaction = db_transaction();
+
+  try {
+    // Delete existing credentials.
+    db_delete('social_feed_credentials')
+        ->condition('sfid', $sfid)
+        ->execute();
+
+    // Save new credentials.
+    if ($credentials) {
+      foreach ($credentials as $key => $value) {
+        db_insert('social_feed_credentials')
+            ->fields(array(
+              'sfid' => $sfid,
+              'uid' => $user->uid,
+              'created' => REQUEST_TIME,
+              'attribute' => $key,
+              'value' => $value,
+            ))->execute();
+      }
+    }
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+function v2_feeds_load_include($feed_type) {
+  return module_load_include('inc', 'v2_feeds', sprintf('includes/v2_feeds.%s', $feed_type));
+}
+
+function v2_feeds_hook($feed_type, $hook, &$arg1 = NULL, &$arg2 = NULL, &$arg3 = NULL, &$arg4 = NULL) {
+  v2_feeds_load_include($feed_type);
+
+  $fnc = sprintf('v2_feeds_%s_%s', $hook, $feed_type);
+  if (function_exists($fnc)) {
+    //$args = array_slice(func_get_args(), 2);
+    return $fnc($arg1, $arg2, $arg3, $arg4);
+  }
+}
+
+function v2_feeds_feed_load($sfid) {
+  $query = db_select('social_feeds', 'f');
+  $query
+      ->fields('f')
+      ->condition('sfid', $sfid);
+
+  $feed = $query->execute()->fetch();
+  return $feed;
+}
+
+function v2_feeds_feed_load_identifier($identifier, $type, $language = NULL) {
+  $query = db_select('social_feeds', 'f');
+  $query
+      ->fields('f')
+      ->condition('identifier', $identifier)
+      ->condition('type', $type);
+
+  $feed = $query->execute()->fetch();
+
+  if ($feed && $language) {
+    // Include the feed alias.
+    $lang_code = is_object($language) ? $language->language : $language;
+
+    $alias_query = db_select('social_feed_countries', 'fc');
+    $alias_query
+        ->condition('fc.language', $lang_code)
+        ->condition('fc.sfid', $feed->sfid)
+        ->addField('fc', 'alias');
+
+    $alias = $alias_query->execute()->fetchField();
+    if (!empty($alias)) {
+      $feed->alias = $alias;
+    }
+  }
+
+  return $feed;
+}
+
+function v2_feeds_feed_types($key = NULL) {
+  $types = array(
+    'facebook' => 'Facebook page',
+    'twitter' => 'Twitter timeline',
+    'instagram' => 'Instagram feed',
+  );
+
+  if ($key) {
+    return isset($types[$key]) ? $types[$key] : '';
+  }
+
+  return $types;
+}
+
+/**
+ * Function delete items social feed multiple
+ * @global type $user
+ * @param array $feed_items
+ * @param type $delete
+ * @param type $language
+ * @return boolean
+ */
+function v2_feeds_feed_items_delele_multiple(array $feed_items, $delete = TRUE, $language = NULL) {
+  global $user;
+
+  $total_items = count($feed_items);
+
+  foreach (array_keys($feed_items) as $sfiid) {
+    db_delete('social_feed_items')
+        ->condition('sfiid', $sfiid)
+        ->execute();
+  }
+
+  drupal_set_message(t("Total @var items deleted", array('@var' => $total_items)), 'status');
+
+  return TRUE;
+}
+
+function v2_feeds_feed_items_publish_multiple(array $feed_items, $publish = TRUE, $language = NULL) {
+  global $user;
+
+  if (NULL === $language) {
+    // Default to country code of logged user
+    $language = mumm_country_get_user_country_language();
+  }
+
+  if (!$language) {
+    // No country code specified.
+    return FALSE;
+  }
+
+  $lang_code = is_object($language) ? $language->language : $language;
+
+  // We will be using the ids as keys.
+  $feed_items = drupal_map_assoc($feed_items);
+
+  // Check which feed items are currently linked to the country.
+  $existing_query = db_select('social_feed_country_items', 'ci');
+  $existing_query->condition('ci.language', $lang_code);
+  $existing_query->addField('ci', 'sfiid');
+
+  $existing_items = $existing_query->execute()->fetchAllKeyed(0, 0);
+
+  $items_to_process = $publish ? array_diff_key($feed_items, $existing_items) : array_intersect_key($feed_items, $existing_items);
+
+  if (empty($items_to_process)) {
+    watchdog('v2_feeds', 'Nothing left to ' . ($publish ? 'publish' : 'unpublish'), array(), WATCHDOG_INFO);
+    return TRUE;
+  }
+
+  if ($publish) {
+    // Wrap INSERT queries in a transaction.
+    $transaction = db_transaction();
+
+    try {
+      foreach (array_keys($items_to_process) as $sfiid) {
+        db_insert('social_feed_country_items')
+            ->fields(array(
+              'sfiid' => $sfiid,
+              'language' => $lang_code,
+              'uid' => $user->uid,
+              'created' => time(),
+            ))->execute();
+      }
+    }
+    catch (Exception $ex) {
+      $transaction->rollback();
+      // @todo logging
+      return FALSE;
+    }
+
+    // Commit.
+    unset($transaction);
+  }
+  else {
+    db_delete('social_feed_country_items')
+        ->condition('language', $lang_code)
+        ->condition('sfiid', array_keys($items_to_process), 'IN')
+        ->execute();
+  }
+
+  $message = $publish ? 'Published @count social item(s) to the Wall of Victories of %country: @item_ids' : 'Unpublished @count social item(s) from the Wall of Victories of %country: @item_ids';
+
+  watchdog('v2_feeds', $message, array(
+    '@count' => count($items_to_process),
+    '@item_ids' => implode(', ', array_keys($items_to_process)),
+    '%country' => mumm_country_code_to_name($language),
+      ), WATCHDOG_INFO);
+
+  return TRUE;
+}
+
+function v2_feeds_get_wall_items() {
+  global $language;
+  $query = db_select('social_feed_country_items', 'ci');
+  $query->join('social_feed_items', 'i', 'i.sfiid = ci.sfiid');
+  $query->join('social_feeds', 'f', 'f.sfid = i.sfid');
+
+  $query->fields('i');
+  $query->addField('f', 'type', 'feed_type');
+  $query->addField('ci', 'created', 'published');
+
+  $query->condition('ci.language', $language->language);
+
+  $query->orderBy('i.created', 'DESC');
+
+  $limit = V2_FEEDS_MORE_ARTICLE;
+
+
+  $query = $query->extend('PagerDefault');
+  $total_items = $query->getCountQuery()->execute()->fetchField();
+  $query->limit($limit);
+  $result = $query->execute();
+
+
+  $wall_items = array(
+    'list-item' =>$result->fetchAllAssoc('sfiid', PDO::FETCH_ASSOC),
+    'total' =>$total_items,
+    );
+
+  return $wall_items;
+}
+
+function v2_feeds_page_filter_type($social_type) {
+  global $language;
+  $query = db_select('social_feed_country_items', 'ci');
+  $query->join('social_feed_items', 'i', 'i.sfiid = ci.sfiid');
+  $query->join('social_feeds', 'f', 'f.sfid = i.sfid');
+
+  $query->fields('i');
+  $query->addField('f', 'type', 'feed_type');
+  $query->addField('ci', 'created', 'published');
+
+  $query->condition('ci.language', $language->language);
+
+  $query->orderBy('i.created', 'DESC');
+
+  $limit = V2_FEEDS_MORE_ARTICLE;
+
+  // Allow filtering by feed type.
+  if ($social_type != 'all') {
+    $query->condition('f.type', $social_type);
+  }
+
+  $query = $query->extend('PagerDefault');
+  $total_items = $query->getCountQuery()->execute()->fetchField();
+  $query->limit($limit);
+  $result = $query->execute();
+
+  $wall_items = $result->fetchAllAssoc('sfiid', PDO::FETCH_ASSOC);
+  // Get sum pager.
+  $max_page = ceil($total_items / $limit);
+  $build = array();
+  if (!empty($result)) {
+    $nodes = node_load_multiple($result);
+    $build = array(
+      'nodes' => $nodes,
+      'pager' => array(
+        '#theme' => 'pager',
+      ),
+      'max_page' => $max_page,
+      'total' => $total_items,
+    );
+  }
+
+  $content = theme('v2_feeds_load_ajax', array('items' => $wall_items));
+
+  $remain = count($wall_items);
+
+  $page = $_GET['page'];
+
+  if ($page == ($build['max_page'] - 1)) {
+    $remain = 0;
+  }
+  
+  if($remain == 0){
+    $url_loadmore = ''; 
+  }
+  else{
+    $url_loadmore = url('feeds-social/loadmore/' . $social_type);
+  }
+ 
+  $count_article = $total_items > 0 ? format_plural($total_items, '1 '._hs_resource_get('article','plain', FALSE, FALSE), '@count '._hs_resource_get('articles','plain', FALSE, FALSE)): '';
+  $resource_name = format_plural($total_items, 'Product', 'Products');
+  $count_article = '<p class="filter-title"><span data-num-result="" class="product-number">'.$count_article.'</span></p>';
+  $count_article = hs_resource_contextual_link($resource_name, $count_article, 'filter-title');
+
+  $json = array(
+    'status' => 'ok',
+    'data-loadmore' => $url_loadmore,
+    'remain' => $remain,
+    'num-items' => $count_article,
+    'content' => $content,
+  );
+  return drupal_json_output($json);
+}
+
+function v2_feeds_page_filter_type_load_more($social_type) {
+  global $language;
+  $query = db_select('social_feed_country_items', 'ci');
+  $query->join('social_feed_items', 'i', 'i.sfiid = ci.sfiid');
+  $query->join('social_feeds', 'f', 'f.sfid = i.sfid');
+
+  $query->fields('i');
+  $query->addField('f', 'type', 'feed_type');
+  $query->addField('ci', 'created', 'published');
+
+  $query->condition('ci.language', $language->language);
+
+  $query->orderBy('i.created', 'DESC');
+
+  $limit = V2_FEEDS_MORE_ARTICLE;
+
+  // Allow filtering by feed type.
+  if ($social_type != 'all') {
+    $query->condition('f.type', $social_type);
+  }
+
+  $query = $query->extend('PagerDefault');
+  $total_items = $query->getCountQuery()->execute()->fetchField();
+
+  $query->limit($limit);
+  $result = $query->execute();
+
+  $wall_items = $result->fetchAllAssoc('sfiid', PDO::FETCH_ASSOC);
+  // Get sum pager.
+  $max_page = ceil($total_items / $limit);
+  $build = array();
+  if (!empty($result)) {
+    $nodes = node_load_multiple($result);
+    $build = array(
+      'nodes' => $nodes,
+      'pager' => array(
+        '#theme' => 'pager',
+      ),
+      'max_page' => $max_page,
+      'total' => $total_items,
+    );
+  }
+  $content = array();
+  foreach ($wall_items as $wall_item) {
+    $content[] = theme('v2_feeds_load_ajax_load_more', array('items' => $wall_item));
+  }
+
+  $remain = count($content);
+
+  $page = $_GET['page'];
+
+  if ($page == ($build['max_page'] - 1)) {
+    $remain = 0;
+  }
+  
+  if($remain == 0){
+    $url_loadmore = ''; 
+  }
+  else{
+    $url_loadmore = url('feeds-social/loadmore/' . $social_type);
+  }
+
+  $count_article = $total_item > 0 ? format_plural($total_item, '1 '._hs_resource_get('article'), '@count '._hs_resource_get('articles')): '';
+  
+  $json = array(
+    'status' => 'ok',
+    'data-loadmore' => $url_loadmore,
+    'remain' => $remain,
+    'num-items' => $count_article,
+    'content' => $content,
+  );
+  return drupal_json_output($json);
+}
+
+function v2_feeds_feed_subscribe($feed, $language = NULL, $alias = NULL) {
+  global $user;
+
+  if (NULL === $alias && isset($feed->alias)) {
+    $alias = $feed->alias;
+  }
+
+  $sfid = is_object($feed) ? $feed->sfid : $feed;
+  if (!$sfid) {
+    return FALSE;
+  }
+
+  $language = $language ? : mumm_country_get_user_country_language();
+  if (!$language) {
+    return FALSE;
+  }
+
+  $lang_code = is_object($language) ? $language->language : $language;
+
+  try {
+    db_insert('social_feed_countries')
+        ->fields(array(
+          'sfid' => $sfid,
+          'alias' => $alias,
+          'language' => $lang_code,
+          'uid' => $user->uid,
+          'created' => time(),
+        ))->execute();
+
+    // Update alias for this feed object.
+    if ($alias) {
+      $feed->alias = $alias;
+    }
+
+    watchdog('v2_feeds', 'Country %country subscribed to social feed %feed_id (%feed_alias).', array(
+      '%country' => mumm_country_code_to_name($language),
+      '%feed_id' => $sfid,
+      '%feed_alias' => $feed->alias,
+        ), WATCHDOG_INFO);
+  }
+  catch (PDOException $ex) {
+    // Already subscribed.
+  }
+
+  // @todo logging
+
+  return TRUE;
+}
+
+function v2_feeds_feed_unsubscribe($feed, $language = NULL) {
+  $language = $language ? : mumm_country_get_user_country_language();
+  if (!$language) {
+    return FALSE;
+  }
+
+  $lang_code = is_object($language) ? $language->language : $language;
+
+  $sfid = is_object($feed) ? $feed->sfid : $feed;
+
+  // Remove published country feed items.
+  $unpublish_sql = 'DELETE p FROM {social_feed_country_items} p ' .
+      'JOIN {social_feed_items} i ON p.sfiid = i.sfiid ' .
+      'WHERE i.sfid = :sfid AND p.language = :language';
+
+  $unpublish_params = array(
+    'sfid' => $sfid,
+    'language' => $lang_code,
+  );
+
+  db_query($unpublish_sql, $unpublish_params)->execute($unpublish_params);
+
+  // Unsubscribe country from social feed.
+  db_delete('social_feed_countries')
+      ->condition('sfid', $sfid)
+      ->condition('language', $lang_code)
+      ->execute();
+
+  // Cleanup when the last user removed this social feed.
+  $remaining_count = db_select('social_feed_countries')
+      ->condition('sfid', $sfid)
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+
+  if ($remaining_count < 1) {
+    _v2_feeds_feed_delete($feed);
+  }
+
+  return TRUE;
+}
+
+function _v2_feeds_feed_delete($feed) {
+  $sfid = is_object($feed) ? $feed->sfid : $feed;
+
+  // Delete feed items.
+  db_delete('social_feed_items')
+      ->condition('sfid', $sfid)
+      ->execute();
+
+  // Delete the feed.
+  db_delete('social_feeds')
+      ->condition('sfid', $sfid)
+      ->execute();
+}
+
+function v2_feeds_feed_save($feed) {
+  global $user;
+
+  $is_new = $feed instanceof SocialFeed ? NULL === $feed->getFeedId() : empty($feed->sfid);
+
+  if ($is_new) {
+    $primary = array();
+    $feed->created = time();
+    $feed->changed = 0;
+  }
+  else {
+    $primary = array('sfid' => $feed->sfid);
+    $feed->changed = time();
+  }
+
+  $feed->uid = $user->uid;
+
+
+  if ($feed instanceof SocialFeed) {
+    // drupal_write_record fails in this case, due to property_exist returning false for dynamic properties.
+    $fields = $feed->getData();
+
+    if ($is_new) {
+      $result = db_insert('social_feeds')
+          ->fields($fields)
+          ->execute();
+    }
+    else {
+      unset($fields['sfid']);
+      $result = db_update('social_feeds')
+          ->condition('sfid', $feed->sfid)
+          ->fields($fields)
+          ->execute();
+    }
+
+    if (FALSE === $result) {
+      return FALSE;
+    }
+
+    if ($is_new) {
+      // Update social feed id with auto increment value from database.
+      $feed->sfid = $result;
+      return TRUE;
+    }
+
+    return $result > 0;
+  }
+
+  return drupal_write_record('social_feeds', $feed, $primary);
+}
+
+function _v2_feeds_strip_utf8($message) {
+  // @todo Find better workaround for 4-byte unicode characters failing to insert into DB.
+  $message = preg_replace('/[\x{10000}-\x{10FFFF}]/u', "", $message);
+
+  return $message;
+}
+
+function v2_feeds_feed_exists($identifier, $type) {
+  $query = db_select('social_feeds', 'f')
+      ->condition('f.identifier', $identifier)
+      ->condition('f.type', $type);
+  $query->addField('f', 'sfid');
+
+  $feed = $query->execute()->fetch();
+
+  return FALSE !== $feed;
+}
+
+function _v2_feeds_feed_items_query($language, $filter_published = FALSE) {
+  $lang_code = is_object($language) ? $language->language : $language;
+
+  $query = db_select('social_feed_countries', 'cf');
+
+  $query->join('social_feeds', 'f', 'f.sfid = cf.sfid');
+  $query->join('social_feed_items', 'i', 'i.sfid = f.sfid');
+  $query->condition('cf.language', $lang_code);
+
+  $query->fields('i');
+  $query->addField('f', 'type', 'feed_type');
+
+  $query->leftJoin('social_feed_country_items', 'ci', 'ci.sfiid = i.sfiid AND ci.language = cf.language');
+  $query->addField('ci', 'created', 'published');
+  $query->addField('ci', 'uid', 'publisher');
+
+  if ($filter_published) {
+    $query->condition('ci.created', 0, '>');
+  }
+
+  return $query;
+}
+
+function v2_feeds_feed_update($feed) {
+  if (is_numeric($feed)) {
+    $feed = v2_feeds_feed_load($feed);
+  }
+
+  if (!$feed) {
+    return FALSE;
+  }
+
+  // @todo cooldown check
+  $feed = SocialFeed::createFromData($feed);
+
+  $success = v2_feeds_hook($feed->type, 'feed_update', $feed);
+  if ($success) {
+    // Bump last updated timestamp for the feed.
+    db_update('social_feeds')
+        ->fields(array('changed' => time()))
+        ->condition('sfid', $feed->sfid)
+        ->execute();
+  }
+
+  return $success;
+}
+
+// region Celebrating F1rsts integration
+
+/**
+ * Implements hook_content_mumm_blocks_celebrating_firsts_homepage_items_alter
+ *
+ * Injects Wall of Victories in admin page of Celebrating Firsts main page.
+ *
+ * @param $items
+ */
+function v2_feeds_mumm_blocks_celebrating_firsts_homepage_items_alter(&$items) {
+  $values = mumm_helpers_get_variable_localized_value(v2_feeds_VAR_SLUG);
+  $position = isset($values['cf_item']['position']) ? $values['cf_item']['position'] : 9999;
+  $item_position = _get_free_position($items, $position);
+  $item_view = v2_feeds_block_view_teaser();
+  $item_data = array(
+    'cf_path' => mumm_helpers_get_url('wall-of-victories'),
+    'cf_title' => _hs_resource_get('social_wall_gallery_title', 'plain', FALSE, FALSE),
+    'cf_call_to_action' => _hs_resource_get('social_wall_gallery_link_title', 'plain', FALSE, FALSE),
+    'cf_published' => isset($values['cf_item']['published']) ? $values['cf_item']['published'] : 0,
+    'attributes' => array('id' => 'preview-wall-of-victories')
+  );
+
+  $items[$item_position] = array(
+    'type' => 'callback_page',
+    'id' => v2_feeds_CF_ITEM_ID,
+    'item' => array_merge($item_view, $item_data)
+  );
+}
+
+/**
+ * Add submit handler for the Wall of Victories in the Celebrating Firsts management page.
+ *
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * @see mumm_blocks_celebrating_firsts_homepage_manage()
+ */
+function v2_feeds_form_mumm_blocks_celebrating_firsts_homepage_manage_alter(&$form, &$form_state) {
+  // Add submit handler
+  form_load_include($form_state, 'inc', 'mumm_content', 'mumm_content.celebrating_firsts');
+  $form['#submit'][] = '_v2_feeds_form_celebrating_firsts_manage_blocks_submit';
+}
+
+/**
+ * Submit handler for Wall of Victories teaser item on Celebrating Firsts management page.
+ *
+ * @param $form
+ * @param $form_state
+ */
+function _v2_feeds_form_celebrating_firsts_manage_blocks_submit($form, &$form_state) {
+  $form_values = $form_state['values']['cf_articles']['items'][v2_feeds_CF_ITEM_ID];
+  $language_code = mumm_helpers_get_settings_language();
+  $values = variable_get(v2_feeds_VAR_SLUG);
+
+  $values[$language_code]['cf_item'] = array(
+    'position' => $form_values['position'],
+    'published' => $form_values['published']
+  );
+
+  variable_set(v2_feeds_VAR_SLUG, $values);
+}
+
+/**
+ * Implements hook_content_mumm_blocks_celebrating_firsts_submenu_items_alter
+ *
+ * Injects Wall of Victories into the Celebrating Firsts submenu template.
+ *
+ * @param $items
+ */
+function v2_feeds_mumm_blocks_celebrating_firsts_submenu_items_alter(&$items) {
+  $values = mumm_helpers_get_variable_localized_value(v2_feeds_VAR_SLUG);
+  $position = (isset($values['cf_item']['position'])) ? $values['cf_item']['position'] : 9999;
+
+  if (!isset($values['cf_item']['published']) || !$values['cf_item']['published']) {
+    return $items;
+  }
+
+  global $language;
+
+  $last_media_item = v2_feeds_get_wall_items($language, 1, -1, array(
+    'has_media' => TRUE,
+  ));
+
+  if (empty($last_media_item)) {
+    // There is no image to be displayed.
+    return $items;
+  }
+
+  $last_media_item = reset($last_media_item);
+  $picture_uri = $last_media_item['media_url'];
+  $picture = sprintf('<img data-interchange="%s" />', _mumm_get_responsive_images($picture_uri, 'celebrating_firsts_submenu'));
+
+  $items[$position] = array(
+    'type' => 'callback_page',
+    'id' => v2_feeds_CF_ITEM_ID,
+    'title' => _hs_resource_get('social_wall_gallery_title', 'plain', FALSE, FALSE),
+    'call_to_action' => _hs_resource_get('social_wall_gallery_link_title', 'plain', FALSE, FALSE),
+    'picture_uri' => $last_media_item['media_url'],
+    'path' => url('wall-of-victories'),
+  );
+
+  return $items;
+}
+
+
+// Get socia category
+function v2_feeds_get_category_social() {
+  global $language;
+  $query = db_select('social_feed_country_items', 'ci');
+  $query->join('social_feed_items', 'i', 'i.sfiid = ci.sfiid');
+  $query->join('social_feeds', 'f', 'f.sfid = i.sfid');
+
+  $query->fields('i');
+  $query->addField('f', 'type', 'feed_type');
+  $query->addField('ci', 'created', 'published');
+
+  $query->condition('ci.language', $language->language);
+
+  $query->orderBy('i.created', 'DESC');
+
+ 
+  $result = $query->execute();
+  
+  $wall_items = $result->fetchAllAssoc('sfiid', PDO::FETCH_ASSOC);
+
+  foreach ($wall_items as $wall_item){
+    $feeds_type[$wall_item['feed_type']] = $wall_item['feed_type']; 
+  }
+  return $feeds_type;
+}
+
+/**
+ * Implement hook_block_info()
+ */
+function v2_feeds_block_info() {
+
+  $blocks['wall_of_victories'] = array(
+    'info' => t('Wall of victories'),
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implement hook_block_view
+ * @param type $delta
+ * @return type
+ */
+function v2_feeds_block_view($delta = '', $share = array()) {
+  $block = array();
+
+  switch ($delta) {
+    case 'wall_of_victories':
+      $block['content'] = render(v2_feeds_page($share));
+      break;
+  }
+
+  return $block;
+}

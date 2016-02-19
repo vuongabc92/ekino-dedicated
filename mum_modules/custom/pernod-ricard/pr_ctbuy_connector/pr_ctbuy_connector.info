@@ -1,0 +1,7 @@
+name = Click to buy Console - Connector for Drupal 7
+description = This Module simplify integration between Drupal and the Click to Buy Console.
+dependencies[] = variable
+dependencies[] = i18n_variable
+package = Pernod-Ricard
+files[] = inc/pr_ctbuy_connector.field.inc
+core = 7.x

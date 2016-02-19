@@ -1,0 +1,6 @@
+name = V2 Products
+description = This module manage content product
+core = 7.x
+package = V2 Development
+
+project path = sites/default/modules

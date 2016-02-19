@@ -1,0 +1,282 @@
+<?php
+
+/*
+ * @file
+ * v2_blocks.module.
+ */
+
+define('V2_BLOCKS_PUSHES_VAR_SLUG', 'v2_blocks_pushes');
+
+define('V2_BLOCKS_FACEBOOK_LINK_VAR_SLUG', 'v2_blocks_facebook_link');
+define('V2_BLOCKS_FACEBOOK_TITLE_VAR_SLUG', 'v2_blocks_facebook_title');
+
+define('V2_BLOCKS_YOUTUBE_LINK_VAR_SLUG', 'v2_blocks_youtube_link');
+define('V2_BLOCKS_YOUTUBE_TITLE_VAR_SLUG', 'v2_blocks_youtube_title');
+
+define('V2_BLOCKS_TWITTER_LINK_VAR_SLUG', 'v2_blocks_twitter_link');
+define('V2_BLOCKS_TWITTER_TITLE_VAR_SLUG', 'v2_blocks_twitter_title');
+
+define('V2_BLOCKS_INSTAGRAM_LINK_VAR_SLUG', 'v2_blocks_instagram_link');
+define('V2_BLOCKS_INSTAGRAM_TITLE_VAR_SLUG', 'v2_blocks_instagram_title');
+
+define('V2_BLOCKS_PUSHES_VAR_DEFAULT', serialize(array(
+  'default' => array(
+    'newsletter' => 0,
+  )
+)));
+
+/*
+ * Implements hook_block_info().
+ */
+
+function v2_blocks_block_info() {
+  $blocks = array();
+
+  $blocks['v2_newsletter'] = array(
+    'info' => t('Block newsletter'),
+    'region' => 'content',
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function v2_blocks_block_view($delta = '') {
+
+  switch ($delta) {
+    case 'v2_newsletter':
+      return array('content' => v2_blocks_push_block_view($delta));
+      break;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function v2_blocks_theme($existing, $type, $theme, $path) {
+  $themes = array();
+
+  $themes['v2_newsletter'] = array(
+    'template' => 'templates/v2-newsletter',
+    'variables' => array(),
+  );
+  return $themes;
+}
+
+function v2_blocks_push_block_view($delta) {
+  $title = FALSE;
+  $link = FALSE;
+  $link_title = FALSE;
+
+  $push_links = mumm_helpers_get_variable_localized_value(V2_BLOCKS_PUSHES_VAR_SLUG);
+  $facebook_link = mumm_helpers_get_variable_localized_value(V2_BLOCKS_FACEBOOK_LINK_VAR_SLUG);
+  $youtube_link = mumm_helpers_get_variable_localized_value(V2_BLOCKS_YOUTUBE_LINK_VAR_SLUG);
+  $twitter_link = mumm_helpers_get_variable_localized_value(V2_BLOCKS_TWITTER_LINK_VAR_SLUG);
+  $instagram_link = mumm_helpers_get_variable_localized_value(V2_BLOCKS_INSTAGRAM_LINK_VAR_SLUG);
+  $facebook_title = mumm_helpers_get_variable_localized_value(V2_BLOCKS_FACEBOOK_TITLE_VAR_SLUG);
+  $youtube_title = mumm_helpers_get_variable_localized_value(V2_BLOCKS_YOUTUBE_TITLE_VAR_SLUG);
+  $twitter_title = mumm_helpers_get_variable_localized_value(V2_BLOCKS_TWITTER_TITLE_VAR_SLUG);
+  $instagram_title = mumm_helpers_get_variable_localized_value(V2_BLOCKS_INSTAGRAM_TITLE_VAR_SLUG);
+
+  $form_name = substr($delta, strlen('v2_'));
+
+  switch ($delta) {
+    case 'v2_newsletter':
+      $title = _hs_resource_get('push_newsletter_title', 'plain', FALSE, TRUE, FALSE, 'BE INFORMED OF OUR DARING NEWS AND PRODUCTS');
+      $link = mumm_helpers_get_url($push_links[$form_name]);
+      $link_title = _hs_resource_get('push_newsletter_link_title', 'plain', FALSE, TRUE, FALSE, 'SUBSCRIBE');
+      break;
+  }
+
+  return theme('v2_newsletter', array(
+    'title' => $title,
+    'link' => $link,
+    'link_title' => $link_title,
+    'facebook' => array(
+      'link' => $facebook_link[$form_name],
+      'title' => $facebook_title[$form_name]
+    ),
+    'youtube' => array(
+      'link' => $youtube_link[$form_name],
+      'title' => $youtube_title[$form_name]
+    ),
+    'twitter' => array(
+      'link' => $twitter_link[$form_name],
+      'title' => $twitter_title[$form_name]
+    ),
+    'instagram' => array(
+      'link' => $instagram_link[$form_name],
+      'title' => $instagram_title[$form_name]
+    ))
+  );
+}
+
+/**
+ * Implements hook_block_configuration().
+ */
+function v2_blocks_block_configure($delta) {
+  $settings_language = mumm_helpers_get_settings_language();
+
+  $settings_links = mumm_helpers_settings_language_switcher();
+  $form['settings_links'] = array(
+    '#markup' => $settings_links
+  );
+
+  $push_links = mumm_helpers_get_variable_localized_value(V2_BLOCKS_PUSHES_VAR_SLUG, V2_BLOCKS_PUSHES_VAR_DEFAULT, $settings_language);
+  $facebook_links = mumm_helpers_get_variable_localized_value(V2_BLOCKS_FACEBOOK_LINK_VAR_SLUG, V2_BLOCKS_PUSHES_VAR_DEFAULT, $settings_language);
+  $facebook_title = mumm_helpers_get_variable_localized_value(V2_BLOCKS_FACEBOOK_TITLE_VAR_SLUG, V2_BLOCKS_PUSHES_VAR_DEFAULT, $settings_language);
+  $youtube_links = mumm_helpers_get_variable_localized_value(V2_BLOCKS_YOUTUBE_LINK_VAR_SLUG, V2_BLOCKS_PUSHES_VAR_DEFAULT, $settings_language);
+  $youtube_title = mumm_helpers_get_variable_localized_value(V2_BLOCKS_YOUTUBE_TITLE_VAR_SLUG, V2_BLOCKS_PUSHES_VAR_DEFAULT, $settings_language);
+  $twitter_links = mumm_helpers_get_variable_localized_value(V2_BLOCKS_TWITTER_LINK_VAR_SLUG, V2_BLOCKS_PUSHES_VAR_DEFAULT, $settings_language);
+  $twitter_title = mumm_helpers_get_variable_localized_value(V2_BLOCKS_TWITTER_TITLE_VAR_SLUG, V2_BLOCKS_PUSHES_VAR_DEFAULT, $settings_language);
+  $instagram_links = mumm_helpers_get_variable_localized_value(V2_BLOCKS_INSTAGRAM_LINK_VAR_SLUG, V2_BLOCKS_PUSHES_VAR_DEFAULT, $settings_language);
+  $instagram_title = mumm_helpers_get_variable_localized_value(V2_BLOCKS_INSTAGRAM_TITLE_VAR_SLUG, V2_BLOCKS_PUSHES_VAR_DEFAULT, $settings_language);
+
+  $form_name = substr($delta, strlen('v2_'));
+  $form['push_link'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Link of the newsletter page(newsletter-subscription)'),
+    '#default_value' => $push_links[$form_name],
+    '#size' => 60,
+    '#required' => TRUE,
+  );
+  $form['facebook_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title page of Facebook.'),
+    '#default_value' => $facebook_title[$form_name],
+    '#size' => 60,
+  );
+  $form['facebook_link'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Link of Facebook.'),
+    '#default_value' => $facebook_links[$form_name],
+    '#size' => 60,
+  );
+  $form['twitter_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title page of Twitter.'),
+    '#default_value' => $twitter_title[$form_name],
+    '#size' => 60,
+  );
+  $form['twitter_link'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Link of Twitter.'),
+    '#default_value' => $twitter_links[$form_name],
+    '#size' => 60,
+  );
+  $form['youtube_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title page of Youtube.'),
+    '#default_value' => $youtube_title[$form_name],
+    '#size' => 60,
+  );
+  $form['youtube_link'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Link of Youtube.'),
+    '#default_value' => $youtube_links[$form_name],
+    '#size' => 60,
+  );
+  $form['instagram_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title of Instagram.'),
+    '#default_value' => $instagram_title[$form_name],
+    '#size' => 60,
+  );
+  $form['instagram_link'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Link of Instagram.'),
+    '#default_value' => $instagram_links[$form_name],
+    '#size' => 60,
+  );
+  $form['settings_language'] = array(
+    '#type' => 'hidden',
+    '#value' => $settings_language
+  );
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function v2_blocks_block_save($delta = '', $edit = array()) {
+  switch ($delta) {
+    case 'v2_newsletter':
+      v2_push_block_save($delta, $edit);
+      break;
+  }
+}
+
+function v2_push_block_save($delta, $edit) {
+
+  $values = variable_get(V2_BLOCKS_PUSHES_VAR_SLUG);
+  $form_name = substr($delta, strlen('v2_'));
+  $values[$edit['settings_language']][$form_name] = $edit['push_link'];
+  variable_set(V2_BLOCKS_PUSHES_VAR_SLUG, $values);
+  // FACEBOOK
+  $values_facebook_link = variable_get(V2_BLOCKS_FACEBOOK_LINK_VAR_SLUG);
+  $values_facebook_title = variable_get(V2_BLOCKS_FACEBOOK_TITLE_VAR_SLUG);
+  $form_name = substr($delta, strlen('v2_'));
+  $values_facebook_link[$edit['settings_language']][$form_name] = $edit['facebook_link'];
+  $values_facebook_title[$edit['settings_language']][$form_name] = $edit['facebook_title'];
+  variable_set(V2_BLOCKS_FACEBOOK_LINK_VAR_SLUG, $values_facebook_link);
+  variable_set(V2_BLOCKS_FACEBOOK_TITLE_VAR_SLUG, $values_facebook_title);
+  // YOUTUBE
+  $values_youtube_link = variable_get(V2_BLOCKS_YOUTUBE_LINK_VAR_SLUG);
+  $values_youtube_title = variable_get(V2_BLOCKS_YOUTUBE_TITLE_VAR_SLUG);
+  $form_name = substr($delta, strlen('v2_'));
+  $values_youtube_link[$edit['settings_language']][$form_name] = $edit['youtube_link'];
+  $values_youtube_title[$edit['settings_language']][$form_name] = $edit['youtube_title'];
+  variable_set(V2_BLOCKS_YOUTUBE_LINK_VAR_SLUG, $values_youtube_link);
+  variable_set(V2_BLOCKS_YOUTUBE_TITLE_VAR_SLUG, $values_youtube_title);
+  // TWITTER
+  $values_twitter_link = variable_get(V2_BLOCKS_TWITTER_LINK_VAR_SLUG);
+  $values_twitter_title = variable_get(V2_BLOCKS_TWITTER_TITLE_VAR_SLUG);
+  $form_name = substr($delta, strlen('v2_'));
+  $values_twitter_link[$edit['settings_language']][$form_name] = $edit['twitter_link'];
+  $values_twitter_title[$edit['settings_language']][$form_name] = $edit['twitter_title'];
+  variable_set(V2_BLOCKS_TWITTER_LINK_VAR_SLUG, $values_twitter_link);
+  variable_set(V2_BLOCKS_TWITTER_TITLE_VAR_SLUG, $values_twitter_title);
+  // INSTAGRAM
+  $values_instagram_link = variable_get(V2_BLOCKS_INSTAGRAM_LINK_VAR_SLUG);
+  $values_instagram_title = variable_get(V2_BLOCKS_INSTAGRAM_TITLE_VAR_SLUG);
+  $form_name = substr($delta, strlen('v2_'));
+  $values_instagram_link[$edit['settings_language']][$form_name] = $edit['instagram_link'];
+  $values_instagram_title[$edit['settings_language']][$form_name] = $edit['instagram_title'];
+  variable_set(V2_BLOCKS_INSTAGRAM_LINK_VAR_SLUG, $values_instagram_link);
+  variable_set(V2_BLOCKS_INSTAGRAM_TITLE_VAR_SLUG, $values_instagram_title);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Adds validation of block configuration custom fields.
+ */
+function v2_blocks_form_block_admin_configure_alter(&$form, &$form_state, $form_id) {
+  if ($form['module']['#value'] == 'v2_blocks') {
+    $form['#validate'][] = 'v2_blocks_block_validate';
+  }
+}
+
+/**
+ * Form validation callback of block configuration.
+ */
+function v2_blocks_block_validate(&$form, $form_state) {
+  $delta = $form['delta']['#value'];
+  if ($delta == 'v2_newsletter') {
+    $values = $form_state['values'];
+    $url_validate = array(
+      'facebook_link' => $values['facebook_link'],
+      'twitter_link' => $values['twitter_link'],
+      'youtube_link' => $values['youtube_link'],
+      'instagram_link' => $values['instagram_link']
+    );
+    foreach ($url_validate as $key => $value) {
+      if ($value && !valid_url($value, TRUE)) {
+        form_set_error($value, t('The value provided for %field is not a valid URL.', array('%field' => $key)));
+      }
+    }
+  }
+}

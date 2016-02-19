@@ -1,0 +1,334 @@
+<?php
+
+/**
+ * @file
+ * Integrate the search feature.
+ */
+/**
+ * Define the numbers of content is need to loaded.
+ */
+if (!defined('V2_SEARCH_MORE_ARTICLE')) {
+  define('V2_SEARCH_MORE_ARTICLE', 6);
+}
+
+if (!defined('V2_SEARCH_MORE_PRODUCT')) {
+  define('V2_SEARCH_MORE_PRODUCT', 3);
+}
+
+/**
+ * Implements hook_menu().
+ */
+function v2_search_menu() {
+  $menus = array();
+
+  $menus['ghmumm/search'] = array(
+    'title' => 'Search',
+    'page callback' => 'v2_search_page',
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'v2_search.content.inc',
+  );
+
+  $types = array(
+    array('type' => 'article', 'id' => 'article-load-more'),
+    array('type' => 'champagne_ritual', 'id' => 'champagne-ritual-load-more'),
+    array('type' => 'product_champagne', 'id' => 'product-champagne-load-more'),
+  );
+
+  foreach ($types as $type) {
+    $menus['ghmumm/search/' . $type['type'] . '/load-more/%'] = array(
+      'title' => '',
+      'page callback' => 'v2_search_load_more',
+      'page arguments' => array(4, 2, 5),
+      'access callback' => TRUE,
+      'type' => MENU_CALLBACK,
+      'file' => 'v2_search.content.inc',
+    );
+  }
+
+  return $menus;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function v2_search_theme() {
+  return array(
+    'heading_content' => array(
+      'variables' => array('key_word' => NULL, 'total' => NULL),
+      'template' => 'templates/heading-content',
+    ),
+    'v2_search_article_wrapper' => array(
+      'variables' => array(
+        'nodes' => NULL,
+        'total' => NULL,
+        'key_word' => NULL,
+      ),
+      'template' => 'templates/v2-search-article-wrapper',
+    ),
+    'v2_search_product_champagne_wrapper' => array(
+      'variables' => array(
+        'nodes' => NULL,
+        'total' => NULL,
+        'key_word' => NULL,
+      ),
+      'template' => 'templates/v2-search-product-champagne-wrapper',
+    ),
+    'v2_search_article_item' => array(
+      'variables' => array('nodes' => NULL),
+      'template' => 'templates/v2-search-article-item',
+    ),
+    'v2_search_product_champagne_item' => array(
+      'variables' => array('nodes' => NULL),
+      'template' => 'templates/v2-search-product-champagne-item',
+    ),
+    'v2_search_form' => array(
+      'render element' => 'form',
+      'template' => 'templates/v2-search-form',
+    ),
+  );
+}
+
+/**
+ * Implements hook_preprocess().
+ */
+function v2_search_preprocess(&$variables, $hook) {
+  $hooks = array(
+    'v2_search_article_wrapper' => V2_SEARCH_MORE_ARTICLE,
+    'v2_search_product_champagne_wrapper' => V2_SEARCH_MORE_PRODUCT,
+  );
+  if (in_array($hook, array_keys($hooks)) &&
+      isset($variables['nodes']) &&
+      count($variables['nodes']) > $hooks[$hook]) {
+
+    $variables['nodes'] = array_slice($variables['nodes'], 0, $hooks[$hook]);
+  }
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function v2_search_block_info() {
+  $blocks['search'] = array(
+    'info' => t('Form search'),
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_info_alter().
+ */
+function v2_search_block_info_alter(&$blocks) {
+
+//  if (isset($blocks['v2_search']['search'])) {
+//    $blocks['v2_search']['search']['status'] = true;
+//    $blocks['v2_search']['search']['region'] = 'search';
+//  }
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function v2_search_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'search':
+      $block['content'] = drupal_render(drupal_get_form('v2_search_custom_form'));
+      break;
+  }
+
+  return $block;
+}
+
+/**
+ * Create a custom search form.
+ */
+function v2_search_custom_form() {
+  $form['content_search'] = array(
+    '#title' => '',
+    '#type' => 'textfield',
+  );
+
+  $form['button_search'] = array(
+    '#type' => 'submit',
+    '#value' => _hs_resource_get('search','plain', FALSE, FALSE),
+    '#attributes' => array(
+      'class' => array('search-btn icon icon-search-black')
+    )
+  );
+  $form['#prefix'] = '<div data-id="search-box" class="search-box">';
+  $form['#suffix'] = '</div>';
+  $form['#attributes'] = array(
+    'class' => array('search-form'),
+    'data-form-tracking' => '',
+    'data-track-action' => 'submit',
+    'data-track-category' => 'search',
+    'data-track-label' => '',
+    'data-track-type' => 'event',
+  );
+
+  unset($form['#theme_wrappers']);
+  unset($form['content_search']['#theme_wrappers']);
+
+  $form['content_search']['#attributes']['id'] = 'search';
+  $form['content_search']['#prefix'] = '<div data-hide-label class="input-element">'
+      . '<label for="' . $form['content_search']['#attributes']['id'] . '" class="label-1">'
+      . _hs_resource_get('search','plain', FALSE, FALSE) . '</label>';
+
+  $form['content_search']['#suffix'] = '</div>';
+  $form['content_search']['#theme_wrappers'] = array();
+  $form['content_search']['#attributes'] = array(
+    'class' => array('input-1'),
+    'id' => 'search',
+    'autocomplete' => 'off',
+  );
+
+  $form['#theme'] = array('v2_search_form');
+
+  return $form;
+}
+
+/**
+ * Custom form search for mobile.
+ * @param type $form
+ */
+function v2_search_custom_form_mobile($form) {
+
+  unset($form['#prefix']);
+  unset($form['#suffix']);
+  $form['content_search']['#attributes']['id'] = 'edit-search-mobile';
+  $form['content_search']['#prefix'] = '<div data-hide-label class="input-element">
+                <label for="' . $form['content_search']['#attributes']['id'] . '" class="label-1">' . _hs_resource_get('search','plain', FALSE, FALSE) . '</label>';
+
+  $form['button_search']['#prefix'] = '<button type="submit" name="search-btn" id="search-btn-mobile" title="" class="search-btn icon icon-next"></button>';
+  $form['button_search']['#attributes']['class'][] = 'hidden';
+
+  return $form;
+}
+
+/**
+ * Implements hook_form_submit().
+ */
+function v2_search_custom_form_submit(&$form, &$form_state) {
+  $values = $form_state['values'];
+  if (isset($values['content_search'])) {
+    // We should override destination parameter if it existed,
+    // to redirect custom-search page.
+    if (isset($_GET['destination'])) {
+      unset($_GET['destination']);
+    }
+    // Redirect to custom-search page.
+    global $base_url, $language;
+    $url = url($base_url . '/' . $language->prefix . '/ghmumm/search', array('query' => array('keyword' => $values['content_search'])));
+    $form_state['redirect'] = $url;
+  }
+}
+
+/**
+ * Get content that is found via search form.
+ *
+ * @param string $title
+ *   It's inserted from seach form.
+ *
+ * @param array $type
+ *   It's array of type. We can set array or string of type.
+ *
+ * @param int $numbers
+ *   The numbers of record is need to get.
+ * Default is unlimited (set variable is 0).
+ *
+ * @param int $offset
+ *   Set range to get data.
+ */
+function v2_search_content($title = '', $type = '', $numbers = 0, $offset = 0) {
+  $build = array();
+  if ($type && $title) {
+    global $language;
+    // Get item page .
+    $query = db_select('node', 'n');
+
+    //Condition content type product
+    if (in_array('product_champagne', $type)) {
+      $query->leftJoin('field_data_field_champagne_brand', 'brand', 'brand.entity_id = n.nid');
+      $query->leftJoin('field_data_field_champagne_category', 'cate', 'cate.entity_id = n.nid');
+      $query->leftJoin('taxonomy_term_data', 'tax', 'tax.tid = cate.field_champagne_category_tid');
+      $query->leftJoin('field_data_field_description', 'description', 'description.entity_id = n.nid');
+      $query->condition(db_or()
+              ->condition('brand.field_champagne_brand_value', '%' . db_like($title) . '%', 'LIKE')
+              ->condition('tax.name', '%' . db_like($title) . '%', 'LIKE')
+              ->condition('description.field_description_value', '%' . db_like($title) . '%', 'LIKE')
+              ->condition('n.title', '%' . db_like($title) . '%', 'LIKE'));
+    }
+    //Condition content type
+    else {
+      $query->leftJoin('field_data_field_article_body', 'article_body', 'article_body.entity_id = n.nid');
+      $query->leftJoin('field_data_field_article_category', 'article_cate', 'article_cate.entity_id = n.nid');
+      $query->leftJoin('taxonomy_term_data', 'tax', 'tax.tid = article_cate.field_article_category_tid');
+      $query->leftJoin('field_data_field_ritual_body', 'ritual_body', 'ritual_body.entity_id = n.nid');
+
+      $query->condition(db_or()
+              ->condition('article_body.field_article_body_value', '%' . db_like($title) . '%', 'LIKE')
+              ->condition('tax.name', '%' . db_like($title) . '%', 'LIKE')
+              ->condition('ritual_body.field_ritual_body_value', '%' . db_like($title) . '%', 'LIKE')
+              ->condition('n.title', '%' . db_like($title) . '%', 'LIKE')
+      );
+    }
+    $query->condition('n.type', is_array($type) ? $type : array($type), 'IN');
+    $query->condition('n.language', $language->language)
+        ->condition('n.status',1)
+        ->fields('n', array('nid'));
+    $result = $query->orderBy('n.created', 'DESC')
+        ->orderBy('n.title', 'DESC');
+    $query = $query->extend('PagerDefault');
+
+    $total_items = $query->getCountQuery()->execute()->fetchField();
+    $query->limit($numbers);
+    $result = $query->execute()->fetchAll();
+
+    // Get sum pager.
+    //$max_page = round(count($result_sum) / $limit);
+    $max_page = ceil($total_items / $numbers);
+    $build = array();
+    if (!empty($result)) {
+      $build = array(
+        'nodes' => $result,
+        'pager' => array(
+          '#theme' => 'pager',
+        ),
+        'max_page' => $max_page,
+        'key_word' => $title,
+        'total' => $total_items,
+      );
+    }
+  }
+  return $build;
+}
+
+/**
+ * Process variables for hubsys-search-form.tpl.php.
+ *
+ * The $variables array contains the following arguments:
+ * - $form
+ *
+ * @see hubsys-search-form.tpl.php
+ */
+function v2_search_preprocess_v2_search_form(&$variables) {
+  $variables['search'] = array();
+  $hidden = array();
+  // Provide variables named after form keys so themers can
+  // print each element independently.
+  foreach (element_children($variables['form']) as $key) {
+    $type = isset($variables['form'][$key]['#type']) ?
+        $variables['form'][$key]['#type'] : '';
+    if ($type == 'hidden' || $type == 'token') {
+      $hidden[] = drupal_render($variables['form'][$key]);
+    }
+    else {
+      $variables['search'][$key] = drupal_render($variables['form'][$key]);
+    }
+  }
+  // Hidden form elements have no value to themers. No need for separation.
+  $variables['search']['hidden'] = implode($hidden);
+  // Collect all form elements to make it easier to print the whole form.
+  $variables['search_form'] = implode($variables['search']);
+}

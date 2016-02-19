@@ -1,0 +1,12 @@
+name = V2 Modules
+description = The modules can be added into Panels templates pages and can be customized directly from Front-office.
+package = V2 Development
+version = "7.1x"
+core = 7.x
+dependencies[] = ctools
+
+; Information added by Drupal.org packaging script on 2015-08-10
+version = "7.x-1.0"
+core = "7.x"
+project = "V2 Development"
+datestamp = "1394061805"

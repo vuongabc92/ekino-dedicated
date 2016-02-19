@@ -1,0 +1,299 @@
+<?php
+
+require('inc/pr_ctbuy_connector.field.inc');
+
+/**
+ * Implements hook_init().
+ * Check that the click to buy variables are defined in the language realm
+ */
+function pr_ctbuy_connector_init() {
+  $controller       = variable_realm_controller('language');
+  $old_variables    = $controller->getEnabledVariables();
+  $ctbuy_variables  = array(
+    'pr_ctbuy_connector_instance',
+    'pr_ctbuy_connector_lang',
+    'pr_ctbuy_connector_key',
+    'pr_ctbuy_connector_endpoint',
+  );
+
+  $containsSearch   = count(array_intersect($ctbuy_variables, $old_variables)) == count($ctbuy_variables);
+
+  if (!$containsSearch) {
+    $variables = array_merge($old_variables, $ctbuy_variables);
+    $controller->setRealmVariable('list', $variables);
+  }
+
+}
+
+/**
+ * Implements hook_variable_group_info()
+ */
+
+function pr_ctbuy_connector_variable_group_info() {
+  $groups['pr_ctbuy_connector'] = array(
+    'title' => t('Pernod Ricard - Click to buy Console'),
+    'access' => 'advanced configuration connector ctbuy',
+  );
+  return $groups;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function pr_ctbuy_connector_theme($existing, $type, $theme, $path) {
+  return array(
+    'ctbuy_link' => array(
+      'template' => 'template/pr-ctbuy-link',
+      'variables' => array('custom_class' => NULL, 'key' => NULL, 'text' => NULL, 'lang' => NULL),
+    ),
+  );
+}
+
+/**
+ * Implements hook_permission().
+ */
+
+function pr_ctbuy_connector_permission() {
+  return array(
+    'advanced configuration connector ctbuy' =>  array(
+      'title' => t('Configure advanced connector settings'),
+    ),
+    'edit click to buy links' =>  array(
+      'title' => t('Edit click to buy links in content'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function pr_ctbuy_connector_menu() {
+
+  $items['admin/prctbuyconnector'] = array(
+    'title' => 'Click to Buy',
+    'description' => 'Configure settings specific to martell.com.',
+    'position' => 'left',
+    'weight' => 100,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+
+  $items['admin/prctbuyconnector/settings'] = array(
+    'title' => t('Click to Buy Connector - Configuration'),
+    'page callback' => 'pr_ctbuy_connector_config_form',
+    'access arguments' => array('advanced configuration connector ctbuy'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 100,
+  );
+
+  $items['admin/prctbuyconnector/autocomplete'] = array(
+    'title' => t('Autocomplete Products for Click to buy'),
+    'page callback' => 'pr_ctbuy_connector_autocomplete_products',
+    'access arguments' => array('edit click to buy links'),
+    'type' => MENU_CALLBACK,
+    'file' => 'inc/pr_ctbuy_connector.autocomplete.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Form edit variables
+ */
+
+function pr_ctbuy_connector_config_form() {
+
+  $form = drupal_get_form('variable_module_form', 'pr_ctbuy_connector');
+
+  return $form;
+
+}
+
+/**
+ * Define Variables of the AgeGate
+ */
+
+
+function pr_ctbuy_connector_variable_info($options) {
+
+  $variables['pr_ctbuy_connector_instance'] = array(
+    'type' => 'string',
+    'title' => t('Click to buy Console - Instance Code', array(), $options),
+    'description' => t('The code of the instance this website (language sensitive) must connect to.'),
+    'required' => TRUE,
+    'localize' => TRUE,
+    'group' => 'pr_ctbuy_connector',
+  );
+
+  $variables['pr_ctbuy_connector_lang'] = array(
+    'type' => 'string',
+    'title' => t('Click to buy Console - Language', array(), $options),
+    'description' => t('The language code.'),
+    'required' => TRUE,
+    'localize' => TRUE,
+    'group' => 'pr_ctbuy_connector',
+  );
+
+  $variables['pr_ctbuy_connector_key'] = array(
+    'type' => 'string',
+    'title' => t('Click to buy Console - Key', array(), $options),
+    'description' => t('The API KEY for connecting to the console.'),
+    'required' => TRUE,
+    'localize' => TRUE,
+    'group' => 'pr_ctbuy_connector',
+  );
+
+  $variables['pr_ctbuy_connector_endpoint'] = array(
+    'type' => 'string',
+    'title' => t('Click to buy Console - EndPoint URL', array(), $options),
+    'description' => t('The URL of the EndPoint.'),
+    'required' => TRUE,
+    'localize' => TRUE,
+    'group' => 'pr_ctbuy_connector',
+  );
+
+  return $variables;
+}
+
+
+/**
+ * Implements hook_form_alter().
+ * Fix a bug in drupal madness
+ */
+function pr_ctbuy_connector_form_alter(&$form, &$form_state, $form_id) {
+  switch ($form_id) {
+    case 'variable_edit_form':
+    case 'variable_module_form':
+      $languages = language_list();
+      $active_lang = isset($_GET['variable_realm_key_language']) ? $_GET['variable_realm_key_language'] : false;
+      $active_lang = $languages[$active_lang];
+
+      if ($active_lang) {
+        $vars = element_children($form);
+        foreach ($vars as $key => $var) {
+          if (substr($var, 0, 11) == 'martell_age') {
+            $var_value = pr_ctbuy_connector_get_var($var, $active_lang);
+            $form[$var]['#default_value'] = $var_value;
+          }
+        }
+      }
+
+      break;
+
+    default:
+
+      break;
+  }
+}
+
+
+/**
+ * Helper function go get var depending on language
+ */
+
+function pr_ctbuy_connector_get_var($var, $lang = false) {
+
+  $def_lang = language_default();
+
+  $lang = !$lang ? $def_lang : $lang;
+
+  $result = db_query("SELECT vs.value FROM {variable_store} vs WHERE vs.name = :var AND vs.realm_key = :rk", array(':var' => $var, ':rk' => $lang->language))->fetchField();
+
+
+  return $result;
+}
+
+/**
+ * Get current language variable width default value
+ */
+
+function pr_ctbuy_connector_get_var_auto($var, $default) {
+  global $language;
+  $return = pr_ctbuy_connector_get_var($var, $language);
+
+  if (!empty($return)) {
+    return $return;
+  } else {
+    return $default;
+  }
+}
+
+/**
+ * Implementation of hook_preprocess_page().
+ * Add JS snippet in page with realm variables
+ */
+
+function pr_ctbuy_connector_preprocess_page(&$variables) {
+  global $language;
+
+  $api_key = pr_ctbuy_connector_get_var('pr_ctbuy_connector_key', $language);
+  $endpoint = pr_ctbuy_connector_get_var('pr_ctbuy_connector_endpoint', $language);
+
+  drupal_add_js('
+    (function(d, s, id){
+     var js, cjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "'. $endpoint .'/sdk.min.js";
+     cjs.parentNode.insertBefore(js, cjs);
+   }(document, "script", "pernodricard-ctbuy-sdk"));
+
+    window.SDKctbuyAsyncInit = function() {
+        SDKctbuy.init({
+          "url" : "' . $endpoint . '/getLinks",
+          "accessKey" : "' . $api_key .'"
+        });
+    };
+  ', array(
+    'type' => 'inline',
+    'scope' => 'footer')
+  );
+}
+
+
+/**
+ * Check and test connexion to the console
+ */
+
+function pr_ctbuy_connector_check_connexion() {
+
+  $tocheck = array(
+    'pr_ctbuy_connector_key' => 'key',
+    'pr_ctbuy_connector_lang' => 'lang',
+    'pr_ctbuy_connector_instance' => 'instance',
+    'pr_ctbuy_connector_endpoint' => 'url'
+  );
+
+  foreach ($tocheck as $var => $alias) {
+    if (!pr_ctbuy_connector_get_var_auto($var, false)) {
+      return false;
+    } else {
+      $$alias = pr_ctbuy_connector_get_var_auto($var);
+    }
+  }
+
+  $data = '?instance=' . $instance;
+  $options = array(
+    'method' => 'GET',
+    'timeout' => 15,
+    'headers' => array(
+      'X-PR-ACCESSKEY' => $key,
+    ),
+  );
+
+  $result = drupal_http_request($url . $data, $options);
+
+  if ($result->code !== "200") {
+    return false;
+  }
+
+  $data = drupal_json_decode($result->data);
+  if (key($data) !== "Welcome") {
+    return false;
+  }
+
+  return true;
+
+}

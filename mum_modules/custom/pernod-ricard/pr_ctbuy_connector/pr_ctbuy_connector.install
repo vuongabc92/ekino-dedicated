@@ -1,0 +1,39 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the pr_ctbuy_connector module.
+ */
+
+/**
+ * Implements hook_field_schema().
+ *
+ * Defines the database schema of the field, using the format used by the
+ * Schema API.
+ *
+ */
+
+function pr_ctbuy_connector_field_schema($field) {
+  $columns = array(
+    'remote_key' => array(
+      'type' => 'varchar',
+      'length' => 100,
+      'not null' => FALSE
+    ),
+    'title' => array(
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => FALSE,
+      'sortable' => TRUE,
+    ),
+  );
+
+  $indexes = array(
+    'remote_key' => array('remote_key'),
+  );
+
+  return array(
+    'columns' => $columns,
+    'indexes' => $indexes,
+  );
+}

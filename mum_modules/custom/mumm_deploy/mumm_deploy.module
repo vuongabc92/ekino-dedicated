@@ -1,0 +1,6 @@
+<?php
+
+/**
+ * The feature module to support delivery on Drupal 7 sites:
+ * - Run the script SQL to update fields in Back-office.
+ */

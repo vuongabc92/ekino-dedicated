@@ -1,0 +1,17 @@
+<?php
+
+/*
+ * Hook_menu().
+ */
+//function mumm_meta_tags_menu() {
+//    $items['admin/config/user-interface/meta-tags'] = array(
+//      'title' => 'Metas for statics pages',
+//      'description' => 'Configure meta title and description for static pages',
+//      'page callback' => 'drupal_get_form',
+//      'page arguments' => array('mumm_meta_tags_setting_form'),
+//      'access callback' => TRUE,
+//      'file' => 'mumm_meta_tags.admin.inc',
+//    );
+//
+//    return $items;
+//}

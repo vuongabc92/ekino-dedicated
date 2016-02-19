@@ -1,0 +1,426 @@
+<?php
+
+/**
+ * @file
+ * The v2 module to provide the utilities for G.H MUMM project version 2.
+ */
+
+/**
+ * Preprocess the primary entry level theme.
+ * Override the Panels modal.
+ */
+function v2_mumm_preprocess_panels_add_content_modal(&$vars) {
+  // Override categories list. Only display modules.
+  $vars['categories'] = array(
+    'module' => $vars['categories']['modules'],
+    'existing' => $vars['categories']['existing'],
+    'entity' => $vars['categories']['entity'],
+    'miscellaneous' => $vars['categories']['miscellaneous'],
+  );
+  $vars['categories_array'] = array();
+  // Process the list of categories.
+
+  foreach ($vars['categories'] as $key => $category_info) {
+    // 'root' category is actually displayed under the categories, so
+    // skip it.
+    if ($key == 'root') {
+      continue;
+    }
+
+    $class = 'panels-modal-add-category';
+    if ($key == $vars['category']) {
+      $class .= ' active';
+    }
+
+    $url = $vars['renderer']->get_url('select-content', $vars['region'], $key);
+    $vars['categories_array'][] = ctools_ajax_text_button($category_info['title'], $url, '', $class);
+  }
+
+  // Now render the top level buttons (aka the root category) if any.
+  $vars['root_content'] = '';
+  if (!empty($vars['categories']['root'])) {
+    foreach ($vars['categories']['root']['content'] as $content_type) {
+      $vars['root_content'] .= theme('panels_add_content_link', array('renderer' => $vars['renderer'], 'region' => $vars['region'], 'content_type' => $content_type));
+    }
+  }
+}
+
+/**
+ * Implement hook_menu().
+ */
+function v2_mumm_menu() {
+  // 404 error page
+  $items['error-404'] = array(
+    'title' => 'Error 404',
+    'description' => 'Error 404 page',
+    'page callback' => 'v2_mumm_view_error_404',
+    'access callback' => TRUE,
+  );
+  //Photo Gallery
+  $items['gallery-photo/%/%/%'] = array(
+    'title' => 'Photo Gallery',
+    'description' => 'Photo gallery load images',
+    'page callback' => 'v2_mumm_photo_gallery',
+    'page arguments' => array(1, 2, 3),
+    'access callback' => TRUE,
+  );
+
+  return $items;
+}
+
+/**
+ * Page callback: error 404 page
+ *
+ * @see mumm_content_menu()
+ */
+function v2_mumm_view_error_404() {
+  $link_to_front = '<a href="' . url('<front>') . '" title="' . _hs_resource_get('error_404_page_link_title', 'plain', FALSE, FALSE) . '" class="btn red-btn slim-text center-btn">' . _hs_resource_get('error_404_page_link_title', 'plain', FALSE, FALSE) . '</a>';
+  $content = '<div class="sorry-block">';
+  $content .= '<h1 class="title">' . _hs_resource_get('error_404_page_title') . '</h1>';
+  $content .= '<p class="sub-title">' . _hs_resource_get('error_404_page_body') . '</p>';
+  $content .= hs_resource_contextual_link('error_404_page_link_title', $link_to_front);
+  $content .= '</div>';
+  return $content;
+}
+
+/**
+ * Get the direction path from a theme.
+ */
+function v2_mumm_custom_get_path($dir_name = NULL, $theme_name = NULL) {
+  if (empty($dir_name)) {
+    return NULL;
+  }
+  global $base_url, $theme;
+  $theme_name = (empty($theme_name)) ? $theme : $theme_name;
+  return $base_url . '/' . drupal_get_path('theme', $theme_name) . '/' . $dir_name . '/';
+}
+
+/**
+ * Implement hook_form_alter()
+ */
+function v2_mumm_form_alter(&$form, &$form_state, $form_id) {
+
+  //hook form login
+  if ($form_id == 'user_login') {
+    $form['#attributes']['class'] = array('form-1', 'login-form');
+    $form['name']['#prefix'] = '<div class="form-item">';
+    $form['name']['#suffix'] = '</div>';
+    $form['pass']['#prefix'] = '<div class="form-item">';
+    $form['pass']['#suffix'] = '</div>';
+    $form['name']['#attributes']['class'] = array('input-1');
+    $form['name']['#attributes']['autocomplete'] = 'off';
+    $form['pass']['#attributes']['class'] = array('input-1');
+    $form['pass']['#attributes']['autocomplete'] = 'off';
+    $form['actions']['submit']['#attributes']['class'] = array('btn-gray', 'btn-submit');
+  }
+}
+
+/**
+ * Hook node form.
+ * @param type $form
+ * @param type $form_state
+ */
+function v2_mumm_form_node_form_alter(&$form, &$form_state) {
+
+  if ($form['menu']['link']['parent']) {
+    $options = $form['menu']['link']['parent']['#options'];
+    $language_node = $form['language']['#default_value'];
+    $options = v2_mumm_get_menu_options_for_language($options, $language_node);
+    $form['menu']['link']['parent']['#options'] = $options;
+  }
+
+  $forms_taxos_fields= array(
+    array('article_node_form','article_category','field_article_category'),
+    array('venues_node_form','venue_filter', 'field_venues_location'),
+    array('product_champagne_node_form','champagne_categories','field_champagne_category'),
+  );
+
+  foreach($forms_taxos_fields as $values) {
+    $form_id = $values[0];
+    $taxonomy = $values[1];
+    $attribute = $values[2];
+
+    //Category languages
+    if($form['#form_id'] == $form_id){
+      $language_node = $form['language']['#default_value'];
+      $taxonomy_name = taxonomy_vocabulary_machine_name_load($taxonomy);
+      $options = i18n_taxonomy_get_tree($taxonomy_name->vid, $language_node);
+      foreach($options as $option){
+        $category[$option->tid] = $option->name;
+      }
+      $value_category = node_load($form['nid']['#value'])->$attribute;
+      $tid_default = $value_category['und'][0]['tid'];
+      $term = taxonomy_term_load($tid_default);
+      $translated_term = i18n_taxonomy_term_get_translation($term, $language_node);
+      $form[$attribute]['und']['#default_value'] = array($translated_term->tid);
+      $form[$attribute]['und']['#options'] = $category;
+    }
+  }
+
+  // Condition content type module image_text
+  if ($form['#form_id'] == 'module_image_text_node_form') {
+    if (!empty($form['field_gmap_address']['und'][0]['value']['#default_value'])) {
+      $address = $form['field_gmap_address']['und'][0]['value']['#default_value'];
+      $long = $form['field_gmap_long']['und'][0]['value']['#default_value'];
+      $lat = $form['field_gmap_lat']['und'][0]['value']['#default_value'];
+      $json = drupal_json_encode(array(
+        'address' => $address,
+        'lng' => $long,
+        'lat' => $lat
+          )
+      );
+      $form['field_gmap_address']['#prefix'] = '<div data-geocode-map data-address-coords=\'' . $json . '\' class="geocode-map-block">
+          <div class="wrapper-input">';
+    }
+    else {
+      $form['field_gmap_address']['#prefix'] = '<div data-geocode-map data-address-coords="" class="geocode-map-block">
+          <div class="wrapper-input">';
+    }
+    $form['field_gmap_address']['#suffix'] = '<input type="button" value="Get Location" class="map-btn-input btn-get-location">
+          </div>
+          <div id="map" class="map"></div>
+        ';
+    $form['field_gmap_address']['und'][0]['value']['#attributes']['class'] = array('map-text-input address-input');
+    $form['field_gmap_address']['#theme_wrappers'] = array();
+    unset($form['field_gmap_address']['und']['#prefix']);
+    unset($form['field_gmap_address']['und']['#suffix']);
+
+    $form['field_gmap_lat']['und'][0]['value']['#attributes']['class'] = array('map-text-input latitude');
+    $form['field_gmap_lat']['und'][0]['value']['#attributes']['readonly'] = array('readonly');
+    $form['field_gmap_lat']['#theme_wrappers'] = array();
+    unset($form['field_gmap_lat']['und']['#prefix']);
+    unset($form['field_gmap_lat']['und']['#suffix']);
+
+    $form['field_gmap_long']['und'][0]['value']['#attributes']['class'] = array('map-text-input longitude');
+    $form['field_gmap_long']['und'][0]['value']['#attributes']['readonly'] = array('readonly');
+    $form['field_gmap_long']['#theme_wrappers'] = array();
+    unset($form['field_gmap_long']['und']['#prefix']);
+    unset($form['field_gmap_long']['und']['#suffix']);
+    $form['field_gmap_long']['#suffix'] = '</div>';
+  }
+  // Condition content type module text
+  if ($form['#form_id'] == 'module_text_node_form') {
+    if (!empty($form['field_text_gmap_address']['und'][0]['value']['#default_value'])) {
+      $address = $form['field_text_gmap_address']['und'][0]['value']['#default_value'];
+      $long = $form['field_text_gmap_long']['und'][0]['value']['#default_value'];
+      $lat = $form['field_text_gmap_lat']['und'][0]['value']['#default_value'];
+      $json = drupal_json_encode(array(
+        'address' => $address,
+        'lng' => $long,
+        'lat' => $lat
+          )
+      );
+      $form['field_text_gmap_address']['#prefix'] = '<div data-geocode-map data-address-coords=\'' . $json . '\' class="geocode-map-block">
+          <div class="wrapper-input">';
+    }
+    else {
+      $form['field_text_gmap_address']['#prefix'] = '<div data-geocode-map data-address-coords="" class="geocode-map-block">
+          <div class="wrapper-input">
+                ';
+    }
+    $form['field_text_gmap_address']['#suffix'] = '<input type="button" value="Get Location" class="map-btn-input btn-get-location">
+          </div>
+          <div id="map" class="map"></div>
+        ';
+    $form['field_text_gmap_address']['und'][0]['value']['#attributes']['class'] = array('map-text-input address-input');
+    $form['field_text_gmap_address']['#theme_wrappers'] = array();
+    unset($form['field_text_gmap_address']['und']['#prefix']);
+    unset($form['field_text_gmap_address']['und']['#suffix']);
+
+
+    $form['field_text_gmap_lat']['und'][0]['value']['#attributes']['class'] = array('map-text-input latitude');
+    $form['field_text_gmap_lat']['und'][0]['value']['#attributes']['readonly'] = array('readonly');
+    $form['field_text_gmap_lat']['#theme_wrappers'] = array();
+    unset($form['field_text_gmap_lat']['und']['#prefix']);
+    unset($form['field_text_gmap_lat']['und']['#suffix']);
+
+    $form['field_text_gmap_long']['und'][0]['value']['#attributes']['class'] = array('map-text-input longitude');
+    $form['field_text_gmap_long']['und'][0]['value']['#attributes']['readonly'] = array('readonly');
+    $form['field_text_gmap_long']['#theme_wrappers'] = array();
+    unset($form['field_text_gmap_long']['und']['#prefix']);
+    unset($form['field_text_gmap_long']['und']['#suffix']);
+    $form['field_text_gmap_long']['#suffix'] = '</div>';
+  }
+  // Condition content type module photo gallery.
+  if ($form['#form_id'] == 'module_photo_gallery_node_form') {
+    $form['#validate'][] = 'v2_mumm_validate_item_for_module_photo_gallery';
+  }
+}
+
+/**
+ * Get menu options for language.
+ * @param type $options
+ * @return type
+ */
+function v2_mumm_get_menu_options_for_language($options, $language_node) {
+  foreach ($options as $key => $option) {
+    $mlid = explode(':', $key);
+    if($mlid[0] != "menu-new-main-menu") {
+      unset($options[$key]);
+    } else {
+      $menu_language = menu_link_load($mlid[1])['language'];
+      if ($menu_language != $language_node && $mlid[1] != 0 && $menu_language != LANGUAGE_NONE){
+        unset($options[$key]);
+      }
+    }
+  }
+  return $options;
+}
+
+/**
+ * Check url is external.
+ * @global type $base_url
+ * @global type $language
+ * @param type $url
+ * @return string
+ */
+function v2_mumm_check_url_external($url) {
+  global $base_url, $language;
+  $external_url = array();
+  // Condition url is front or nolink.
+  if ($url == '<front>' || $url == '<nolink>') {
+    $external_url['path'] = $base_url . '/' . $language->prefix;
+  }
+  else {
+    $external = url_is_external($url);
+    if ($external) {
+      $external_url['path'] = $url;
+      $external_url['external'] = TRUE;
+    }
+    else {
+      $prefix = "/" . $language->prefix . "/";
+      $find_prefix = strpos($url, $prefix);
+      // Condition isset prefix in url.
+      if (!$find_prefix && $find_prefix != 0) {
+        $external_url['path'] = $language->prefix . '/' . $url;
+      }
+      else {
+        $external_url['path'] = $url;
+      }
+      $external_url['external'] = FALSE;
+    }
+  }
+  return $external_url;
+}
+
+/**
+ * Validate content type module photo gallery (Minimum 4 pictures must be uploaded)
+ * @param type $form
+ * @param type $form_state
+ */
+function v2_mumm_validate_item_for_module_photo_gallery(&$form, &$form_state) {
+  if ($form_state['values']['field_photo_gallery'][LANGUAGE_NONE]) {
+    $values = $form_state['values']['field_photo_gallery'][LANGUAGE_NONE];
+    // Remove item add more
+    unset($values['add_more']);
+    $count_fid = 0;
+
+    foreach ($values as $key => $value) {
+      if (isset($value['field_gallery_picture'][LANGUAGE_NONE][0]) && $value['field_gallery_picture'][LANGUAGE_NONE][0]['fid'] != 0) {
+        $count_fid ++;
+      }
+    }
+    // Condition isset 4 item
+    if ($count_fid < 4) {
+      $message = t('Please fill in minimum 4 item');
+      form_set_error('photo', $message);
+      return FALSE;
+    }
+  }
+}
+
+/**
+ * Load photo gallery
+ * See hook_menu()
+ */
+function v2_mumm_photo_gallery($fid, $nid, $current_path) {
+  return theme('photo_gallery_share_twitter', array('fid' => $fid, 'nid' => $nid, 'node_current' => $current_path));
+}
+
+/**
+ * Implement Hook_theme()
+ */
+function v2_mumm_theme() {
+  return array(
+    'photo_gallery_share_twitter' => array(
+      'template' => 'photo-gallery-share-twitter',
+      'variables' => array('fid' => '', 'nid' => '', 'node_current' => ''),
+      'path' => drupal_get_path('theme', 'v2_mumm') . '/templates',
+    ),
+  );
+}
+
+/**
+ * Function get node id current
+ */
+function get_node_id_current() {
+  $node_href = explode('/', $_GET['q']);
+  if ($node_href[0] == 'node') {
+    return $node_href[1];
+  }
+  return FALSE;
+}
+
+/**
+ * Fuction metatag for twitter
+ */
+function v2_mumm_add_metatag_twitter($metatags) {
+  foreach ($metatags as $metatag) {
+    $element = array(
+      '#tag' => 'meta',
+      '#attributes' => array(
+        'name' => 'twitter:' . $metatag['type'],
+        'content' => $metatag['content'],
+      ),
+    );
+    drupal_add_html_head($element, 'twitter_'.$metatag['type']);
+  }
+}
+
+/**
+ * Implements hook_token_info_alter().
+ */
+function v2_mumm_token_info_alter(&$data) {
+  $data['tokens']['pr_exacttarget']['mummcountrycode'] = array(
+    'name' => t("Mumm Country Code"),
+    'description' => t("The country code, specific to mumm websites"),
+  );
+}
+
+/**
+ * Implementation of hook_tokens_alter().
+ */
+function v2_mumm_tokens_alter(array &$replacements, array $context) {
+  $type = $context['type'];
+  $tokens = $context['tokens'];
+
+  if ($type == 'pr_exacttarget') {
+    global $language;
+
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'mummcountrycode':
+          // If the language prefix don't have the country code (like Internationnal (en)), we retreive the value from the selected country on the agegate mumm_user_country
+          if(empty(trim(substr($language->prefix, 3, 5)))) {
+            // retrieve the 2 letter country code $mumm_user_country (from country taxonnomy term) of the country selected by the user on the agegate
+            $mumm_user_country = isset($_COOKIE['mumm_user_country']) ? $_COOKIE['mumm_user_country'] : 'ww';
+            if($mumm_user_country){
+              $replacements[$original] = trim(substr($mumm_user_country, 0, 2));
+            }
+          }
+          else {
+            $replacements[$original] = trim(substr($language->prefix, 3, 5));
+          }
+          break;
+
+        case 'languagecode':
+        //languagecode is already defined in pr_exacttarget module, we want to override it here
+          $replacements[$original] = trim(substr($language->prefix, 0, 2));
+          break;
+
+        default :
+          break;
+      }
+    }
+  }
+}

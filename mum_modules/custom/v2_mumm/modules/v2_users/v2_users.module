@@ -1,0 +1,266 @@
+<?php
+
+/**
+ * @file
+ * Enables configuration in Drupal.
+ *
+ */
+
+/**
+ *  Implements hook_form_alter().
+ */
+function v2_users_form_alter(&$form, &$form_state, $form_id) {
+  global $user, $language;
+     
+  if ($user->uid && $user->uid != 1 && is_manager($user) && array_key_exists(3, $user->roles) == FALSE) {
+    if (array_key_exists(4, $user->roles) && array_key_exists(5, $user->roles) == FALSE) {
+      if (isset($form['language'])) {
+        unset($form['language']);
+        $form['language'] = array(
+          '#type' => 'hidden',
+          '#value' => $user->language,
+        );
+      }
+    }
+    
+    if (isset($form['#node'])) {
+      v2_remove_button($form, array('delete'));
+    }
+
+    switch ($form_id):
+          
+      case "node_admin_content":
+        $form['admin']['options']['submit']['#submit'] = array('v2_user_node_form_submit');
+        break;
+      case 'menu_overview_form':
+        $value = array();
+        foreach (element_children($form) as $key => $mlid) {
+          if (isset($form[$mlid]['hidden'])) {
+            $element = &$form[$mlid];
+            if ($element['#item']['language'] != $user->language) {
+              unset($form[$mlid]);
+              $value[] = $mlid;
+            }
+          }
+        }
+
+        $form['filter']['language']['#default_value'] = $user->language;
+        $form['filter']['language']['#disabled'] = TRUE;
+        break;
+      case 'taxonomy_overview_terms':
+        $value = array();
+        foreach (element_children($form) as $key => $mlid) {
+          $element = &$form[$mlid];
+          if ($element['#term']['language'] != $user->language) {
+            unset($form[$mlid]);
+            $value[] = $mlid;
+          }
+        }
+        break;
+
+      case 'menu_edit_item':
+        if (array_key_exists(4, $user->roles) && array_key_exists(5, $user->roles) == FALSE) {
+          if (isset($form['i18n']['language'])) {
+            unset($form['i18n']['language']);
+            $form['i18n']['language'] = array(
+              '#type' => 'hidden',
+              '#value' => $user->language,
+            );
+          }
+        }
+        $options =  $form['parent']['#options'];
+        $options_languague = array();
+        foreach($options as $key => $option){
+          $mlid = explode(':', $key)[1];
+          $menu_language = menu_link_load($mlid)['language'];
+          if($mlid == 0){
+            $options_languague[$key] = $option;
+          }
+          if($user->language == $menu_language && $mlid != 0){
+            $options_languague[$key] = $option;
+          }
+        }
+        $form['parent']['#options'] = array();
+        $form['parent']['#options'] = $options_languague;
+        break;
+       
+      case 'block_add_block_form':
+        $options = $form['i18n_block']['languages']['languages']['#options'];
+        foreach ($options as $key => $value) {
+          if ($key != $user->language) {
+            unset($form['i18n_block']['languages']['languages']['#options'][$key]);
+          }
+        }
+        break;
+      
+ 
+      
+      case 'block_admin_configure':
+        unset($form['i18n_block']);
+        unset($form['visibility']['role']);
+        break;
+
+    endswitch;
+  }
+}
+
+/**
+ * Executes node deletion.
+ *
+ * @see v2_users_delete_confirm_submit()
+ */
+//function v2_users_delete_confirm_submit($form, &$form_state) {
+//  form_set_error('delete', t('You don\'t permission delete'));
+//  $form_state['redirect'] = '<front>';
+//}
+
+/**
+ * detech manager
+ */
+function is_manager($user) {
+  if (array_key_exists(4, $user->roles) || array_key_exists(5, $user->roles)) {
+    return TRUE;
+  }
+}
+
+/**
+ * Form submission handler for node_filter_form().
+ */
+function v2_user_node_form_submit($form, &$form_state) {
+  global $user;
+  $erro = 0;
+  if (is_manager($user) && array_key_exists(3, $user->roles) == FALSE) {
+    if ($form_state['values']['operation'] == 'publish' || $form_state['values']['operation'] == 'unpublish') {
+      if (array_key_exists(4, $user->roles) && array_key_exists(5, $user->roles) == FALSE && array_key_exists(3, $user->roles) == FALSE) {
+        $nodes = array_filter($form_state['values']['nodes']);
+        $list = node_load_multiple($nodes);
+        if (!empty($list)) {
+          foreach ($list as $item) {
+            $uid = $item->uid;
+            if ($user->uid != $uid) {
+              form_set_error('operation', t('You don\'t permission') . ' ' . t($form_state['values']['operation']));
+              $erro ++;
+              break;
+            }
+          }
+        }
+      }
+    }
+//    if ($form_state['values']['operation'] == 'delete') {
+//      form_set_error('operation', t('You don\'t permission delete'));
+//    }
+    if ($erro == 0) {
+      $operations = module_invoke_all('node_operations');
+      $operation = $operations[$form_state['values']['operation']];
+      // Filter out unchecked nodes
+      $nodes = array_filter($form_state['values']['nodes']);
+      if ($function = $operation['callback']) {
+        // Add in callback arguments if present.
+        if (isset($operation['callback arguments'])) {
+          $args = array_merge(array($nodes), $operation['callback arguments']);
+        }
+        else {
+          $args = array($nodes);
+        }
+        call_user_func_array($function, $args);
+
+        cache_clear_all();
+      }
+      else {
+        // We need to rebuild the form to go to a second step. For example, to
+        // show the confirmation form for the deletion of nodes.
+        $form_state['rebuild'] = TRUE;
+      }
+    }
+    else {
+      $form_state['rebuild'] = TRUE;
+    }
+  }
+}
+
+/**
+ * Remove button un-used in BO for role.
+ */
+function v2_remove_button(&$form, $list = array('delete')) {
+  if (isset($form['actions'])) {
+    foreach ($list as $key) {
+      if (isset($form['actions'][$key])) {
+        unset($form['actions'][$key]);
+      }
+    }
+  }
+}
+
+/**
+ * Remove contextual link difference language for role single country manager
+ */
+function v2_users_contextual_links_view_alter(&$element, $items) {
+  global $user, $language;
+  if (array_key_exists(4, $user->roles)) {
+    if ($user->language != $language->language) {
+      foreach ($element['#links'] as $key => $value) {
+        unset($element['#links'][$key]);
+      }
+    }
+  }
+}
+
+/**
+ * Implement hook_form_id_alter()
+ * Check user permission for page admin/content
+ * @param type $form
+ * @param type $form_state
+ * @param type $form_id
+ */
+function v2_users_form_node_admin_content_alter(&$form, &$form_state, $form_id) {
+  global $user, $language;
+
+  if ($user->uid && $user->uid != 1 && is_manager($user) && array_key_exists(3, $user->roles) == FALSE) {
+    if (array_key_exists(4, $user->roles) && array_key_exists(5, $user->roles) == FALSE) {
+      drupal_goto('admin/content/search');
+    }
+  }
+}
+
+/**
+ * Implement hook_permission()
+ * @return type
+ */
+function v2_users_permission() {
+  return array(
+    'config page site information' => array(
+      'title' => t('config page site information'),
+      'description' => t('Config page site information(Site name, Slogan, Email...)'),
+    ),
+    'administer edit menu' => array(
+      'title' => t('administer edit menu'),
+      'description' => t('administer edit menu'),
+    ),
+    'administer delete menu' => array(
+      'title' => t('administer delete menu'),
+      'description' => t('administer delete menu'),
+    ),
+  );
+}
+
+
+/**
+ * Implements hook_menu_alter.
+ * Check access for forum menu item.
+ */
+function v2_users_menu_alter(&$items) {
+   $items['admin/config/system/site-information']['access arguments'] = array('config page site information');
+   $items['admin/structure/menu/manage/%menu/edit']['access arguments'] = array('administer edit menu');
+   $items['admin/structure/menu/manage/%menu/delete']['access arguments'] = array('administer edit menu');
+}
+
+/**
+ * Implement hook_user_login().
+ */
+function v2_users_user_login(&$edit, $account) {
+  global $user, $base_url;
+  $path = $base_url;
+  $prefix_language = mumm_country_get_user_country()->prefix;
+  // Do not redirect when the user is resetting her password.
+  $edit['redirect'] = $path.'/'.$prefix_language;
+}

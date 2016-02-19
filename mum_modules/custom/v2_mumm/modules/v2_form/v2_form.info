@@ -1,0 +1,4 @@
+name = V2 Form
+description = Integrate the webform templates (such as Contact, Booking, Newsletter, Contest).
+package = V2 Development
+core = 7.x

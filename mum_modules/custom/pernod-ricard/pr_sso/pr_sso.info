@@ -1,0 +1,6 @@
+name = pr_sso
+description = SINGLE SIGN ON - Provide an external authentication from Pernod Ricard Web Service
+version = 0.2
+package = Pernod-Ricard
+core = 7.x
+configure = admin/config/people/pr_sso

@@ -1,0 +1,437 @@
+<?php
+
+define('V2_MUMM_AGE_GATE_COOKIE_NAME', 'mumm_age_gate');
+define('V2_MUMM_USER_AGE_COOKIE_NAME', 'mumm_user_age');
+define('V2_MUMM_USER_COUNTRY_COOKIE_NAME', 'mumm_user_country');
+define('V2_MUMM_USER_LANGUAGE_COOKIE_NAME', 'mumm_user_language');
+
+/**
+ * Implements hook_init().
+ */
+function v2_age_gate_init()
+{
+  global $language;
+  $array_condition_link = array();
+  $age_gate_condition = v2_age_gate_variable_get('conditions', $language->language);
+  $cookie_policy_data = v2_age_gate_variable_get('mention_cookies', $language->language);
+
+  preg_match_all('/node\/([0-9]+)/i', $age_gate_condition['value'], $matches);
+  $nid = $matches[1][0];
+  array_push($array_condition_link, drupal_get_path_alias(sprintf('node/%d', $nid)));
+  preg_match_all('/node\/([0-9]+)/i', $cookie_policy_data['value'], $matches_cookie);
+  $nid_cookie = $matches_cookie[1][0];
+  array_push($array_condition_link, drupal_get_path_alias(sprintf('node/%d', $nid_cookie)));
+
+// Set mumm_age_gate.js is allways display.
+  drupal_add_js(drupal_get_path('theme', 'v2_mumm') . '/js/script-age-gate.js');
+
+  $country_vocabulary = taxonomy_vocabulary_machine_name_load('countries');
+  $country_terms = taxonomy_get_tree($country_vocabulary->vid, 0, NULL, TRUE);
+  $country_options = $country_ages = array();
+  foreach ($country_terms as $country_term) {
+    $wrapper = entity_metadata_wrapper('taxonomy_term', $country_term);
+    $country_code = strtolower($wrapper->field_country_code->value());
+    $country_options[$country_code] = $country_term->name;
+    $country_ages[$country_code] = $wrapper->field_legal_drinking_age->value();
+  }
+
+  drupal_add_js(array(
+    'mumm_age_gate' => array(
+      'cookie_name' => V2_MUMM_AGE_GATE_COOKIE_NAME,
+      'cookie_user_age' => V2_MUMM_USER_AGE_COOKIE_NAME,
+      'cookie_user_country' => V2_MUMM_USER_COUNTRY_COOKIE_NAME,
+      'terms_conditions_link' => $array_condition_link,
+      'country_ages' => $country_ages,
+    ),
+    'cache' => TRUE,
+      ), 'setting');
+
+  if (current_path() === 'age-gate') {
+    $GLOBALS['conf']['cache'] = FALSE;
+  }
+}
+
+/**
+ * Implement hook_permission()
+ * @return type
+ */
+function v2_age_gate_permission() {
+  return array(
+    'configure agegate' => array(
+      'title' => t('Configure agegate'),
+      'description' => t('Configure agegate'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function v2_age_gate_menu()
+{
+  $items['age-gate'] = array(
+    'title' => 'Age gate',
+    'page callback' => 'v2_mumm_page_age_gate',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'file' => 'v2_age_gate.pages.inc',
+  );
+
+  $items['age-gate/redirect'] = array(
+    'title' => 'Age gate',
+    'page callback' => 'v2_age_gate_redirect',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'file' => 'v2_age_gate.pages.inc',
+  );
+
+  $items['admin/config/user-interface/age-gate'] = array(
+    'title' => 'Age gate',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('v2_age_gate_manage'),
+    'access arguments' => array('configure agegate'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'v2_age_gate.pages.inc',
+  );
+
+  $items['outdated-browser'] = array(
+    'title' => 'Outdated Browser',
+    'page callback' => array('v2_age_gate_browser'),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'file' => 'v2_age_gate.pages.inc',
+  );
+
+  $items['admin/config/user-interface/tagging'] = array(
+    'title' => 'Configure Tracking',
+    'description' => t('Configure Google Analytics parameters and Tagging variables'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('v2_manage_acount_tagging'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'v2_age_gate.pages.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function v2_age_gate_theme()
+{
+  $theme['v2_age_gate_form'] = array(
+    'render element' => 'form',
+    'template' => 'templates/v2_age_gate_form',
+  );
+
+  $theme['v2_mumm_page_age_gate'] = array(
+    'template' => 'templates/v2_mumm_page_age_gate',
+  );
+
+  $theme['v2_age_gate_inputfield'] = array(
+    'render element' => 'element',
+  );
+
+  $theme['age_gate_select'] = array(
+    'render element' => 'element',
+  );
+
+  $theme['v2_age_gate_noop'] = array();
+
+  return $theme;
+}
+
+/**
+ * Theme age_gate_select()
+ * @param type $variables
+ * @return type
+ */
+function theme_age_gate_select($variables)
+{
+  $element = $variables['element'];
+  element_set_attributes($element, array('id', 'name', 'size'));
+  _form_set_class($element, array('form-select'));
+
+  return '<select' . drupal_attributes($element ['#attributes']) . '>' . v2_mumm_form_select_options($element) . '</select>';
+}
+
+/**
+ * Implement function v2_mumm_formumm_select_options()
+ * @param type $element
+ * @param type $choices
+ * @return string
+ */
+function v2_mumm_form_select_options($element, $choices = NULL)
+{
+  if (!isset($choices)) {
+    $choices = $element ['#options'];
+  }
+// array_key_exists() accommodates the rare event where $element['#value'] is NULL.
+// isset() fails in this situation.
+  $value_valid = isset($element ['#value']) || array_key_exists('#value', $element);
+  $value_is_array = $value_valid && is_array($element ['#value']);
+  $options = '';
+  foreach ($choices as $key => $choice) {
+    if (is_array($choice)) {
+      $options .= '<optgroup label="' . check_plain($key) . '">';
+      $options .= v2_mumm_form_select_options($element, $choice);
+      $options .= '</optgroup>';
+    }
+    elseif (is_object($choice)) {
+      $options .= v2_mumm_form_select_options($element, $choice->option);
+    }
+    else {
+      $key = (string) $key;
+      if ($value_valid && (!$value_is_array && (string) $element ['#value'] === $key || ($value_is_array && in_array($key, $element ['#value'])))) {
+        $selected = ' selected="selected"';
+      }
+      else {
+        $selected = '';
+      }
+      $country = taxonomy_term_load($choice);
+      $country_full_birthday = 0;
+      if ($country->field_full_birthday && isset($country->field_full_birthday[LANGUAGE_NONE][0]['value'])) {
+        $country_full_birthday = $country->field_full_birthday[LANGUAGE_NONE][0]['value'];
+      }
+      $date_format = 'yyyy';
+      if ($country_full_birthday == 1) {
+        $date_format = isset($country->field_date_formats[LANGUAGE_NONE][0]['value']) ? $country->field_date_formats[LANGUAGE_NONE][0]['value'] : 'yyyy';
+      }
+
+      $legal_drinking_age = $country->field_legal_drinking_age[LANGUAGE_NONE][0]['value'];
+      $options .= '<option value="' . check_plain($key) . '"' . $selected . ' data-age-limit="' . $legal_drinking_age . '" data-country-age="' . $date_format . '" >' . $country->name . '</option>';
+    }
+  }
+  return $options;
+}
+
+/**
+ * @see theme_textfield()
+ */
+function theme_v2_age_gate_inputfield($variables)
+{
+  $element = $variables['element'];
+
+  $type = 'text';
+  if (isset($element['#field_type'])) {
+    $type = $element['#field_type'];
+  }
+
+  $element['#attributes']['type'] = $type;
+  element_set_attributes($element, array('id', 'name', 'value', 'size', 'maxlength'));
+  _form_set_class($element, array('form-text'));
+
+  $extra = '';
+  if ($element['#autocomplete_path'] && drupal_valid_path($element['#autocomplete_path'])) {
+    drupal_add_library('system', 'drupal.autocomplete');
+    $element['#attributes']['class'][] = 'form-autocomplete';
+
+    $attributes = array();
+    $attributes['type'] = 'hidden';
+    $attributes['id'] = $element['#attributes']['id'] . '-autocomplete';
+    $attributes['value'] = url($element['#autocomplete_path'], array('absolute' => TRUE));
+    $attributes['disabled'] = 'disabled';
+    $attributes['class'][] = 'autocomplete';
+    $extra = '<input' . drupal_attributes($attributes) . ' />';
+  }
+
+  $output = '<input' . drupal_attributes($element['#attributes']) . ' />';
+
+  return $output . $extra;
+}
+
+function theme_v2_age_gate_noop()
+{
+  return '';
+}
+
+function v2_age_gate_calculate_age($year, $month = NULL, $day = NULL, $end_of_day = FALSE)
+{
+  $now = new \DateTime();
+
+  $end_of_day = NULL === $month || NULL === $day;
+  $time = $end_of_day ? '23:59:59' : '00:00:00';
+
+  $month = $month ? : date('m');
+  $day = $day ? : date('d');
+
+  $birthdate_string = sprintf('%04d/%02d/%02d %s', $year, $month, $day, $time);
+  $birthdate = date_create_from_format('Y/m/d H:i:s', $birthdate_string);
+  if (FALSE !== $birthdate) {
+    $age = (int) $birthdate->diff($now)->format('%R%y');
+
+    $max_age = variable_get('v2_age_gate_maximum_age', 150);
+    if ($age > 0 && $age <= $max_age) {
+      return $age;
+    }
+  }
+
+  return FALSE;
+}
+
+function v2_age_gate_get_legal_drinking_age($country)
+{
+  $tid = is_object($country) ? $country->tid : $country;
+
+  if ($term = taxonomy_term_load($tid)) {
+    $country = entity_metadata_wrapper('taxonomy_term', $term);
+    $legal_drinking_age = $country->field_legal_drinking_age->value();
+    return (int) $legal_drinking_age;
+  }
+
+  return FALSE;
+}
+
+function v2_age_gate_get_cookie()
+{
+  $cookie = NULL;
+
+  if (isset($_COOKIE[V2_MUMM_AGE_GATE_COOKIE_NAME])) {
+    $cookie = $_COOKIE[V2_MUMM_AGE_GATE_COOKIE_NAME];
+  }
+
+  return $cookie;
+}
+
+function v2_age_gate_has_cookie()
+{
+  return NULL !== v2_age_gate_get_cookie();
+}
+
+function v2_age_gate_set_cookie($name, $data, $expire = 0, $path = '/')
+{
+  setcookie($name, $data, $expire, $path);
+}
+
+/**
+ * @param object|string $country_code
+ * @return string
+ */
+function _v2_age_gate_get_cookie_path($country_code)
+{
+  $cookie_path = '/';
+
+// Unused cookie path language.
+//    if (drupal_multilingual() && $country = _mumm_country_get_language_object($country_code, FALSE)) {
+//        $cookie_path .= mumm_country_get_prefix($country);
+//    }
+
+  return $cookie_path;
+}
+
+/**
+ * @param string $slug
+ * @param object|string $settings_language
+ *   A Drupal language object or language code.
+ *   Setting this variable adds a language suffix to $slug.
+ * @param mixed $default
+ * @return mixed
+ */
+function v2_age_gate_variable_get($slug, $settings_language = NULL, $default = NULL)
+{
+  if (NULL === $default) {
+    $default = v2_age_gate_variable_get_default_value($slug);
+  }
+
+  $name = v2_age_gate_variable_slug($slug, $settings_language);
+  return variable_get($name, $default);
+}
+
+function v2_age_gate_variable_get_default_value($slug)
+{
+  $slug = strtolower($slug);
+
+  switch ($slug) {
+    case 'title':
+      return 'Welcome';
+
+    case 'instructions':
+      return 'Please enter your date of birth to verify your age';
+
+    case 'facebook_connect_instructions':
+      return 'Or verify your age using:';
+
+    case 'facebook_connect_link_text':
+      return 'Facebook connect';
+
+    case 'conditions':
+      return array(
+        'value' => 'I confirm I\'ve read and accept the site\'s <a href="" target="_blank">terms and conditions</a> and that I want to proceed.',
+        'format' => 'filtered_html',
+      );
+
+    case 'error_mandatory_fields':
+      return 'Please fill all mandatory fields';
+
+    case 'error_underaged':
+      return 'You must be over @legal_age to enter this site';
+
+    case 'error_no_legal_age':
+      return 'We are sorry but local legislation forbids the promotion of alcoholic drinks via the internet from your current location, and access to this site is thus not possible.';
+
+    default:
+      return NULL;
+  }
+}
+
+/**
+ * Generate a variable name, based on a slug and and optional language.
+ *
+ * @param string $slug
+ * @param object|string $settings_language
+ *   A Drupal language object or language code.
+ *   Setting this variable adds a language suffix to $slug.
+ * @return string
+ */
+
+function v2_age_gate_variable_slug($slug, $settings_language = NULL) {
+// Add a language suffix to the variable name.
+  if ($settings_language) {
+    $lang_code = is_object($settings_language) ? $settings_language->language : $settings_language;
+    $slug = sprintf('%s_%s', $slug, $lang_code);
+  }
+
+  return $slug;
+}
+
+/**
+ * Implement hook_block_
+ * @return type
+ */
+function v2_age_gate_block_info()
+{
+
+  $blocks['age-gate'] = array(
+    'info' => t('Age-gate'),
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function v2_age_gate_block_view($delta = '')
+{
+  $block = array();
+
+  switch ($delta) {
+    case 'age-gate':
+      $block['content'] = array('#markup' => '&nbsp;');
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_block_info_alter().
+ */
+function v2_age_gate_block_info_alter(&$blocks)
+{
+//
+//  if (isset($blocks['v2_age_gate']['age-gate'])) {
+//    $blocks['v2_age_gate']['age-gate']['status'] = true;
+//    $blocks['v2_age_gate']['age-gate']['region'] = 'popup';
+//    $blocks['v2_age_gate']['age-gate']['weight'] = -1;
+//  }
+}

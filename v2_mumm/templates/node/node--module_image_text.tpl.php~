@@ -1,0 +1,66 @@
+<?php
+/*
+ * @file node--module_image_text.tpl.php.
+ *
+ */
+
+$image = isset($node->field_visual_image_text[LANGUAGE_NONE][0]['uri']) ? $node->field_visual_image_text[LANGUAGE_NONE][0]['uri'] : '';
+$crop_style_list = array('01_desktop_image_text', '02_tablet_image_text', '03_mobile_image_text');
+$interchange = v2_mumm_interchange_images($image, $crop_style_list);
+$field_subtitle = isset($node->field_subtitle[LANGUAGE_NONE][0]['value']) ? $node->field_subtitle[LANGUAGE_NONE][0]['value'] : '';
+$field_introduction = isset($node->field_article_introduction[LANGUAGE_NONE][0]['value']) ? $node->field_article_introduction[LANGUAGE_NONE][0]['value'] : '';
+$col_1 = isset($node->field_read_more_column_1[LANGUAGE_NONE][0]['value']) ? $node->field_read_more_column_1[LANGUAGE_NONE][0]['value'] : '';
+$col_2 = isset($node->field_read_more_column_2[LANGUAGE_NONE][0]['value']) ? $node->field_read_more_column_2[LANGUAGE_NONE][0]['value'] : '';
+$button_url = isset($node->field_cta[LANGUAGE_NONE][0]['url']) ? $node->field_cta[LANGUAGE_NONE][0]['url'] : '';
+$button_title = isset($node->field_cta[LANGUAGE_NONE][0]['title']) ? $node->field_cta[LANGUAGE_NONE][0]['title'] : '';
+$field_maps_long = isset($node->field_maps[LANGUAGE_NONE][0]['lng']) ? $node->field_maps[LANGUAGE_NONE][0]['lng'] : '';
+$field_maps_lat = isset($node->field_maps[LANGUAGE_NONE][0]['lat']) ? $node->field_maps[LANGUAGE_NONE][0]['lat'] : '';
+$marker_icon_src = path_to_theme() . '/images/icon-pin.png';
+$one_col = ($col_1 !== '' && trim($col_2) === '' && (trim($field_maps_long) === '' || trim($field_maps_lat) === ''));
+$two_col = ($col_1 !== '' && $col_2 !== '');
+$map_col = ($col_1 !== '' && ($field_maps_long !== '' && $field_maps_lat !== ''));
+?>
+<div class="image-text banner-item spacing-bottom">
+    <div class="grid-fluid">
+        <div class="inner"><span data-interchange='<?php print $interchange; ?>' data-type="background-image" class="image-background"></span></div>
+        <div data-read-more="" class="description">
+            <h3 class="image-title <?php print is_numeric($node->title) ? 'large' : 'small'; ?>"><?php print $node->title; ?></h3>
+            <h4 class="sub-title"><?php print $field_subtitle; ?></h4>
+            <p><?php print nl2br($field_introduction); ?></p>
+            <?php if (trim($col_1) !== '') : ?>
+                <button type="button" name="open-button" id="open-button" title="<?php print t('Read more') ?>" class="btn btn-gray open-btn"><?php print t('Read more') ?></button>
+            <?php endif; ?>
+            <div class="content">
+                <div class="editor <?php print ($two_col) ? 'two-col border' : ''; ?> <?php print ($map_col) ? 'two-col border map' : ''; ?>">
+                    <?php if ($one_col) : ?>
+                        <p><?php print $col_1; ?></p>
+                    <?php elseif ($map_col) : ?>
+                        <div class="row">
+                            <div data-gmap="" data-lat="<?php print $field_maps_lat; ?>" data-long="<?php print $field_maps_long; ?>" data-icon-marker="<?php print $marker_icon_src; ?>" class="map-frame spacing-bottom hidden-sm visible-xs"></div>
+                            <div class="col">
+                                <?php print $col_2; ?>
+                                <div data-gmap="" data-lat="<?php print $field_maps_lat; ?>" data-long="<?php print $field_maps_long; ?>" data-icon-marker="<?php print $marker_icon_src; ?>" class="map-frame hidden-xs"></div>
+                            </div>
+                            <div class="col multi-col" data-multi-columns="">
+                                <?php print $col_1; ?>
+                            </div>
+                        </div>
+                    <?php elseif ($two_col) : ?>
+                        <div class="row">
+                            <div class="col"><?php print $col_1; ?></div>
+                            <div class="col"><?php print $col_2; ?></div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (trim($button_url) !== '' && trim($button_title) !== '') : ?>
+
+                        <a href="<?php print $button_url; ?>" title="<?php print $button_title; ?>" target="_blank" class="btn red-btn center-btn"><?php print $button_title; ?></a>
+
+                    <?php endif; ?>
+                </div>
+                <button type="button" name="close-button" id="close-button" title="<?php print('Close'); ?>" class="btn btn-gray close-btn"><?php print('Close'); ?></button>
+            </div>
+        </div>
+    </div>
+</div>
+

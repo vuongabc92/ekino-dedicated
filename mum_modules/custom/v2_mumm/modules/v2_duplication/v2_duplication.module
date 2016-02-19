@@ -1,0 +1,413 @@
+<?php
+
+/**
+ * @file
+ * V2 Duplication of content.
+ * Choose duplication scope (Contents-Types, Taxonomy, Menu, Blocks, etc...).
+ * Choose origin and target language.
+ */
+function v2_duplication_permission() {
+  return array(
+    'access administration duplication pages' => array(
+      'title' => t('Access administration duplication'),
+      'description' => t('Access administration duplication'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function v2_duplication_menu() {
+  $items = array();
+
+  $items['admin/config/content/duplication'] = array(
+    'title' => 'Duplicate content',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('v2_duplication_admin_form'),
+    'access arguments' => array('access administration duplication pages'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_form().
+ */
+function v2_duplication_admin_form($form, &$form_state) {
+  $languages_data = language_list();
+  $source_languages_list = array();
+  $translated_languages_list = array();
+
+  foreach ($languages_data as $language) {
+    $translated_languages_list[$language->language] = $language->name;
+    if (duplication_validate_source_language($language->language)) {
+      $source_languages_list[$language->language] = $language->name;
+    }
+  }
+  unset($translated_languages_list['en']);
+  $options_translation_entities = array(
+    'taxonomy' => t('Taxonomy'),
+    'node' => t('Content'),
+    'menu' => t('Menu'),
+    'hs_resource' => t('Resources'),
+    'variables' => t('Block configuration (variables)')
+  );
+
+  $source_language_default = isset($source_languages_list['en']) ? 'en' : '';
+
+  $taxonomies = taxonomy_get_vocabularies();
+  $options_taxonomy = array();
+  foreach ($taxonomies as $taxonomy) {
+    $options_taxonomy[$taxonomy->machine_name] = $taxonomy->name;
+  }
+  unset($options_taxonomy['countries']);
+  unset($options_taxonomy['regions']);
+
+
+  $node_types = node_type_get_types();
+  $options_node_type = array();
+  foreach ($node_types as $node_type) {
+    // Here we seperate nodes types module_xxxxx from normal nodes in two arrays
+    if(substr($node_type->type, 0, 7 ) === "module_") {
+      $options_node_module_type[$node_type->type] = $node_type->name;
+    } else {
+    $options_node_content_type[$node_type->type] = $node_type->name;
+    }
+  }
+ unset($options_node_content_type['panel']);
+// Putting module_xxxxx nodes at the end of the array to ensure they are processed AFTER the regular content nodes
+// This way referenced nodes id in module can be correctly translated
+$options_node_type = array_merge($options_node_content_type, $options_node_module_type);
+
+
+  $menus = menu_get_menus();
+  $dev_menus = array('devel', 'management', 'navigation', 'user-menu','main-menu');
+  $options_menu = array();
+  foreach ($menus as $machine_name => $title) {
+    if (!in_array($machine_name, $dev_menus)) {
+      $options_menu[$machine_name] = $title;
+    }
+  }
+  $form['source_language'] = array(
+    '#type' => 'hidden',
+    '#title' => t('Source language'),
+    '#default_value' => $source_language_default,
+    '#attributes' => array(
+      'readonly' => 'readonly',
+
+      ),
+
+  );
+
+  $form['translation_language'] = array(
+    '#type' => 'select',
+    '#title' => t('Target language'),
+    '#options' => $translated_languages_list,
+    '#default_value' => '',
+  );
+
+  $form['translatable_entities'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Translatable entities'),
+    '#description' => t('Select the elements you wish to duplicate.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['translatable_entities']['translatable_entity_items'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Translatable entities'),
+    '#title_display' => 'invisible',
+    '#options' => $options_translation_entities,
+    '#default_value' => array_keys($options_translation_entities)
+  );
+
+  $form['taxonomies'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Taxonomies'),
+    '#description' => t('Select the taxonomies you wish to duplicate'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['taxonomies']['taxonomy_items'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Taxonomies'),
+    '#title_display' => 'invisible',
+    '#options' => $options_taxonomy,
+    '#default_value' => array_keys($options_taxonomy)
+  );
+
+  $form['node_types'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Content types'),
+    '#description' => t('Select the content you wish to duplicate'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['node_types']['node_type_items'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Content types'),
+    '#title_display' => 'invisible',
+    '#options' => $options_node_type,
+    '#default_value' => array_keys($options_node_type)
+  );
+
+  $form['menus'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Menus'),
+    '#description' => t('Select the menus you wish to duplicate'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['menus']['menu_items'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Menus'),
+    '#title_display' => 'invisible',
+    '#options' => $options_menu,
+    '#default_value' => array_keys($options_menu)
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Duplicate'),
+  );
+
+  return $form;
+}
+
+/**
+ * Implements hook_form_validate().
+ */
+function v2_duplication_admin_form_validate($form, &$form_state) {
+  $source_language = $form_state['values']['source_language'];
+  $translation_language = $form_state['values']['translation_language'];
+  $languages = language_list('language');
+
+  if ($translation_language == '' || !in_array($translation_language, array_keys($languages))) {
+    form_set_error('translation_language', 'You must select one language as translation language');
+  }
+}
+
+/**
+ * Implements hook_form_submit().
+ */
+function v2_duplication_admin_form_submit($form, &$form_state) {
+  // Create a batch for each entity.
+  if ($form_state['values']['translatable_entity_items']['taxonomy']) {
+    batch_set(duplication_build_batch_set_taxonomy($form_state['values']));
+  }
+  if ($form_state['values']['translatable_entity_items']['node']) {
+    batch_set(duplication_build_batch_set_node($form_state['values']));
+  }
+  if ($form_state['values']['translatable_entity_items']['menu']) {
+    batch_set(duplication_build_batch_set_menu($form_state['values']));
+  }
+  if ($form_state['values']['translatable_entity_items']['hs_resource']) {
+    batch_set(duplication_build_batch_set_hs_resource($form_state['values']));
+  }
+  if ($form_state['values']['translatable_entity_items']['variables']) {
+
+    batch_set(duplication_build_batch_set_variables($form_state['values']));
+  }
+
+  batch_process();
+}
+
+/**
+ * Run batch operation for node entity.
+ */
+function duplication_build_batch_set_node($values) {
+  // List the batch's functions.
+  $operations_duplicate_content = array();
+  $operations_duplicate_node_references = array();
+
+  foreach ($values['node_type_items'] as $node_type) {
+    if ($node_type) {
+      $operations_duplicate_content[] = array(
+        'v2_duplication_content',
+        array(
+          array(
+            'node_type' => $node_type,
+            'source_language' => $values['source_language'],
+            'translation_language' => $values['translation_language']
+          )
+        )
+      );
+
+      $operations_duplicate_node_references[] = array('v2_duplication_node_references', array($node_type, $values['translation_language']));
+    }
+  }
+
+  // Build the batch
+  $batch = array(
+    'title' => t('Duplication'),
+    'init_message' => t('Initializing'),
+    'progress_message' => t('Duplication of content : operation @current out of @total.'),
+    'error_message' => t('An error occured.'),
+    'operations' => array_merge($operations_duplicate_content, $operations_duplicate_node_references),
+    'finished' => 'v2_duplication_content_finished',
+    'file' => sprintf('%s/v2_duplication.batch.node.inc', drupal_get_path('module', 'v2_duplication'))
+  );
+
+  return $batch;
+}
+
+/**
+ * Run batch operation for taxonomy entity.
+ */
+function duplication_build_batch_set_taxonomy($values) {
+  // Create batch operations
+  $taxonomies = taxonomy_get_vocabularies();
+  $batch_operations = array();
+
+  foreach ($values['taxonomy_items'] as $machine_name => $title) {
+    if ($title) {
+      $batch_operations[] = array('v2_duplication_taxonomy', array(
+          array(
+            'taxonomy' => taxonomy_vocabulary_machine_name_load($machine_name),
+            'source_language' => $values['source_language'],
+            'translation_language' => $values['translation_language']
+          )
+      ));
+    }
+  }
+
+  // Create batch
+  $batch = array(
+    'title' => t('Duplication'),
+    'init_message' => t('Initializing'),
+    'progress_message' => t('Duplication of taxonomy terms : operation @current out of @total.'),
+    'error_message' => t('An error occured.'),
+    'operations' => $batch_operations,
+    'finished' => 'v2_duplication_taxonomy_finished',
+    'file' => sprintf('%s/v2_duplication.batch.taxonomy.inc', drupal_get_path('module', 'v2_duplication'))
+  );
+
+  return $batch;
+}
+
+/**
+ * Run batch operation for menu.
+ */
+function duplication_build_batch_set_menu($values) {
+  $duplication_data = array(
+    'source_language' => $values['source_language'],
+    'translation_language' => $values['translation_language']
+  );
+  $batch_operations = array();
+
+  foreach ($values['menu_items'] as $machine_name => $title) {
+    if ($title) {
+      $duplication_data['menu_name'] = $machine_name;
+
+      $batch_operations[] = array('v2_duplication_menu_set_translation_sets', array($duplication_data));
+      $batch_operations[] = array('v2_duplication_menu_duplicate', array($duplication_data));
+    }
+  }
+
+  // Build the batch
+  $batch = array(
+    'title' => t('Duplication'),
+    'init_message' => t('Initializing'),
+    'progress_message' => t('Duplication of menus : operation @current out of @total.'),
+    'error_message' => t('An error occured.'),
+    'operations' => $batch_operations,
+    'finished' => 'v2_duplication_menu_finished',
+    'file' => sprintf('%s/v2_duplication.batch.menu.inc', drupal_get_path('module', 'v2_duplication'))
+  );
+
+  return $batch;
+}
+
+/**
+ * Run batch operation for Hs resource.
+ */
+function duplication_build_batch_set_hs_resource($values) {
+  $batch_operations = array();
+
+  $batch_operations[] = array('v2_duplication_hs_resource', array(
+      array(
+        'source_language' => $values['source_language'],
+        'translation_language' => $values['translation_language'],
+      ),
+  ));
+
+  $batch = array(
+    'title' => t('Duplication'),
+    'init_message' => t('Initializing'),
+    'progress_message' => t('Duplication of resources : operation @current out of @total.'),
+    'error_message' => t('An error occurred.'),
+    'operations' => $batch_operations,
+    'finished' => 'v2_duplication_hs_resource_finished',
+    'file' => sprintf('%s/v2_duplication.batch.hs_resource.inc', drupal_get_path('module', 'v2_duplication')),
+  );
+
+  return $batch;
+}
+
+/**
+ * Run batch operation for variable.
+ */
+function duplication_build_batch_set_variables($values) {
+  $batch_operations = array();
+
+  $batch_operations[] = array('v2_duplication_variables', array(
+      array(
+        'source_language' => $values['source_language'],
+        'translation_language' => $values['translation_language'],
+      ),
+  ));
+
+  $batch = array(
+    'title' => t('Duplication'),
+    'init_message' => t('Initializing'),
+    'progress_message' => t('Duplication of variables : operation @current out of @total.'),
+    'error_message' => t('An error occurred.'),
+    'operations' => $batch_operations,
+    'finished' => 'v2_duplication_variables_finished',
+    'file' => sprintf('%s/v2_duplication.batch.variables.inc', drupal_get_path('module', 'v2_duplication')),
+  );
+
+  return $batch;
+}
+
+/**
+ * Helper function which helps determine if a language can be used as
+ * a source language for duplication. To be eligible, a language must contain pages
+ * referring to those savec in 'Admin > Configuration >System > Site structure'
+ *
+ * @param $source_language
+ * @return bool
+ */
+function duplication_validate_source_language($source_language) {
+  $menu_item_slugs = mumm_helpers_get_constants('MUMM_MENU_ITEM');
+
+  $localized_item = FALSE;
+  foreach ($menu_item_slugs as $menu_item_slug) {
+    $default_nid = variable_get(constant($menu_item_slug));
+
+    if ($source_language == 'en' && $default_nid > 0) {
+      $localized_item = $default_nid;
+      continue;
+    }
+    else {
+      $localized_item = db_select('node', 'n')
+          ->fields('n', array('nid'))
+          ->condition('tnid', $default_nid, '=')
+          ->condition('language', $source_language, '=')
+          ->execute()
+          ->fetchField();
+    }
+
+    if (!$localized_item) {
+      break;
+    }
+  }
+
+  return $localized_item;
+}

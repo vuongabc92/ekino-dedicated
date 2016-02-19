@@ -1,0 +1,1 @@
+if(-1===window.location.href.indexOf("outdated-browser")){var ua=navigator.userAgent,isIe=ua.indexOf("MSIE");if(isIe>0){var ie=parseInt(ua.split("MSIE")[1]),path=window.location.pathname.split("/")[1];"undefined"!=typeof ie&&8>=ie&&(window.location.href="/"+path+"/outdated-browser")}}

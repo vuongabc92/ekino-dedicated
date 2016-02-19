@@ -1,0 +1,4 @@
+name = "V2 Users"
+package = V2 Custom Module
+core = "7.x"
+description = "Users, roles and permissions"

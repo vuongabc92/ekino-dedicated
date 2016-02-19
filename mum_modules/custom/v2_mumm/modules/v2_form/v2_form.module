@@ -1,0 +1,778 @@
+<?php
+
+/**
+ * @file
+ * Code for the Forms feature.
+ */
+
+define('V2_FORM_LIST_GENDER', 'v2_form_list_title');
+define('V2_FORM_LIST_BOOKING_TYPE_TOUR', 'v2_form_list_tour_type');
+define('V2_FORM_LIST_BOOKING_REQUESTED_TIME', 'v2_form_list_booking_time_requested');
+define('V2_FORM_LIST_BOOKING_PREFERED_LANGUAGE', 'v2_form_list_booking_prefered_language');
+define('V2_FORM_LIST_BOOKING_YOUR_EXPERIENCE', 'v2_form_list_booking_your_experience');
+define('V2_FORM_LIST_TOPICS', 'v2_form_list_topics');
+
+/**
+ *  Implements hook_menu().
+ */
+function v2_form_menu() {
+	$items = array();
+
+	$items['admin/config/content/lists-webforms'] = array(
+	  'title'            => 'Webform lists',
+	  'page callback'    => 'drupal_get_form',
+	  'page arguments'   => array('v2_form_admin_lists'),
+	  'access arguments' => array('administer site configuration'),
+	  'file'             => 'v2_form.admin.inc',
+	  'type'             => MENU_NORMAL_ITEM,
+	);
+
+	return $items;
+}
+/**
+ * Check if a form or form_id is a webform.
+ *
+ * @param array|string $form
+ *   An associative form array, or the form id.
+ * @return bool
+ */
+function is_webform($form)
+{
+  $form_id = $form;
+  if (is_array($form)) {
+    $form_id = $form['#form_id'];
+  }
+
+  $is_webform = (substr($form_id, 0, 20) === 'webform_client_form_');
+  return $is_webform;
+}
+
+/**
+ * Implemetns hook_form_alter
+ * @param type $form
+ * @param type $form_state
+ * @param type $form_id
+ */
+function v2_form_form_alter(&$form, &$form_state, $form_id)
+{
+  if (is_webform($form_id)) {
+    $GLOBALS['conf']['cache'] = FALSE;
+    v2_form_webform_alter($form, $form_state, $form_id);
+  }
+  // Append language names for menu settings.
+  if (isset($form['#node_edit_form']) && $form['#node_edit_form']) {
+    $options = custom_menu_parent_options(menu_get_menus(), array('mlid' => 0));
+    $form['menu']['link']['parent']['#options'] = $options;
+  }
+}
+
+function v2_form_webform_alter(&$form, &$form_state, $form_id)
+{
+
+  $form['#attached']['js'][] = drupal_get_path('module', 'v2_form') . '/js/v2_form.js';
+  $form['#validate'][] = 'v2_form_form_validate';
+
+  $form_fields = flatten_form($form, array('fieldset', 'textfield', 'webform_number', 'webform_email', 'radios', 'checkboxes', 'select', 'date', 'textarea'));
+  foreach ($form_fields as $key => &$field) {
+    switch ($field['#type']) {
+
+      case 'select':
+        $field['#theme'] = 'v2_form_country_select_box';
+        break;
+      case 'radios':
+        $field['#theme'] = 'v2_form_gender_radios_button';
+        break;
+      case 'checkboxes':
+        $field['#theme'] = 'v2_form_check_box';
+        break;
+      case 'fieldset':
+        if (strpos($key, 'row_') !== FALSE && !isset($field['your_message'])) {
+          $field['#attributes']['class'][] = 'box';
+        }
+        if (strpos($key, 'column_') !== FALSE) {
+          $field['#attributes']['class'][] = 'field-item-special';
+        }
+        break;
+      case 'textfield':
+      case 'webform_number':
+      case 'webform_email':
+        $field['#attributes']['class'][] = 'input-1';
+        break;
+      case 'textarea':
+        $field['#attributes']['class'][] = 'textarea-1';
+        break;
+      case 'date':
+        $field['#theme'] = 'v2_form_date';
+        break;
+      default:
+        break;
+    }
+  }
+
+  $form['#node']->content['field_webform_footer']['#attributes'][] = 'field-text-description';
+  $form['actions']['submit']['#attributes']['class'][] = 'btn-gray btn-submit';
+  $form['actions']['submit']['#value'] = _hs_resource_get('Send','plain', FALSE, FALSE, FALSE, 'Send');
+
+  if(isset($form['#node'])){
+    $category = drupal_lookup_path('alias', 'node/' .$form['#node']->nid);
+  }
+  $form['#attributes'] = array(
+    'class' => array('form-1'),
+    'data-hide-label-mobile data-validate' => '',
+    'novalidate' => '',
+    'data-form-tracking' => '',
+    'data-track-action' => 'submit',
+    'data-track-category' => 'form-' . $category,
+    'data-track-label' => '',
+    'data-track-type' => 'event',
+  );
+
+  if(isset($form['submitted']['main_box_step_1']) && isset($form['submitted']['main_box_step_2'])) {
+    $form['submitted']['main_box_step_1']['#prefix'] = '<div data-tabs="" '
+      . 'data-next-step="'. _hs_resource_get('next_step','plain', FALSE, FALSE, FALSE, 'Next step') .'" '
+      . 'data-submit="' . _hs_resource_get('booking_submit','plain', FALSE, FALSE, FALSE, 'Submit') . '" class="tab-field hidden-xs">'
+      . '<a href="javascript:;" title="'. $form['submitted']['main_box_step_1']['#title'] .'" data-trigger="[data-step-1]" class="tab-link active">' . $form['submitted']['main_box_step_1']['#title'] . '</a>'
+      . '<a href="javascript:;" title="' . $form['submitted']['main_box_step_2']['#title'] . '" data-trigger="[data-step-2]" class="tab-link">' . $form['submitted']['main_box_step_2']['#title'] . '</a>'
+      . '</div><div data-accordion="" class="accordion-panel"><div class="hidden-sm">'
+      . '<a href="javascript:;" title="' . $form['submitted']['main_box_step_1']['#title'] . '" data-trigger="[data-step-1]" class="collapse-item active">' . $form['submitted']['main_box_step_1']['#title'] . '</a>'
+      . '</div>';
+
+    $step_one_id = isset($form['submitted']['main_box_step_1']['#webform_component']['form_key']) ? $form['submitted']['main_box_step_1']['#webform_component']['form_key'] : '';
+
+    $form['submitted']['main_box_step_1']['#attributes']['id'] = $step_one_id;
+    $form['submitted']['main_box_step_1']['#attributes']['data-step-1 data-validate-group'] = '';
+    $form['submitted']['main_box_step_2']['#attributes']['data-step-2 data-validate-group'] = '';
+    $form['submitted']['main_box_step_2']['#attributes']['class'][] = 'hidden';
+    $form['submitted']['main_box_step_2']['#prefix'] = '<div class="hidden-sm">'
+      . '<a href="javascript:;" title="'.$form['submitted']['main_box_step_2']['#title'].'" data-trigger="[data-step-2]" class="collapse-item">' . $form['submitted']['main_box_step_2']['#title'] . '</a></div>';
+    $form['submitted']['main_box_step_2']['#suffix'] = '</div>';
+    $form['actions']['submit']['#value'] = _hs_resource_get('next_step','plain', FALSE, FALSE, FALSE, 'Next step');
+    $form['actions']['submit']['#attributes']['data-nextstep'] = '';
+  }
+
+  _v2_form_webform_prefill_fields($form);
+}
+
+function _v2_form_webform_prefill_fields(&$form)
+{
+  // Get prefill values
+  $user_age = explode('-', _v2_form_get_user_cookie(V2_MUMM_USER_AGE_COOKIE_NAME));
+  $user_country = _v2_form_get_user_cookie(V2_MUMM_USER_COUNTRY_COOKIE_NAME);
+  $browser_language = isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : 'en'; //fallback on English
+
+  if (is_array($browser_language)) {
+    $browser_language = array_shift($browser_language);
+  }
+
+  $form_fields = flatten_form($form, array('select', 'date'));
+  $fields = array(
+    'country',
+    'd_o_b',
+    'booking_prefered_language'
+  );
+
+  foreach ($form_fields as $key => &$form_field) {
+    if (in_array($key, $fields)) {
+      switch ($key) {
+        case 'country':
+          if ($user_country != NULL) {
+            $form_field['#default_value'] = strtoupper($user_country);
+          }
+          break;
+        case 'd_o_b':
+          $attributes = array('data-age-year', 'data-age-month', 'data-age-day');
+          foreach ($attributes as $key => $data_attribute) {
+            if (isset($user_age[$key]) && $user_age[$key] != NULL) {
+              $form_field['#attributes'][$data_attribute] = $user_age[$key];
+            }
+          }
+          break;
+        case 'booking_prefered_language':
+          $form_field['#default_value'] = strtolower(substr($browser_language, 0, 2));
+          break;
+      }
+    }
+  }
+}
+
+function v2_form_admin_lists_submit($form, &$form_state) {
+	$lists = array('title', 'tour_type', 'booking_time_requested', 'booking_prefered_language', 'booking_your_experience', 'topics');
+	$variable_prefix = 'v2_form_list';
+	$settings_language = mumm_helpers_get_settings_language();
+
+	foreach ($lists as $list_name) {
+		$list_variable_name = sprintf('%s_%s_%s', $variable_prefix, $list_name, $settings_language);
+		$values = $form_state['values'][sprintf('%s_%s', $list_name, 'values')];
+		variable_set($list_variable_name, $values);
+		if ($settings_language == 'en') {
+			variable_set(sprintf('%s_%s', $variable_prefix, $list_name), $values);
+		}
+	}
+}
+
+/**
+ *  Implements hook_webform_select_options_info().
+ */
+function v2_form_webform_select_options_info() {
+	$items = array();
+
+	$variable_prefix = 'v2_form_list';
+
+	$lists = array(
+	  'gender'                  => 'Title',
+	  'tour_type'              => 'Tour - Types',
+	  'booking_time_requested'    => 'Booking - Requested times',
+	  'booking_prefered_language' => 'Booking - Prefered languages',
+    'booking_your_experience' => 'Booking - Your experience',
+    'topics' => 'Your - Topics'
+	);
+
+	foreach ($lists as $name => $title) {
+		$items[$name] = array(
+		  'title'            => t($title),
+		  'options callback' => sprintf('%s_%s', 'v2_webform_options', $name)
+		);
+	}
+
+	return $items;
+}
+
+function _v2_form_get_user_cookie($cookie_name)
+{
+  $cookie = NULL;
+
+  if (isset($_COOKIE[$cookie_name])) {
+    $cookie = $_COOKIE[$cookie_name];
+  }
+
+  return $cookie;
+}
+
+function v2_webform_options_gender() {
+	return v2_webform_options(V2_FORM_LIST_GENDER);
+}
+
+function v2_webform_options_tour_type() {
+	return v2_webform_options(V2_FORM_LIST_BOOKING_TYPE_TOUR);
+}
+
+function v2_webform_options_booking_time_requested() {
+	return v2_webform_options(V2_FORM_LIST_BOOKING_REQUESTED_TIME);
+}
+
+function v2_webform_options_booking_prefered_language() {
+	return v2_webform_options(V2_FORM_LIST_BOOKING_PREFERED_LANGUAGE);
+}
+
+function v2_webform_options_booking_your_experience() {
+	return v2_webform_options(V2_FORM_LIST_BOOKING_YOUR_EXPERIENCE);
+}
+
+function v2_webform_options_topics() {
+	return v2_webform_options(V2_FORM_LIST_TOPICS);
+}
+
+function v2_countries_options() {
+	$options = array();
+
+	// fetch taxonomy
+	$vocabulary = taxonomy_vocabulary_machine_name_load('countries');
+	$taxonomy_tree = taxonomy_get_tree($vocabulary->vid);
+
+	// Fill on options
+	foreach ($taxonomy_tree as $country) {
+		$term = taxonomy_term_load($country->tid);
+		$wrapper = entity_metadata_wrapper('taxonomy_term', $term);
+		$options[$wrapper->field_country_code->value()] = $wrapper->name->value();
+	}
+
+	return $options;
+}
+
+function v2_webform_options($list_name, $lang_code = NULL) {
+	$options = array();
+
+	if ($lang_code == NULL) {
+		global $language;
+		$lang_code = $language->language;
+	}
+
+	$values = explode('|', variable_get(sprintf('%s_%s', $list_name, $lang_code)));
+	if ($values[0] == NULL) {
+		$values = explode('|', variable_get(sprintf('%s_%s', $list_name, 'en')));
+	}
+
+	for ($i = 0; $i < count($values); $i++) {
+		$value = explode('@@', $values[$i]);
+		$options[$value[0]] = $value[1];
+	}
+
+	return $options;
+}
+
+function v2_form_form_menu_edit_item_alter(&$form, &$form_state, $form_id) {
+  $mlid = $form['mlid']['#value'];
+  $menu_link = menu_link_load($mlid);
+  $options = custom_menu_parent_options(menu_get_menus(), $menu_link);
+  $default = $menu_link['menu_name'] . ':' . $menu_link['plid'];
+  if (!isset($options[$default])) {
+    $default = 'navigation:0';
+  }
+  $form['parent']['#default_value'] = $default;
+  $form['parent']['#options'] = $options;
+}
+
+/**
+ * Return a list of menu items that are valid possible parents for the given menu item.
+ *
+ * @param $menus
+ *   An array of menu names and titles, such as from menu_get_menus().
+ * @param $item
+ *   The menu item or the node type for which to generate a list of parents.
+ *   If $item['mlid'] == 0 then the complete tree is returned.
+ * @param $type
+ *   The node type for which to generate a list of parents.
+ *   If $item itself is a node type then $type is ignored.
+ * @return
+ *   An array of menu link titles keyed on the a string containing the menu name
+ *   and mlid. The list excludes the given item and its children.
+ *
+ * @todo This has to be turned into a #process form element callback. The
+ *   'menu_override_parent_selector' variable is entirely superfluous.
+ */
+function custom_menu_parent_options($menus, $item, $type = '') {
+  // The menu_links table can be practically any size and we need a way to
+  // allow contrib modules to provide more scalable pattern choosers.
+  // hook_form_alter is too late in itself because all the possible parents are
+  // retrieved here, unless menu_override_parent_selector is set to TRUE.
+  if (variable_get('menu_override_parent_selector', FALSE)) {
+    return array();
+  }
+
+  $available_menus = array();
+  if (!is_array($item)) {
+    // If $item is not an array then it is a node type.
+    // Use it as $type and prepare a dummy menu item for _menu_get_options().
+    $type = $item;
+    $item = array('mlid' => 0);
+  }
+  if (empty($type)) {
+    // If no node type is set, use all menus given to this function.
+    $available_menus = $menus;
+  }
+  else {
+    // If a node type is set, use all available menus for this type.
+    $type_menus = variable_get('menu_options_' . $type, array('main-menu' => 'main-menu'));
+    foreach ($type_menus as $menu) {
+      $available_menus[$menu] = $menu;
+    }
+  }
+
+  return _custom_menu_get_options($menus, $available_menus, $item);
+}
+
+/**
+ * Helper function to get the items of the given menu.
+ */
+function _custom_menu_get_options($menus, $available_menus, $item) {
+  // If the item has children, there is an added limit to the depth of valid parents.
+  if (isset($item['parent_depth_limit'])) {
+    $limit = $item['parent_depth_limit'];
+  }
+  else {
+    $limit = _menu_parent_depth_limit($item);
+  }
+
+  $options = array();
+  foreach ($menus as $menu_name => $title) {
+    if (isset($available_menus[$menu_name])) {
+      $tree = menu_tree_all_data($menu_name, NULL);
+      $options[$menu_name . ':0'] = '<' . $title . '>';
+      _custom_menu_parents_recurse($tree, $menu_name, '--', $options, $item['mlid'], $limit);
+    }
+  }
+  return $options;
+}
+/**
+ * Recursive helper function for menu_parent_options().
+ */
+function _custom_menu_parents_recurse($tree, $menu_name, $indent, &$options, $exclude, $depth_limit) {
+  foreach ($tree as $data) {
+    if ($data['link']['depth'] > $depth_limit) {
+      // Don't iterate through any links on this level.
+      break;
+    }
+    if ($data['link']['mlid'] != $exclude && $data['link']['hidden'] >= 0) {
+      $title = $indent . ' ' . truncate_utf8($data['link']['title'], 30, TRUE, FALSE);
+      if ($data['link']['hidden']) {
+        $title .= ' (' . t('disabled') . ')';
+      }
+      $language_list = language_list();
+      $menu_language = ($data['link']['language'] != LANGUAGE_NONE) ? $language_list[$data['link']['language']]->name : 'All';
+      $title .= ' - [' . $menu_language . ']';
+      $options[$menu_name . ':' . $data['link']['mlid']] = $title;
+      if ($data['below']) {
+        _custom_menu_parents_recurse($data['below'], $menu_name, $indent . '--', $options, $exclude, $depth_limit);
+      }
+    }
+  }
+}
+
+/**
+ * Implements of hook_theme().
+ */
+function v2_form_theme($existing, $type, $theme, $path)
+{
+  return array(
+    'v2_form_gender_radios_button' => array(
+      'render element' => 'element',
+    ),
+    'v2_form_gender_radios_item' => array(
+      'render element' => 'element',
+    ),
+    'v2_form_country_select_box' => array(
+      'render element' => 'element',
+    ),
+    'v2_form_country_select_box_item' => array(
+      'render element' => 'element',
+    ),
+    'v2_form_check_box' => array(
+      'render element' => 'element',
+    ),
+    'v2_form_country_check_box_item' => array(
+      'render element' => 'element',
+    ),
+    'v2_form_date' => array(
+      'render element' => 'element',
+    ),
+    'v2_form_increase_box' => array(
+      'render element' => 'element',
+    ),
+    'v2_mumm_custom_webform_email' => array(
+      'template' => 'templates/v2-mumm-custom-webform-email',
+      'variables' => array(),
+    ),
+    'email_menu_footer' => array(
+      'template' => 'templates/email-menu-footer',
+      'variables' => array(),
+    ),
+    'email_menu_footer_policy' => array(
+      'template' => 'templates/email-menu-footer-policy',
+      'variables' => array(),
+    ),
+  );
+}
+
+function theme_v2_form_date($variables)
+{
+  $element = $variables['element'];
+  $element['year']['#attributes']['class'] = array('year hidden');
+  $element['month']['#attributes']['class'] = array('month hidden');
+  $element['day']['#attributes']['class'] = array('day hidden');
+
+  if (form_get_error($element)) {
+    $element['year']['#attributes']['class'][] = 'error';
+    $element['month']['#attributes']['class'][] = 'error';
+    $element['day']['#attributes']['class'][] = 'error';
+  }
+
+  $class = array('webform-container-inline');
+  if (!empty($element['#datepicker'])) {
+    $class[] = 'webform-datepicker';
+    $calendar_class = array('webform-calendar');
+    if ($element['#start_date']) {
+      $calendar_class[] = 'webform-calendar-start-' . $element['#start_date'];
+    }
+    if ($element['#end_date']) {
+      $calendar_class[] = 'webform-calendar-end-' . $element['#end_date'];
+    }
+    $calendar_class[] = 'webform-calendar-day-' . variable_get('date_first_day', 0);
+
+    $calendar_options = array(
+      'component' => $element['#webform_component'],
+      'calendar_classes' => $calendar_class
+    );
+    $calendar = theme('webform_calendar', $calendar_options);
+  }
+  $year = $element['year']['#value'];
+  if($element['month']['#value']){
+    $month = $element['month']['#value'].'/';
+  }
+  if($element['day']['#value']){
+    $days = $element['day']['#value'].'/';
+  }
+
+  $output = '';
+  $output .= '<div data-date-picker class="' . implode(' ', $class) . ' date-show">';
+  $output .= '<input data-date-show id="date-picker-show" type="text" value="'.$month .''.$days.''.$year.'" name="date" class="input-1"/>';
+  $output .= drupal_render_children($element);
+  $output .= isset($calendar) ? $calendar : '';
+  $output .= '</div>';
+
+  return $output;
+}
+
+function theme_v2_form_increase_box($variables)
+{
+  $element = $variables['element'];
+  $attributes = array('#return_value' => 'value', 'id', 'type');
+  element_set_attributes($element, $attributes);
+  $output = '<div class="form-item-custom">'
+    . '<input class="form-text form-number" type="number" name="' . $element['#name'] . '" ' . drupal_attributes($element['#attributes']) . '/>'
+    . '<label class="element-invisible" for="' . $element['#id'] . '">' . $element['#title'] . '</label>'
+    . '</div>';
+
+  return $output;
+}
+
+function theme_v2_form_check_box($variables)
+{
+  $element = $variables['element'];
+  $options = array_keys($element['#options']);
+  foreach ($options as $option) {
+    $output .= theme('v2_form_country_check_box_item', $element[$option]);
+  }
+
+  return $output;
+}
+
+function theme_v2_form_country_check_box_item($variables)
+{
+
+  $element = $variables['element'];
+  $element['#attributes']['class'] = array('hidden');
+  $attributes = array('#return_value' => 'value', 'id', 'type');
+  element_set_attributes($element, $attributes);
+  if ($element['#default_value'] == $element['#return_value']) {
+    $element['#attributes']['checked'] = 'checked';
+  }
+
+  $output = '<div class="checkbox-btn">'
+    . '<input name="' . $element['#name'] . '" ' . drupal_attributes($element['#attributes']) . '/>'
+    . '<label for="' . $element['#id'] . '">' . $element['#title'] . '</label>'
+    . '</div>';
+
+  return $output;
+}
+
+/**
+ * Custom theme of radios button for the gender field.
+ */
+function theme_v2_form_gender_radios_button($variables)
+{
+  $element = $variables['element'];
+
+  $options = array_keys($element['#options']);
+  foreach ($options as $option) {
+    $output .= theme('v2_form_gender_radios_item', $element[$option]);
+  }
+
+  return $output;
+}
+
+/**
+ * Custom theme of radios button for the gender field.
+ */
+function theme_v2_form_country_select_box($variables)
+{
+  $element = $variables['element'];
+  $options = $element['#options'];
+  $require = ($element['#required']) ? 'required' : '';
+  $title = strtolower($element['#title']);
+  $deafault_value = $variables['element']['#value'];
+
+  $output = '<div class="dropdown custom-dropdown">';
+  $output .= '<button type="button" class="btn-dropdown dropdown-toggle">Select ' . $title . '</button>';
+  $output .= '<select name="' . $element['#name'] . '" data-custom-select-normal class="form-control form-select ' . $require . '" id="' . $element['#id'] . '">';
+
+  foreach ($options as $key => $option) {
+    $select = '';
+    if ($key == $deafault_value) {
+      $select = 'selected="selected"';
+    }
+    $output .= '<option ' . $select . ' value="' . $key . '">' . $option . '</option>';
+  }
+
+  $output .= '</select>';
+  $output .= '</div>';
+
+  return $output;
+}
+
+
+/**
+ * Custom theme of radio item for the gender field.
+ */
+function theme_v2_form_gender_radios_item($variables)
+{
+  $element = $variables['element'];
+  $element['#attributes']['class'] = array('hidden');
+  $attributes = array('#return_value' => 'value', 'id', 'type');
+  element_set_attributes($element, $attributes);
+  if ($element['#value'] != FALSE && $element['#value'] == $element['#return_value'] || $element['#value'] == $element['#return_value']) {
+    $element['#attributes']['checked'] = 'checked';
+  }
+
+  $output = '<div class="radio-btn">'
+    . '<input name="' . $element['#name'] . '" ' . drupal_attributes($element['#attributes']) . '/>'
+    . '<label for="' . $element['#id'] . '">' . $element['#title'] . '</label>'
+    . '</div>';
+
+  return $output;
+}
+
+/**
+ * Remove the validation errors from the top of the page, and delegate the display
+ * of form error messages to the javascript. This will display the error messages inline.
+ */
+function v2_form_form_validate(&$form, $form_state)
+{
+  // Clear Drupal error messages.
+  drupal_get_messages('error');
+
+  // Validate minimum and maximum phone mobile.
+  $mobile_vaule = isset($form_state['input']['submitted']['mobile_number']) ? $form_state['input']['submitted']['mobile_number'] : '' ;
+  if ($mobile_vaule){
+    foreach ($mobile_vaule as $key => $value){
+      $explode_value = explode('|', $value);
+      if (isset($explode_value) && isset($explode_value[2])){
+        $count_phone = strlen($explode_value[2]);
+        if(($count_phone > 0 &&  $count_phone < 7) || $count_phone > 20){
+          form_set_error('', '');
+        }
+      }
+    }
+  }
+
+  // Get form errors.
+  $form_errors = form_get_errors();
+  if (empty($form_errors)) {
+    return;
+  }
+
+  // Flatten the field path to their name.
+  $field_errors = array();
+
+  foreach ($form_errors as $flattened_path => $message) {
+
+    $path_array = explode('][', $flattened_path);
+
+    $component = array_shift($path_array);
+
+    if ($component !== 'submitted') {
+      continue;
+    }
+
+    if (in_array('newsletter_subscription', $path_array)) {
+      $path_array = array_merge($path_array, array('newsletter_subscription'));
+    }
+    $field_name = 'submitted[' . implode('][', $path_array) . ']';
+
+    switch ($path_array[3]) {
+      case 'topics':
+        $message = t('You must select a topic');
+        break;
+      case 'country':
+        $message = t('You must select a country');
+        break;
+      case 'gender':
+        $message = t('Your title is mandatory');
+        break;
+      case 'firstname':
+        $message = t('Your firstname is mandatory');
+        break;
+      case 'lastname':
+        $message = t('Your lastname is mandatory');
+        break;
+      case 'address':
+        $message = t('Your address is mandatory');
+        break;
+      case 'postcode_zip':
+        $message = t('Your postcode zip is mandatory');
+        break;
+    }
+
+    $field_errors[$field_name] = $message;
+  }
+
+  // Form set massage phone mobile.
+  foreach ($mobile_vaule as $key => $value){
+    $explode_value = explode('|', $value);
+    if (isset($explode_value) && isset($explode_value[2])){
+      $count_phone = strlen($explode_value[2]);
+      if(($count_phone > 0 && $count_phone < 7) || $count_phone > 20){
+        $field_errors[$explode_value[0]] = $explode_value[1].' ' .t('minimum 7 characters and maximum 20 characters.');
+      }
+    }
+  }
+
+  // Add form errors to settings for the script.
+  $form['#attached']['js'][] = array(
+    'type' => 'setting',
+    'data' => array(
+      'v2_form' => array(
+        'errors' => $field_errors,
+      ),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_preprocess_HOOK().
+ */
+function v2_form_preprocess_page(&$variables)
+{
+  if (isset($variables['node']) && $variables['node']->type != 'webform') {
+    $variables['theme_hook_suggestions'][] = 'node__' . $variables['node']->type;
+  }
+}
+
+function flatten_form(&$form, $field_types = array())
+{
+  $result = array();
+
+  foreach ($form as $key => &$value) {
+    if (is_array($value)) {
+      if (isset($value['#type'])) {
+        if (count($field_types) == 0) {
+          $result[$key] = & $value;
+        }
+        elseif (in_array($value['#type'], $field_types)) {
+          $result[$key] = & $value;
+        }
+      }
+      $result = $result + flatten_form($value, $field_types);
+    }
+  }
+
+  return $result;
+}
+
+/**
+ * Hook mail_alter().
+ */
+function v2_form_mail_alter(&$message) {
+
+  if ($message['module'] = 'webform' && $message['id'] == 'webform_submission') {
+
+    $header_array = explode(';', $message['headers']['Content-Type']);
+    if(isset($header_array[0]) && $header_array[0] == 'text/html'){
+
+      // Render template email menu footer.
+      $menu_footer = array('menu-new-main-menu');
+      $email_menu_footer = v2_menu_get_menu('email_menu_footer', $menu_footer);
+
+      // Render template email menu policy.
+      $menu_footer_policy = array('menu-doormat');
+      $email_menu_footer_policy = v2_menu_get_menu('email_menu_footer_policy', $menu_footer_policy);
+
+      // Email template.
+      $message['body'][0] = theme('v2_mumm_custom_webform_email', array(
+        'message' => $message['body'][0],
+        'email_menu_footer' => $email_menu_footer,
+        'email_menu_footer_policy' => $email_menu_footer_policy
+        )
+      );
+    }
+  }
+}

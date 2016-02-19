@@ -1,0 +1,4 @@
+name = V2 News
+description = This module manage content news
+core = 7.x
+package = V2 Development

@@ -1,0 +1,243 @@
+<?php
+
+/**
+ * Define the numbers of content is need to loaded.
+ */
+if (!defined('V2_NEW_MORE_ARTICLE')) {
+  define('V2_NEW_MORE_ARTICLE', 9);
+}
+
+/**
+ * Implement hook_block_info()
+ */
+function v2_news_block_info() {
+
+  $blocks['news'] = array(
+    'info' => t('News block'),
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements Hook menu.
+ * @return type
+ */
+function v2_news_menu() {
+
+  $items['news-load-ajax'] = array(
+    'title' => 'Tips',
+    'page callback' => 'load_more_news',
+    'access callback' => TRUE,
+  );
+  $items['news-load-ajax-category/%'] = array(
+    'title' => 'Tips',
+    'page arguments' => array(1),
+    'page callback' => 'load_filter_category',
+    'access callback' => TRUE,
+  );
+  return $items;
+}
+
+/**
+ * Implement hook_block_view
+ * @param type $delta
+ * @return type
+ */
+function v2_news_block_view($delta = '', $share = array()) {
+  $block = array();
+
+  switch ($delta) {
+    case 'news':
+      global $language;
+      $build = get_news();
+      $vocabulary = taxonomy_vocabulary_machine_name_load('article_category');
+      $v_terms = taxonomy_term_load_multiple(FALSE, array('vid' => $vocabulary->vid, 'language' => $language->language));
+      $terms = array();
+      foreach ($v_terms as $term) {
+        if (taxonomy_select_nodes($term->tid)) {
+          $terms[] = $term;
+        }
+      }
+      $block['content'] = theme('list_news', array('build' => $build, 'taxonomy' => $terms, 'share' => $share));
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implement hook_theme()
+ */
+function v2_news_theme() {
+  return array(
+    'list_news' => array(
+      'template' => 'templates/list_news',
+      'variables' => array('build' => NULL),
+    ),
+  );
+}
+
+/**
+ * Get champagne rituals.
+ */
+function get_news() {
+  global $language;
+  $limit = V2_NEW_MORE_ARTICLE;
+  // Get item page .
+  $query = db_select('node', 'n');
+  $query->leftJoin('field_data_field_article_category', 'a', 'a.entity_id = n.nid');
+  $query->fields('n', array('nid'))
+      ->condition('n.type', 'article')
+      ->condition('n.language', $language->language);
+
+  $query->condition('n.status', 1)
+      ->orderBy('nid', 'DESC');
+
+  $query = $query->extend('PagerDefault');
+  $total_items = $query->getCountQuery()->execute()->fetchField();
+  $query->limit($limit);
+  $result = $query->execute()->fetchCol();
+
+  // Get sum pager.
+  $max_page = ceil($total_items / $limit);
+  $build = array();
+  if (!empty($result)) {
+    $nodes = node_load_multiple($result);
+    $build = array(
+      'nodes' => $nodes,
+      'pager' => array(
+        '#theme' => 'pager',
+      ),
+      'max_page' => $max_page,
+      'total' => $total_items,
+    );
+  }
+  return $build;
+}
+
+function get_news_category($tid) {
+  global $language;
+  $limit = V2_NEW_MORE_ARTICLE;
+  // Get item page .
+  $query = db_select('node', 'n');
+  $query->leftJoin('field_data_field_article_category', 'a', 'a.entity_id = n.nid');
+  $query->fields('n', array('nid'))
+      ->condition('n.type', 'article')
+      ->condition('n.language', $language->language);
+  $query->condition('a.field_article_category_tid', $tid);
+
+  $query->condition('n.status', 1)
+      ->orderBy('nid', 'DESC');
+
+  $query = $query->extend('PagerDefault');
+  $total_items = $query->getCountQuery()->execute()->fetchField();
+  $query->limit($limit);
+  $result = $query->execute()->fetchCol();
+
+  // Get sum pager.
+  $max_page = ceil($total_items / $limit);
+  $build = array();
+  if (!empty($result)) {
+    $nodes = node_load_multiple($result);
+    $build = array(
+      'nodes' => $nodes,
+      'pager' => array(
+        '#theme' => 'pager',
+      ),
+      'max_page' => $max_page,
+      'total' => $total_items,
+    );
+  }
+  return $build;
+}
+
+/**
+ * Load more news
+ * @return page
+ */
+function load_more_news() {
+  $results = get_news();
+  $content = array();
+  $nodes = $results['nodes'];
+  $page = $_GET['page'];
+  $remain = count($nodes);
+
+  if ($nodes) :
+    foreach ($nodes as $node) :
+      $rendered_node = drupal_render(node_view($node, 'teaser'));
+      $content[] = $rendered_node;
+    endforeach;
+  endif;
+
+  $limit_item = V2_NEW_MORE_ARTICLE;
+
+  $total_item = $results['total'];
+
+  if ($page == ($results['max_page'] - 1)) {
+    $remain = 0;
+  }
+  $content_count_article = '';
+  $count_article = $total_item > 0 ? format_plural($total_item, '1 '._hs_resource_get('article','plain', FALSE, FALSE), '@count '._hs_resource_get('articles','plain', FALSE, FALSE)): '';
+  
+//  if($remain > 0){
+    $resource_name = format_plural($total_item, 'article', 'articles');
+    $content_count = '<p class="filter-title"><span data-num-result="" class="product-number">'.$count_article.'</span></p>';
+    $content_count_article = hs_resource_contextual_link($resource_name, $content_count, 'filter-title');
+//  }
+  
+  $json = array(
+    'status' => 'ok',
+    'data-loadmore' => url('news-load-ajax'),
+    'remain' => $remain,
+    'num-items' =>  $content_count_article,
+    'content' => $content,
+  );
+  return drupal_json_output($json);
+  die;
+}
+
+/**
+ * Load more news
+ * @return page
+ */
+function load_filter_category($tid) {
+  $results = get_news_category($tid);
+  $content = array();
+  $nodes = $results['nodes'];
+  $page = $_GET['page'];
+  $remain = count($nodes);
+
+  if ($nodes) :
+    foreach ($nodes as $node) :
+      $rendered_node = drupal_render(node_view($node, 'teaser'));
+      $content[] = $rendered_node;
+    endforeach;
+  endif;
+
+  $limit_item = V2_NEW_MORE_ARTICLE;
+
+  if ($page >= 1) {
+    $count_item = ($page * $limit_item) + count($nodes);
+  }
+  if ($page == 0) {
+    $count_item = $remain;
+  }
+
+  if ($page == ($results['max_page'] - 1)) {
+    $remain = 0;
+  }
+  
+  $count_article = $count_item > 0 ? format_plural($count_item, '1 '._hs_resource_get('article','plain', FALSE, FALSE), '@count '._hs_resource_get('articles','plain', FALSE, FALSE)): '';
+  $resource_name = format_plural($count_article, 'article', 'articles');
+  $content_count = '<p class="filter-title"><span data-num-result="" class="product-number">'.$count_article.'</span></p>';
+  $content_count_article = hs_resource_contextual_link($resource_name, $content_count, 'filter-title');
+  $json = array(
+    'status' => 'ok',
+    'data-loadmore' => url('news-load-ajax-category/' . $tid),
+    'remain' => $remain,
+    'num-items' => $content_count_article,
+    'content' => $content,
+  );
+  return drupal_json_output($json);
+  die;
+}

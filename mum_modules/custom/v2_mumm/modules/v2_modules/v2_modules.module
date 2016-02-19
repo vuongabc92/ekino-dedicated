@@ -1,0 +1,610 @@
+<?php
+
+/**
+ * @file
+ *
+ * We have these modules can be added into Panels, and can be customized directly
+ * from Front-office.
+ * 1. SLIDER MODULE
+ * 2. MODULE INTRO
+ * 3. MODULE BANNER
+ * 4. MODULE CROSS SELL
+ * 5. MODULE CROSS CONTENT
+ * 6. MODULE TEXT (1 and 2 COLUMNS)
+ * 7. MODULE IMAGE & TEXT (card optional)
+ * 8. MODULE QUOTE
+ * 9. MODULE VIDEO
+ * 10. MODULE PHOTO GALLERY
+ * 11. MODULE CALL TO ACTION
+ */
+/**
+ * Define the time play video for module slider.
+ */
+if (!defined('SLIDER_SECOND_VIDEO')) {
+  define('SLIDER_SECOND_VIDEO', 10);
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function v2_modules_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'ctools' && $plugin_type == 'content_types') {
+    return 'plugins/' . $plugin_type;
+  }
+}
+
+/**
+ * Implements hook_init().
+ */
+function v2_modules_init() {
+  global $user;
+  if (is_array($user->roles) && in_array('administrator', $user->roles) || in_array('content uploader', $user->roles)) {
+    drupal_add_css(drupal_get_path('module', 'v2_mumm') . '/css/v2_mumm.css', array('group' => CSS_DEFAULT, 'every_page' => TRUE));
+    drupal_add_css(drupal_get_path('module', 'v2_mumm') . '/css/style_gmap.css', array('group' => CSS_DEFAULT, 'every_page' => TRUE));
+    drupal_add_js(drupal_get_path('module', 'v2_mumm') . '/js/admin-script.js');
+    drupal_add_js('//maps.googleapis.com/maps/api/js', 'external');
+    drupal_add_js(drupal_get_path('module', 'v2_mumm') . '/js/script_gmap.js');
+  }
+}
+
+/**
+ * Implement hook_permission()
+ * @return type
+ */
+function v2_modules_permission() {
+  return array(
+    'find and manage content' => array(
+      'title' => t('Find and manage content'),
+      'description' => t('Find and manage content for all content types'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function v2_modules_menu() {
+  $items['admin/structure/modules'] = array(
+    'title' => 'Modules',
+    'description' => 'Manage modules',
+    'page callback' => 'modules_overview_types',
+    'access arguments' => array('administer content types'),
+    'file' => 'v2_modules.admin.inc',
+  );
+
+  $items['admin/module-content'] = array(
+    'title' => 'Module content',
+    'description' => 'Find and manage content.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('module_admin_content'),
+    'access arguments' => array('find and manage content'),
+    'weight' => -10,
+    'file' => 'v2_modules.admin.inc',
+  );
+  $items['admin/module-content/config-variable'] = array(
+    'title' => 'Config variable',
+    'description' => 'Configure all variables for the website.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('v2_modules_variable_settings_form'),
+    'access arguments' => array('access content overview'),
+    'weight' => -10,
+    'file' => 'v2_modules.variables.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements render the mode view for embedded modules.
+ * It's a callback function from Ctool plugin content type.
+ */
+function v2_module_render($subtype, $conf, $panel_args) {
+  global $language;
+  if (isset($conf[$language->language]['nid'])) {
+    $nid = $conf[$language->language]['nid'];
+  }
+  else {
+    return;
+  }
+
+  if (!is_numeric($nid)) {
+    return;
+  }
+
+  $node = node_load($nid);
+  if (!node_access('view', $node)) {
+    return;
+  }
+
+
+// Don't store viewed node data on the node, this can mess up other
+// views of the node.
+  $node = clone($node);
+  $block = new stdClass();
+  $block->module = 'node';
+  $block->delta = $node->nid;
+  $block->title = check_plain($node->title);
+  $block->content = node_view($node, '');
+  $block->content['links']['#access'] = FALSE;
+  return $block;
+}
+
+/**
+ * Implements hook_form().
+ * Render node from include add/edit node from in Back-office.
+ */
+function v2_node_form($form, &$form_state) {
+  global $language, $user;
+
+  $form['#prefix'] = '<div id="wrapper-form-node custom-form">';
+
+  $form['#suffix'] = '</div>';
+
+  $conf = $form_state['conf'];
+  $type = str_replace('_node_form', '', $form_state['build_info']['form_id']);
+
+  $language_default = $language->language;
+  $nid = $node = null;
+
+// Get current nid with current language.
+  if (isset($conf[$language->language]['nid']) && !empty($conf[$language->language]['nid'])) {
+    $nid = $conf[$language->language]['nid'];
+  }
+  else {
+// If current entity (!= en language) is empty,
+// Then to display the entity (en) that create a new instance.
+    $nid = $conf[language_default()->language]['nid'];
+  }
+
+// If entity is real node and has validated actually, then load entity instance.
+  if (!empty($nid) && is_numeric($nid)) {
+    $node = node_load($nid);
+  }
+
+// Validate again before use node entity to implement.
+  if (!$node) {
+    $node = (object) array('uid' => $user->uid, 'name' => (isset($user->name) ? $user->name : ''), 'type' => $type, 'language' => $language->language);
+  }
+  else {
+    if ($node->language != $language->language) {
+      unset($node->nid);
+      unset($node->vid);
+    }
+  }
+
+  ctools_form_include_file($form_state, $form_state['plugin']['path'] . '/' . $form_state['plugin']['file']);
+
+// During initial form build, add the node entity to the form state for use
+// during form building and processing. During a rebuild, use what is in the
+// form state.
+  if (!isset($form_state['node'])) {
+    if (!isset($node->title)) {
+      $node->title = NULL;
+    }
+    node_object_prepare($node);
+    $form_state['node'] = $node;
+  }
+  else {
+    $node = $form_state['node'];
+  }
+
+// Some special stuff when previewing a node.
+  if (isset($form_state['node_preview'])) {
+    $form['#prefix'] = $form_state['node_preview'];
+    $node->in_preview = TRUE;
+  }
+  else {
+    unset($node->in_preview);
+  }
+
+// Identify this as a node edit form.
+// @todo D8: Remove. Modules can implement hook_form_BASE_FORM_ID_alter() now.
+  $form['#node_edit_form'] = TRUE;
+
+  $form['#attributes']['class'][] = 'node-form form-1';
+  if (!empty($node->type)) {
+    $form['#attributes']['class'][] = 'node-' . $node->type . '-form';
+  }
+
+// Basic node information.
+// These elements are just values so they are not even sent to the client.
+  foreach (array('nid', 'vid', 'uid', 'created', 'type', 'language') as $key) {
+    $form[$key] = array(
+      '#type' => 'value',
+      '#value' => isset($node->$key) ? $node->$key : NULL,
+    );
+  }
+
+// Changed must be sent to the client, for later overwrite error checking.
+  $form['changed'] = array(
+    '#type' => 'hidden',
+    '#default_value' => isset($node->changed) ? $node->changed : NULL,
+  );
+// Invoke hook_form() to get the node-specific bits. Can't use node_invoke(),
+// because hook_form() needs to be able to receive $form_state by reference.
+// @todo hook_form() implementations are unable to add #validate or #submit
+//   handlers to the form buttons below. Remove hook_form() entirely.
+  $function = node_type_get_base($node) . '_form';
+  if (function_exists($function) && ($extra = $function($node, $form_state))) {
+    $form = array_merge_recursive($form, $extra);
+  }
+// If the node type has a title, and the node type form defined no special
+// weight for it, we default to a weight of -5 for consistency.
+  if (isset($form['title']) && !isset($form['title']['#weight'])) {
+    $form['title']['#weight'] = -5;
+  }
+// @todo D8: Remove. Modules should access the node using $form_state['node'].
+  $form['#node'] = $node;
+// i18n_node support.
+  $form['language'] = array(
+    '#type' => 'select',
+    '#title' => t('Language'),
+    '#options' => i18n_node_language_list($node, FALSE, FALSE),
+    '#value' => $language_default,
+    '#disabled' => TRUE,
+  );
+
+
+// This form uses a button-level #submit handler for the form's main submit
+// action. node_form_submit() manually invokes all form-level #submit handlers
+// of the form. Without explicitly setting #submit, Form API would auto-detect
+// node_form_submit() as submit handler, but that is the button-level #submit
+// handler for the 'Save' action. To maintain backwards compatibility, a
+// #submit handler is auto-suggested for custom node type modules.
+
+  field_attach_form('node', $node, $form, $form_state, entity_language('node', $node));
+  //Condition content type image_text
+  if ($form['#bundle'] == 'module_image_text') {
+    if (!empty($form['field_gmap_address']['und'][0]['value']['#default_value'])) {
+      $address = $form['field_gmap_address']['und'][0]['value']['#default_value'];
+      $long = $form['field_gmap_long']['und'][0]['value']['#default_value'];
+      $lat = $form['field_gmap_lat']['und'][0]['value']['#default_value'];
+      $json = drupal_json_encode(array(
+        'address' => $address,
+        'lng' => $long,
+        'lat' => $lat
+          )
+      );
+      $form['field_gmap_address']['#prefix'] = '<div data-geocode-map data-address-coords=\'' . $json . '\' class="geocode-map-block">
+          <div class="wrapper-input">';
+    }
+    else {
+      $form['field_gmap_address']['#prefix'] = '<div data-geocode-map data-address-coords="" class="geocode-map-block">
+          <div class="wrapper-input">';
+    }
+    $form['field_gmap_address']['#suffix'] = '<input type="button" value="Get Location" class="map-btn-input btn-get-location">
+          </div>
+          <div id="map" class="map"></div>
+        ';
+    $form['field_gmap_address']['und'][0]['value']['#attributes']['class'] = array('map-text-input address-input');
+    $form['field_gmap_address']['#theme_wrappers'] = array();
+    unset($form['field_gmap_address']['und']['#prefix']);
+    unset($form['field_gmap_address']['und']['#suffix']);
+
+
+    $form['field_gmap_lat']['und'][0]['value']['#attributes']['class'] = array('map-text-input latitude');
+    $form['field_gmap_lat']['und'][0]['value']['#attributes']['readonly'] = array('readonly');
+    $form['field_gmap_lat']['#theme_wrappers'] = array();
+    unset($form['field_gmap_lat']['und']['#prefix']);
+    unset($form['field_gmap_lat']['und']['#suffix']);
+
+    $form['field_gmap_long']['und'][0]['value']['#attributes']['class'] = array('map-text-input longitude');
+    $form['field_gmap_long']['und'][0]['value']['#attributes']['readonly'] = array('readonly');
+    $form['field_gmap_long']['#theme_wrappers'] = array();
+    unset($form['field_gmap_long']['und']['#prefix']);
+    unset($form['field_gmap_long']['und']['#suffix']);
+    $form['field_gmap_long']['#suffix'] = '</div>';
+  }
+  //Condition content type text
+  if ($form['#bundle'] == 'module_text') {
+    if (!empty($form['field_text_gmap_address']['und'][0]['value']['#default_value'])) {
+      $address = $form['field_text_gmap_address']['und'][0]['value']['#default_value'];
+      $long = $form['field_text_gmap_long']['und'][0]['value']['#default_value'];
+      $lat = $form['field_text_gmap_lat']['und'][0]['value']['#default_value'];
+      $json = drupal_json_encode(array(
+        'address' => $address,
+        'lng' => $long,
+        'lat' => $lat
+          )
+      );
+      $form['field_text_gmap_address']['#prefix'] = '<div data-geocode-map data-address-coords=\'' . $json . '\' class="geocode-map-block">
+          <div class="wrapper-input">';
+    }
+    else {
+      $form['field_text_gmap_address']['#prefix'] = '<div data-geocode-map data-address-coords="" class="geocode-map-block">
+          <div class="wrapper-input">';
+    }
+    $form['field_text_gmap_address']['#suffix'] = '<input type="button" value="Get Location" class="map-btn-input btn-get-location">
+          </div>
+          <div id="map" class="map"></div>
+        ';
+    $form['field_text_gmap_address']['und'][0]['value']['#attributes']['class'] = array('map-text-input address-input');
+    $form['field_text_gmap_address']['#theme_wrappers'] = array();
+    unset($form['field_text_gmap_address']['und']['#prefix']);
+    unset($form['field_text_gmap_address']['und']['#suffix']);
+
+    $form['field_text_gmap_lat']['und'][0]['value']['#attributes']['class'] = array('map-text-input latitude');
+    $form['field_text_gmap_lat']['und'][0]['value']['#attributes']['readonly'] = array('readonly');
+    $form['field_text_gmap_lat']['#theme_wrappers'] = array();
+    unset($form['field_text_gmap_lat']['und']['#prefix']);
+    unset($form['field_text_gmap_lat']['und']['#suffix']);
+
+    $form['field_text_gmap_long']['und'][0]['value']['#attributes']['class'] = array('map-text-input longitude');
+    $form['field_text_gmap_long']['und'][0]['value']['#attributes']['readonly'] = array('readonly');
+    $form['field_text_gmap_long']['#theme_wrappers'] = array();
+    unset($form['field_text_gmap_long']['und']['#prefix']);
+    unset($form['field_text_gmap_long']['und']['#suffix']);
+    $form['field_text_gmap_long']['#suffix'] = '</div>';
+  }
+
+  // Condition content type module photo gallery.
+  if ($form['#bundle'] == 'module_photo_gallery') {
+    $form['#validate'][] = 'v2_mumm_validate_item_for_module_photo_gallery';
+  }
+
+  if ($form_state['pane']->pid != 'new' && node_access("update", $node, $user) === FALSE) {
+    $form = array();
+    $form['#prefix'] = '<div>You do not have permission to editing';
+    $form['#suffix'] = '</div>';
+  }
+  if ($form_state['pane']->pid == 'new' && user_access('create ' . $node->type . ' content') == FALSE) {
+    $form = array();
+    $form['#prefix'] = '<div>You do not have permission to create';
+    $form['#suffix'] = '</div>';
+  }
+
+  return $form;
+}
+
+/**
+ * Implements form submit on Panels Configuration.
+ * For purpose to save node entity.
+ */
+function v2_node_form_submit($form, &$form_state) {
+  global $language;
+
+  unset($form_state['submit_handlers']);
+
+  $node = $form_state['node'];
+  entity_form_submit_build_entity('node', $node, $form, $form_state);
+
+  node_submit($node);
+  foreach (module_implements('node_submit') as $module) {
+    $function = $module . '_node_submit';
+    $function($node, $form, $form_state);
+  }
+
+  $insert = empty($node->nid);
+
+  node_save($node);
+  $node_link = l(t('view'), 'node/' . $node->nid);
+  $watchdog_args = array('@type' => $node->type, '%title' => $node->title);
+  $t_args = array('@type' => node_type_get_name($node), '%title' => $node->title);
+
+  if ($insert) {
+    watchdog('content', '@type: added %title.', $watchdog_args, WATCHDOG_NOTICE, $node_link);
+    drupal_set_message(t('@type %title has been created.', $t_args));
+  }
+  else {
+    watchdog('content', '@type: updated %title.', $watchdog_args, WATCHDOG_NOTICE, $node_link);
+    drupal_set_message(t('@type %title has been updated.', $t_args));
+  }
+  if ($node->nid) {
+    $form_state['values']['nid'] = $node->nid;
+    $form_state['nid'] = $node->nid;
+    $form_state['redirect'] = node_access('view', $node) ? 'node/' . $node->nid : '<front>';
+  }
+  else {
+// In the unlikely case something went wrong on save, the node will be
+// rebuilt and node form redisplayed the same way as in preview.
+    drupal_set_message(t('The post could not be saved.'), 'error');
+    $form_state['rebuild'] = TRUE;
+  }
+
+// Save node entity to panel via form_state[conf].
+  $form_state['conf'][$language->language]['nid'] = $node->nid;
+
+// Clear all caches.
+  cache_clear_all();
+}
+
+/**
+ * Validate slider.
+ * @param type $form_values
+ * @param type $field_name
+ * @param type $delta
+ * @return boolean
+ */
+function v2_modules_validate_slider($form_values, $field_name, $delta) {
+
+  unset($form_values['remove_button']);
+  unset($form_values['_weight']);
+  unset($form_values['entity']);
+  $error = false;
+  $error_messeage = array();
+  // Flag with item > 1.
+  $flag = false;
+  // Flag with item < 1.
+  $flag_item = false;
+  foreach ($form_values as $key => $value) {
+    switch ($key) {
+      case 'field_title':
+        if (!$value[LANGUAGE_NONE][0]['value']) {
+          $flag_item = true;
+          $error_messeage[$key . '_' . $delta] = t('Title field is required.');
+        }
+        else {
+          $flag = true;
+        }
+        break;
+      case 'field_short_title':
+        if (!$value[LANGUAGE_NONE][0]['value']) {
+          $flag_item = true;
+          $error_messeage[$key . '_' . $delta] = t('Short title field is required.');
+        }
+        else {
+          $flag = true;
+        }
+        break;
+      case 'field_cta':
+        if (!$value[LANGUAGE_NONE][0]['url']) {
+          $flag_item = true;
+          $error_messeage[$key . '_' . $delta] = t('CTA url field is required.');
+        }
+        else {
+          $flag = true;
+        };
+        if (!$value[LANGUAGE_NONE][0]['title']) {
+          $flag_item = true;
+          $error_messeage[$key . '_' . $delta] = t('CTA title field is required.');
+        }
+        else {
+          $flag = true;
+        }
+        break;
+      case 'field_visual_slider':
+        if ($value[LANGUAGE_NONE][0]['fid'] == 0) {
+          $flag_item = true;
+          $error_messeage[$key . '_' . $delta] = t('Visual field is required.');
+        }
+        else {
+          $flag = true;
+        }
+        break;
+      case 'field_text':
+        if ($value[LANGUAGE_NONE][0]['value']) {
+          $flag = true;
+        }
+        break;
+      case 'field_background_video':
+        if ($value[LANGUAGE_NONE][0]['fid'] != 0) {
+          $flag = true;
+        }
+        break;
+
+      default:
+        break;
+    }
+  }
+  if ($delta < 1) {
+    if ($flag_item) {
+      foreach ($error_messeage as $key => $value) {
+        form_set_error($key, $value);
+      }
+      form_set_error('error form', t('Please fill in 1 item.'));
+    }
+    $error = $flag_item;
+  }
+  elseif ($flag && count($error_messeage)) {
+    foreach ($error_messeage as $key => $value) {
+      form_set_error($key, $value);
+    }
+    $error = true;
+    form_set_error('error form', t('Please fill in all field of item.'));
+  };
+  return $error;
+}
+
+/**
+ * Implements hook_form_validate().
+ */
+function v2_modules_node_validate($node, $form, &$form_state) {
+  $node_type = $node->type;
+  if ($node_type == 'module_slider') {
+    $values = $form_state['values']['field_slider_collection'][LANGUAGE_NONE];
+    foreach ($values as $key => $value) {
+      $error = v2_modules_validate_slider($value, 'field_slider_collection', $key);
+      if ($error) {
+        return FALSE;
+      }
+    }
+  }
+}
+
+/**
+ * Check validate url.
+ * @param type $url
+ * @return boolean
+ */
+function v2_modules_check_validate_url($url) {
+  $error = false;
+  if ($url) {
+    if (!valid_url($url, TRUE)) {
+      $message = t('Invalid Web URL');
+      form_set_error('url', $message);
+      $error = true;
+    }
+  }
+  return $error;
+}
+
+/**
+ * Implements hook_form_alter().
+ * @param type $form
+ * @param type $form_state
+ * @param type $form_id
+ */
+function v2_modules_form_alter(&$form, &$form_state, $form_id) {
+  // Condition fiedl slider colection require  only 4 item.
+  if ($form_id == 'field_ui_field_edit_form') {
+    if ($form['#field']['field_name'] && $form['#field']['field_name'] == 'field_slider_collection') {
+      if ($form['field']['cardinality']) {
+        $form['field']['cardinality']['#default_value'] = 4;
+        $form['field']['cardinality']['#type'] = 'textfield';
+        $form['field']['cardinality']['#attributes'] = array('readonly' => 'readonly');
+      }
+    }
+  }
+}
+
+/**
+ * Function get id facebook for module videos
+ */
+function get_id_youtube_from_url($url) {
+
+  $patterns = array(
+    '@youtube\.com/watch[#\?].*?v=([^"\& ]+)@i',
+    '@youtube\.com/embed/([^"\&\? ]+)@i',
+    '@youtube\.com/v/([^"\&\? ]+)@i',
+    '@youtube\.com/\?v=([^"\& ]+)@i',
+    '@youtu\.be/([^"\&\? ]+)@i',
+    '@gdata\.youtube\.com/feeds/api/videos/([^"\&\? ]+)@i',
+  );
+  
+  foreach ($patterns as $pattern) {
+    preg_match($pattern, $url, $matches);
+      if($matches[1]){
+        return $matches[1];
+      }
+  }
+}
+/**
+ * Check redirect empty page
+ * @param type $variable
+ */
+function v2_modules_check_redirect_empty_page($variable) {
+  // Redirect if empty page.
+  if ($variable['page']['#type'] == 'page') {
+    if (isset($variable['node'])) {
+      $type = $variable['node']->type;
+      // Condition content type venues redirect url drink-mumm
+      if ($type == 'venues'){
+        drupal_goto('/drink-mumm');
+      }
+      // Condition content type empty page
+      $type_arr = array();
+      $query = db_select('node_type', 'nt')
+              ->addTag('translatable')
+              ->addTag('node_type_access')
+              ->fields('nt')
+              ->condition('nt.type', '^module_', 'REGEXP')
+              ->orderBy('nt.type', 'ASC')
+              ->execute()->fetchAll();
+      foreach ($query as $key => $value) {
+        $type_arr[] = $value->type;
+      }
+      if (in_array($type, $type_arr)){
+        drupal_goto('<front>');
+      }
+    }
+  }
+}

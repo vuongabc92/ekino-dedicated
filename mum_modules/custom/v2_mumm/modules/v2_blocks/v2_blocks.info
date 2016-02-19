@@ -1,0 +1,4 @@
+name = V2 Blocks
+description = This module manage Blocks for all page
+core = 7.x
+package = V2 G.H. Mumm

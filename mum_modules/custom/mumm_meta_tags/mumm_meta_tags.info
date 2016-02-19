@@ -1,0 +1,11 @@
+name = Mumm Meta tags
+description = Mumm Champagne implements Meta tags page.
+package = Mumm Champagne
+version = "7.1x"
+core = 7.x
+
+; Information added by Drupal.org packaging script on 2014-07-09
+version = "7.x-1.9"
+core = "7.x"
+project = "Mumm"
+datestamp = "1394061805"
