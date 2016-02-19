@@ -1,0 +1,4 @@
+name = "Babybel Contextual"
+package = Babybel Custom Module
+core = "7.x"
+description = "Babybel module create contextual link"

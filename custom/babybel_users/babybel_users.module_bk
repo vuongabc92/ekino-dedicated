@@ -1,0 +1,170 @@
+<?php
+
+/**
+ * @file
+ * Enables configuration in Drupal.
+ *
+ */
+
+/**
+ * Implements hook_user_login().
+ */
+function babybel_users_user_login(&$edit, $account) {
+  global $base_root, $user;
+  $prefix = babybel_common_switch_country_from_key_to_path($user->language);
+  drupal_goto($base_root . $prefix);
+}
+
+/**
+ *  Implements hook_form_alter().
+ */
+function babybel_users_form_alter(&$form, &$form_state, $form_id) {
+  global $user, $language;
+
+  if ($user->uid && $user->uid != 1 && is_manager($user) && array_key_exists(3, $user->roles) == FALSE) {
+    if (array_key_exists(4, $user->roles) && array_key_exists(5, $user->roles) == FALSE) {
+      if (isset($form['language'])) {
+        unset($form['language']);
+        $form['language'] = array(
+          '#type' => 'hidden',
+          '#value' => $user->language,
+        );
+      }
+    }
+    if (isset($form['#node'])) {
+      babybel_remove_button($form, array('delete'));
+    }
+
+    switch ($form_id):
+      case "node_admin_content":
+        $form['admin']['options']['submit']['#submit'] = array('babybel_user_node_form_submit');
+        break;
+      case "node_delete_confirm":
+        $form['#submit'] = array('babybel_users_delete_confirm_submit');
+        break;
+      case 'menu_overview_form':
+        $value = array();
+        if (array_key_exists(4, $user->roles) && array_key_exists(5, $user->roles) == FALSE) {
+          foreach (element_children($form) as $key => $mlid) {
+            if (isset($form[$mlid]['hidden'])) {
+              $element = &$form[$mlid];
+              if ($element['#item']['language'] != $user->language) {
+                unset($form[$mlid]);
+                $value[] = $mlid;
+              }
+            }
+          }
+        }
+        break;
+      case 'menu_edit_item':
+        if (array_key_exists(4, $user->roles) && array_key_exists(5, $user->roles) == FALSE) {
+          if (isset($form['i18n']['language'])) {
+            unset($form['i18n']['language']);
+            $form['i18n']['language'] = array(
+              '#type' => 'hidden',
+              '#value' => $user->language,
+            );
+          }
+        }
+        break;
+    endswitch;
+  }
+}
+
+/**
+ * Executes node deletion.
+ *
+ * @see babybel_users_delete_confirm_submit()
+ */
+function babybel_users_delete_confirm_submit($form, &$form_state) {
+  form_set_error('delete', t('You don\'t permission delete'));
+  $form_state['redirect'] = '<front>';
+}
+
+/**
+ * detech manager
+ */
+function is_manager($user) {
+  if (array_key_exists(4, $user->roles) || array_key_exists(5, $user->roles)) {
+    return TRUE;
+  }
+}
+
+/**
+ * Form submission handler for node_filter_form().
+ */
+function babybel_user_node_form_submit($form, &$form_state) {
+  global $user;
+  $erro = 0;
+  if (is_manager($user) && array_key_exists(3, $user->roles) == FALSE) {
+    if ($form_state['values']['operation'] == 'publish' || $form_state['values']['operation'] == 'unpublish') {
+      if (array_key_exists(4, $user->roles) && array_key_exists(5, $user->roles) == FALSE && array_key_exists(3, $user->roles) == FALSE) {
+        $nodes = array_filter($form_state['values']['nodes']);
+        $list = node_load_multiple($nodes);
+        if (!empty($list)) {
+          foreach ($list as $item) {
+            $uid = $item->uid;
+            if ($user->uid != $uid) {
+              form_set_error('operation', t('You don\'t permission') . ' ' . t($form_state['values']['operation']));
+              $erro ++;
+              break;
+            }
+          }
+        }
+      }
+    }
+    if ($form_state['values']['operation'] == 'delete') {
+      form_set_error('operation', t('You don\'t permission delete'));
+    }
+    if ($erro == 0) {
+      $operations = module_invoke_all('node_operations');
+      $operation = $operations[$form_state['values']['operation']];
+      // Filter out unchecked nodes
+      $nodes = array_filter($form_state['values']['nodes']);
+      if ($function = $operation['callback']) {
+        // Add in callback arguments if present.
+        if (isset($operation['callback arguments'])) {
+          $args = array_merge(array($nodes), $operation['callback arguments']);
+        } else {
+          $args = array($nodes);
+        }
+        call_user_func_array($function, $args);
+
+        cache_clear_all();
+      } else {
+        // We need to rebuild the form to go to a second step. For example, to
+        // show the confirmation form for the deletion of nodes.
+        $form_state['rebuild'] = TRUE;
+      }
+    } else {
+      $form_state['rebuild'] = TRUE;
+    }
+  }
+}
+
+/**
+ * Remove button un-used in BO for role.
+ */
+function babybel_remove_button(&$form, $list = array('delete')) {
+  if (isset($form['actions'])) {
+    foreach ($list as $key) {
+      if (isset($form['actions'][$key])) {
+        unset($form['actions'][$key]);
+      }
+    }
+  }
+}
+
+/**
+ * Remove contextual link difference language for role single country manager
+ */
+function babybel_users_contextual_links_view_alter(&$element, $items) {
+  global $user, $language;
+  if (array_key_exists(4, $user->roles)) {
+    if ($user->language != $language->language) {
+      foreach ($element['#links'] as $key => $value) {
+        unset($element['#links'][$key]);
+      }
+    }
+  }
+}

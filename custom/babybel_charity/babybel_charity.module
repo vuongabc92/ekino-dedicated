@@ -1,0 +1,115 @@
+<?php
+
+/**
+ *  Implements hook_menu().
+ */
+function babybel_charity_menu() { 
+  	$items = array();
+  	$items['charity'] = array(
+    	'title' => 'Charity',
+    	'page callback' => 'babybel_charity_page',
+    	'access callback' => TRUE,
+  	);
+
+    $items['load-more-charity/%/%'] = array(
+      'page callback' => 'charity_load_more_ajax',
+      'page arguments' => array(1,2),
+      'access callback' => TRUE,
+    );
+
+  	return $items;
+}
+// Charity load more
+function charity_load_more_ajax($offset = 0, $limit = 5) {
+  $arr_charity = babybel_charity_get_charity_limit($offset, $limit);
+  $total = count(babybel_charity_get_charity());
+  $offset += $limit;
+  $flag = false;
+  if($total <= $offset) {
+    $flag = true;
+  }
+  if($arr_charity) {
+    $content = '';
+    foreach($arr_charity as $charity){
+      $content .= '<div id="charity-' . $charity->vid . '" data-sharing class="charity-block">';
+      $view_charity = node_view($charity, 'charity');
+      $content .= drupal_render($view_charity);
+      $content .= '</div>'; 
+    }
+  }
+  $data = array('data' => $content, 'offset'=> $offset, 'limit' => $limit, 'total' => $total, 'flag' => $flag, 'destination'=> 'charity');
+  drupal_json_output($data);
+  drupal_exit();
+}
+
+/**
+ * Implements of hook_theme().
+ */
+function babybel_charity_theme($existing, $type, $theme, $path)
+{
+  return array(
+    'babybel_charity' => array(
+      'template' => 'templates/babybel_charity',
+      'variables' => array('main_menu' => NULL),
+    ),
+  );
+}
+
+/**
+ * Render content for Charity page.
+ */
+function babybel_charity_page() {
+  global $language;
+  $current_lang = $language->language;
+  return theme('babybel_charity', array('current_lang' => $current_lang));
+}
+
+/**
+ * Get charity item by lang code.
+ */
+function babybel_charity_get_charity()
+{
+  global $language;
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'charity')
+    ->propertyCondition('status', 1)
+    ->propertyCondition('language', $language->language)
+    ->propertyOrderBy('created', 'DESC')
+    ->execute();
+
+  $nodes = node_load_multiple(array_keys($result['node']));
+  return $nodes;
+}
+
+/**
+ * Get charity item by lang code.
+ * @param $offset
+ * @param $limit
+ */
+function babybel_charity_get_charity_limit($offset, $limit)
+{
+  global $language;
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'charity')
+    ->propertyCondition('status', 1)
+    ->propertyCondition('language', $language->language)
+    ->range($offset, $limit)
+    ->propertyOrderBy('created', 'DESC')
+    ->execute();
+
+  $nodes = node_load_multiple(array_keys($result['node']));
+  return $nodes;
+}
+
+/**
+ * Implements of hook_init()
+ * @param: NULL
+ * @return: NULL
+ */
+function babybel_charity_init() {
+  // Including the custom jquery file for teaser refresh functionality.
+  drupal_add_js(drupal_get_path('module', 'babybel_charity') .
+        '/js/contextual.js');
+}

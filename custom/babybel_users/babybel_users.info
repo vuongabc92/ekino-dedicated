@@ -1,0 +1,4 @@
+name = "Babybel Users"
+package = Babybel Custom Module
+core = "7.x"
+description = "Users, roles and permissions"

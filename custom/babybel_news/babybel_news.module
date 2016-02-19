@@ -1,0 +1,136 @@
+<?php
+
+/**
+ *  Implements hook_menu().
+ */
+function babybel_news_menu() {
+  	$items = array();
+  	$items['news'] = array(
+    	'title' => 'News',
+    	'page callback' => 'babybel_news_page',
+    	'access callback' => TRUE,
+  	);
+
+    $items['load-more/%/%'] = array(
+      'page callback' => 'load_more_ajax',
+      'page arguments' => array(1,2),
+      'access callback' => TRUE,
+    );
+
+  	return $items;
+}
+
+function load_more_ajax($offset = 0, $limit = 5) {
+  $arr_news = babybel_news_get_news_limit($offset, $limit);
+
+  $total = count(babybel_news_get_news());
+  $offset += $limit;
+
+  $flag = false;
+  if($total <= $offset) {
+    $flag = true;
+  }
+
+  if($arr_news) {
+    $content = '';
+    foreach($arr_news as $news){
+      $content .= '<div id="article-' . $news->vid . '" data-sharing class="new news-block">';
+      $view_news = node_view($news, 'news');
+      $content .= drupal_render($view_news);
+      $content .= '</div>';
+    }
+  }
+
+  $data = array('data' => $content, 'offset'=> $offset, 'limit' => $limit, 'total' => $total, 'flag' => $flag, 'destination'=> 'news');
+
+  drupal_json_output($data);
+  drupal_exit();
+}
+
+/**
+ * Implements of hook_theme().
+ */
+function babybel_news_theme($existing, $type, $theme, $path)
+{
+  return array(
+    'babybel_news' => array(
+      'template' => 'templates/babybel_news',
+      'variables' => array('main_menu' => NULL),
+    ),
+  );
+}
+
+/**
+ * Render content for fun-stuff page.
+ */
+function babybel_news_page() {
+  global $language;
+  $current_lang = $language->language;
+  return theme('babybel_news', array('current_lang' => $current_lang));
+}
+
+/**
+ * Get news item by lang code.
+ */
+function babybel_news_get_news()
+{
+  global $language;
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'news')
+    ->propertyCondition('status', 1)
+    ->propertyCondition('language', $language->language)
+    ->propertyOrderBy('created', 'DESC')
+    ->execute();
+
+  $nodes = node_load_multiple(array_keys($result['node']));
+  return $nodes;
+}
+
+/**
+ * Get news item by lang code.
+ */
+function babybel_news_get_news_limit($offset, $limit)
+{
+  global $language;
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'news')
+    ->propertyCondition('status', 1)
+    ->propertyCondition('language', $language->language)
+    ->range($offset, $limit)
+    ->propertyOrderBy('created', 'DESC')
+    ->execute();
+
+  $nodes = node_load_multiple(array_keys($result['node']));
+  return $nodes;
+}
+
+/**
+ * Get iframe item by lang code.
+ */
+function babybel_news_get_iframe()
+{
+  global $language;
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'iframe')
+    ->propertyCondition('status', 1)
+    ->propertyCondition('language', $language->language)
+    ->propertyOrderBy('created', 'DESC')
+    ->execute();
+
+  $nodes = node_load_multiple(array_keys($result['node']));
+  return $nodes;
+}
+
+/**
+ * Implements of hook_init()
+ * @param: NULL
+ * @return: NULL
+ */
+function babybel_news_init() {
+  // Including the custom jquery file for teaser refresh functionality.
+  drupal_add_js(drupal_get_path('module', 'babybel_news') .
+        '/js/contextual.js');
+}

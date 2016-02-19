@@ -1,0 +1,52 @@
+/*reset block product-presentation*/
+
+.block-2 .product-presentation .clearfix:after{
+	visibility: inherit !important;
+}
+
+.block-2 .advices-block .clearfix:after{
+	visibility: inherit !important;
+}
+#admin-menu-shortcuts-responsive {
+	display: none!important;
+}
+#admin-menu, #admin-menu .dropdown {
+    z-index: 9002;
+}
+body.adminimal-menu #admin-menu #admin-menu-wrapper div#toolbar div.toolbar-shortcuts ul li{
+	display: none;
+}
+
+body.adminimal-menu #admin-menu #admin-menu-wrapper div#toolbar div.toolbar-shortcuts ul li:first-child{
+	display: block
+}
+body.adminimal-menu #admin-menu #admin-menu-wrapper div#toolbar div.toolbar-shortcuts ul:hover{
+	position: absolute;
+	height: auto;
+	background-color: #202020;
+}
+body.adminimal-menu #admin-menu #admin-menu-wrapper div#toolbar div.toolbar-shortcuts ul:hover li{
+	display: block;
+}
+body.adminimal-menu #admin-menu #admin-menu-wrapper div#toolbar div.toolbar-shortcuts ul:hover li:first-child{
+	display: block;
+}
+body.adminimal-menu .cookies-banner .cc_banner-wrapper.scroll-banner .cc_banner {
+    top: 0;
+}
+.header .list-social li.social-network-icons- {
+  width: auto;
+  height: auto;
+}
+.cookies-wrapper {
+  position: absolute;
+  bottom: 0;
+  right: 25px;
+}
+.adminimal-menu .cookies-banner .cc_container {
+    top: 29px;
+}
+@media screen and (max-width: 1024px) {
+	body.admin-menu.adminimal-menu:before { display: none; }
+	.adminimal-menu .cookies-banner .cc_container { top: 47px; }
+}

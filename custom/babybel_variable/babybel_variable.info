@@ -1,0 +1,4 @@
+name = "Babybel Variable"
+package = Babybel Custom Module
+core = "7.x"
+description = "Provides variable for site"

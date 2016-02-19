@@ -1,0 +1,313 @@
+<?php
+
+/**
+ * @file
+ * Provide Facebook.
+ */
+
+/**
+ * The minimum version of PHP SDKs required.
+ */
+define('SOCIAL_FACEBOOK_SDK_MIN_PLUGIN_VERSION', '5.0');
+
+use Facebook\FacebookSession;
+use Facebook\FacebookRequest;
+use Facebook\FacebookSDKException;
+use Facebook\GraphObject;
+use MetzWeb\Instagram\Instagram;
+
+/**
+ *  Implements hook_menu().
+ */
+function babybel_social_menu() {
+  	$items = array();
+    $items['admin/babybel-settings/social-variable'] = array(
+      'title' => 'Social feeds setting',
+      'description' => 'Manage Social',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('babybel_variable_social_settings_form'),
+      'access callback' => 'babybel_variable_user_check',
+      'access arguments' => array('administrator social settings'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'babybel_variable.social.admin.inc',
+    );
+    $items['admin/config/content/social-feeds-credentials'] = array(
+      'title' => 'Social feeds credentials',
+      'description' => 'Manage Social',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('babybel_variable_social_credentials_settings_form'),
+      'access arguments' => array('configure social'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'babybel_variable.social.admin.inc',
+    );
+    $items['social'] = array(
+      'title' => t('Social'),
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+    );
+  	return $items;
+}
+/**
+ * Implement hook_permission()
+ * @return type
+ */
+function babybel_social_permission() {
+  return array(
+    'configure social' => array(
+      'title' => t('Configure social feed'),
+      'description' => t('access social feeds credentials user pages'),
+    ),
+  );
+}
+/**
+ * Implements of hook_theme().
+ */
+function babybel_social_theme($existing, $type, $theme, $path) {
+  return array(
+    'babybel_social_feed' => array(
+      'variables' => array('facebook' => NULL),
+      'template' => 'babybel_social',
+      'path' => drupal_get_path('module', 'babybel_social') . '/templates',
+    ),
+  );
+}
+/**
+ * Implements hook_block_info().
+ */
+function babybel_social_block_info() {
+  $blocks = array();
+  $blocks['social_latest_feed'] = array(
+    'info' => t('Social Feed Block'),
+  );
+  return $blocks;
+}
+/**
+ * Implements hook_block_view().
+ */
+function babybel_social_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'social_latest_feed':
+      $block['subject'] = '';
+      $block['content'] = babybel_social_feed_posts();
+      break;
+    default :
+      break;
+  }
+  return $block;
+}
+/**
+ * Uses babybel_social_feed_posts() for fetching social feeds.
+ */
+function babybel_social_feed_posts() {  
+  global $language;
+  $current_language = $language->language;
+  $data_feed = $facebook_latest = $twitter_latest = $instagram_latest = array();
+  $display_facebook = variable_get('babybel_variable_social_display_homepage_'.$current_language.'');
+  $display_twitter = variable_get('babybel_variable_social_twitter_display_homepage_'.$current_language.'');
+  $display_instagram = variable_get('babybel_variable_social_instagram_display_homepage_'.$current_language.'');
+  $display_title = variable_get('babybel_variable_social_feed_display_title_'.$current_language.'');
+  $title = variable_get('babybel_variable_social_feed_title_'.$current_language);
+  if($display_title == 1){
+      $data_feed_title['title'] = $title;
+    }
+  if($display_facebook == 1){    
+    $facebook_latest = babybel_social_facebook_feeds();
+  }
+  if($display_twitter == 1){
+    $twitter_latest = babybel_social_twitter_posts();
+  }
+  if($display_instagram == 1){
+    $instagram_latest = babybel_social_instagram_posts();
+  }
+  $data_feed = array_merge($facebook_latest, $twitter_latest, $instagram_latest);
+
+  return theme('babybel_social_feed', array(
+    'data' => $data_feed,
+    'feed_title' => $data_feed_title,
+      ));
+}
+/**
+ * Implements hook_libraries_info().
+ */
+function babybel_social_libraries_info() {
+
+  $libraries['facebook'] = array(
+    'name' => 'Facebook',
+    'vendor url' => 'https://graph.facebook.com',
+    'download url' => 'https://developers.facebook.com/docs/php/gettingstarted/5.0.0',
+    'library path' => 'sites/all/libraries/facebook/src/Facebook',
+    'version' => '5.0.0',
+    'files' => array(
+      'php' => array('FacebookSession.php'),
+    ),
+  );
+  return $libraries;
+}
+/**
+ * Returns HTML with feeds in required format.
+ *
+ * @param string $page_name
+ *   Array with parameters for this action: depends on the trigger.
+ */
+function babybel_social_facebook_feeds() {
+  global $language;
+  $current_language = $language->language;
+  require_once(libraries_get_path('facebook') . '/autoload.php' );
+  $config = $facebook_feed = array();
+  $display_time = $display_pic = $selected_type = $selected_type_key = $fb_type = $selected_type_value = '';
+  $config['app_id'] = variable_get('babybel_variable_social_facebook_app_id');
+  $config['secret'] = variable_get('babybel_variable_social_facebook_secret_key');
+  $fb_page = variable_get('babybel_variable_social_facebook_page_name_'.$current_language.'');
+  if($fb_page){    
+    // PHP SDK 5.x
+    libraries_load('facebook');
+    FacebookSession::setDefaultApplication($config['app_id'], $config['secret']);
+    if (isset($config['app_id']) && !empty($config['app_id']) && isset($config['secret']) && !empty($config['secret'])) {
+      $session = FacebookSession::newAppSession();    
+      try {
+        $request = new FacebookRequest(
+            $session, 
+            'GET', 
+            '/' . $fb_page . '/feed',
+            array(
+            'fields' => 'actions,from,message,created_time,object_id,is_published,status_type,type,parent_id,story',
+          ));
+    /* handle the result */
+        $response = $request->execute();
+        $graph_object = $response->getGraphObject();
+        $facebook_values = $graph_object->asArray('data');
+        if ($facebook_values) {
+          $i=0;
+          foreach ($facebook_values['data'] as $facebook_value) {
+            $post_id = explode('_', $facebook_value->id);
+            if(!isset($facebook_value->story)){
+              $time = strtotime($facebook_value->created_time);
+              if($post_id[0] == $facebook_value->from->id && !$facebook_value->parent_id){
+                $facebook_feed[$time]['page_name'] = $fb_page;
+                $facebook_feed[$time]['id_page'] = $facebook_value->from->id;
+                $facebook_feed[$time]['name'] = $facebook_value->from->name;
+                $facebook_feed[$time]['post_id'] = $post_id[1];
+                $facebook_feed[$time]['type'] = $facebook_value->type;
+                $facebook_feed[$time]['created'] = $time;
+                $facebook_feed[$time]['message'] = $facebook_value->message;
+                $facebook_feed[$time]['type'] = 'facebook';
+                $i++;
+              }
+            }
+            if($i == 3){
+              break;
+            }
+          } 
+          return $facebook_feed;
+        }
+      }catch (FacebookSDKException $e) {
+        $error = array();
+        return $error;
+      }
+    }
+    else {
+      return array();
+    }
+    
+  }
+}
+/**
+ * Uses babybel_social_twitter_feeds() for fetching Twitter tweets.
+ *
+ * @var array $settings
+ */
+function babybel_social_twitter_posts(){
+  global $language;
+  $current_language = $language->language;
+  require_once(libraries_get_path('twitter') . '/TwitterAPIExchange.php' );       
+  libraries_load('twitter');
+  $twitter_tweets = array();
+
+  $settings = array(
+    'oauth_access_token' => variable_get('babybel_variable_social_twitter_access_token'),
+    'oauth_access_token_secret' => variable_get('babybel_variable_social_twitter_access_token_secret'),
+    'consumer_key' => variable_get('babybel_variable_social_twitter_consumer_key'),
+    'consumer_secret' => variable_get('babybel_variable_social_twitter_consumer_secret'),
+  );
+  $tweets_count = 50;
+  $twitter_username = variable_get('babybel_variable_social_twitter_username_'.$current_language.'');
+  if(!empty($twitter_username)){
+    $url = "https://api.twitter.com/1.1/statuses/user_timeline.json";
+    $request_method = "GET";
+    $getfield = '?screen_name=' . $twitter_username . '&exclude_replies=true&count=' . $tweets_count ;
+    $curlOptions = array(
+      CURLOPT_SSL_VERIFYPEER => FALSE,
+    );
+    $twitter = new TwitterAPIExchange($settings);
+    $twitter_values = json_decode($twitter->setGetfield($getfield)
+            ->buildOauth($url, $request_method)
+            ->performRequest(TRUE, $curlOptions), $assoc = TRUE
+    );
+
+    if (isset($twitter_values) && !empty($twitter_values)) {
+      if (array_key_exists('errors', $twitter_values)) {
+        if ($twitter_values["errors"][0]["message"] != "") {
+          return array();
+        }
+      }$i=0;
+      foreach ($twitter_values as $key => $twitter_value) {
+        //check tweet
+          $time = strtotime($twitter_value['created_at']);
+          $twitter_tweets[$time]['text'] = $twitter_value['text'];
+          $twitter_tweets[$time]['id'] = $twitter_value['id'];
+          $twitter_tweets[$time]['created'] = $time;
+          $twitter_tweets[$time]['username'] = $twitter_value['user']['screen_name'];
+          $twitter_tweets[$time]['type'] = 'twitter';
+          $i++;
+
+        if($i == 3){
+           break;
+        }
+      }      
+    }
+  }
+  return $twitter_tweets;
+}
+/**
+ * Uses babybel_social_instagram_posts() for fetching instagram pictures.
+ *
+ * @var array $images
+ */
+function babybel_social_instagram_posts() {
+  global $language;
+  $current_language = $language->language;
+  require_once(libraries_get_path('instagram') . '/src/Instagram.php');
+  $images = array();
+  $i = 0;
+  libraries_load('instagram');
+  $instagram = new Instagram(array(
+    'apiKey'      => variable_get('babybel_variable_social_instagram_api_key'),
+    'apiSecret'   => variable_get('babybel_variable_social_instagram_api_secret'),
+  ));
+  $user_id = variable_get('babybel_variable_social_instagram_user_id_'.$current_language.'');
+  if(!empty($user_id)){
+    if (isset($instagram->getUserMedia($user_id)->data) && !empty($instagram->getUserMedia($user_id)->data)) {
+      $instagram_objects = $instagram->getUserMedia($user_id)->data;
+
+      foreach ($instagram_objects as $instagram_object) {
+        $time = $instagram_object->created_time;
+        $data[$time]['link'] = $instagram_object->link;
+        $data[$time]['created'] = $instagram_object->created_time;
+        $data[$time]['type'] = 'instagram';
+        $i++;
+        if ($i == 3) {
+          break;
+        }
+      }
+      return $data;
+    }
+    elseif (empty($instagram->getUserMedia($user_id)->data)) {
+      return array();
+    }
+    else {
+      return array();
+    }
+  }else {
+      return array();
+    }
+}

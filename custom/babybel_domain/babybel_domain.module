@@ -1,0 +1,205 @@
+<?php
+
+/**
+ * Implements of hook_theme().
+ */
+function babybel_domain_theme($existing, $type, $theme, $path) {
+  return array(
+    'babybel_locale_languages_overview_form' => array(
+      'template' => 'templates/babybel_locale_languages_overview_form',
+      'render element' => 'form',
+    ),
+  );
+}
+/**
+ * Implements hook_form_alter().
+ */
+function babybel_domain_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'locale_languages_overview_form') {
+    $form['#theme'] = 'babybel_locale_languages_overview_form';
+  }
+  
+  if ($form_id == 'locale_languages_edit_form') {
+    $lang_code = $form['langcode']['#value'];
+    $form['domain_lang'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Domain for language'),
+      '#description' => t('Add a domain setting field for each language (hostname / can be www.babybel.fr or babybel.de etc...)'),
+      '#default_value' => variable_get('domain_lang_' . $form['langcode']['#value'], ''),
+      '#size' => 60,
+      '#maxlength' => 128,
+      '#required' => FALSE,
+    );
+    $form['access_lang'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Access Restriction'),
+      '#description' => t('Tick the above checkbox to make this language restricted and visible only to logged managers on Front-end.'),
+//      '#default_value' =>1,
+      '#default_value' => variable_get('access_lang_' . $form['langcode']['#value'], ''),
+      '#options' => array(
+        1 => t('Visible to logged managers only'),
+       ),
+      '#required' => FALSE,
+    );
+    $form['#submit'][] = 'babybel_domain_language_submit';
+  }
+}
+
+/**
+ * Implement hook_form_submit().
+ */
+function babybel_domain_language_submit(&$form, &$form_state, $form_id) {
+  if ($form_state['input']['domain_lang']) {
+    variable_set('domain_lang_' . $form['langcode']['#value'], $form_state['input']['domain_lang']);
+  }
+  else {
+    variable_set('domain_lang_' . $form['langcode']['#value'], '');
+  }
+  if ($form_state['input']['access_lang'] && count($form_state['input']['access_lang']) > 0) { 
+    variable_set('access_lang_' . $form['langcode']['#value'], $form_state['input']['access_lang']);
+  }
+  else {
+    variable_set('access_lang_' . $form['langcode']['#value'], '');
+  }
+}
+
+/**
+ * Implements hook_theme_form().
+ */
+function babybel_locale_languages_overview_form($form) {
+  $default = language_default();
+  foreach ($form['name'] as $key => $element) {
+    // Do not take form control structures.
+    if (is_array($element) && element_child($key)) {
+      // Disable checkbox for the default language, because it cannot be disabled.
+      if ($key == $default->language) {
+        $form['enabled'][$key]['#attributes']['disabled'] = 'disabled';
+      }
+
+      // Add invisible labels for the checkboxes and radio buttons in the table
+      // for accessibility. These changes are only required and valid when the
+      // form is themed as a table, so it would be wrong to perform them in the
+      // form constructor.
+      $title = drupal_render($form['name'][$key]);
+      $form['enabled'][$key]['#title'] = t('Enable !title', array('!title' => $title));
+      $form['enabled'][$key]['#title_display'] = 'invisible';
+      $form['site_default'][$key]['#title'] = t('Set !title as default', array('!title' => $title));
+      $form['site_default'][$key]['#title_display'] = 'invisible';
+      //$form_state['input']['domain_lang']
+      $rows[] = array(
+        'data' => array(
+          '<strong>' . $title . '</strong>',
+          drupal_render($form['native'][$key]),
+          variable_get('domain_lang_' . $key, ''),
+          check_plain($key),
+          drupal_render($form['direction'][$key]),
+          array('data' => drupal_render($form['enabled'][$key]), 'align' => 'center'),
+          drupal_render($form['site_default'][$key]),
+          drupal_render($form['weight'][$key]),
+          l(t('edit'), 'admin/config/regional/language/edit/' . $key) . (($key != 'en' && $key != $default->language) ? ' ' . l(t('delete'), 'admin/config/regional/language/delete/' . $key) : '')
+        ),
+        'class' => array('draggable'),
+      );
+    }
+  }
+  $header = array(array('data' => t('English name')), array('data' => t('Native name')), array('data' => t('Domain')), array('data' => t('Code')), array('data' => t('Direction')), array('data' => t('Enabled')), array('data' => t('Default')), array('data' => t('Weight')), array('data' => t('Operations')));
+  $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'language-order')));
+  $output .= drupal_render_children($form);
+
+  drupal_add_tabledrag('language-order', 'order', 'sibling', 'language-order-weight');
+
+  return $output;
+}
+
+/**
+ * Implements hook_language_switch_links_alter().
+ */
+function babybel_domain_language_switch_links_alter(array &$links, $type, $path) {
+  global $language;
+  $mode = variable_get('language_multi_domains', FALSE);
+  $arg = arg();
+  $dispatch_page = variable_get('language_selection_page_path', 'language_selection');
+  if ($arg[0] == $dispatch_page) {
+    $links = '';
+    $attributes = array(
+      'href' => '/' . $dispatch_page,
+      'rel' => 'alternate',
+      'hreflang' => 'x-default',
+    );
+    drupal_add_html_head_link($attributes);
+  }
+  else {
+    if ($mode) {
+      $protocol = baybel_common_get_protocol();
+      $host_name = variable_get('domain_lang_' . $language->language);
+      if (!drupal_is_front_page()) {
+        $path = $protocol . '://' . $host_name . '/' . $language->prefix . '/' . drupal_get_path_alias(implode('/', $arg));
+      }
+      else {
+        $path = $protocol . '://' . $host_name . '/' . $language->prefix;
+      }
+      $attributes = array(
+        'href' => $path,
+        'rel' => 'canonical',
+      );
+      drupal_add_html_head_link($attributes);
+    }
+  }
+}
+
+/**
+ * Implements hook_html_head_alter.
+ */
+function babybel_domain_html_head_alter(&$head_elements) {
+  $arg = arg();
+
+  $mode = variable_get('language_multi_domains', FALSE);
+  unset($head_elements['metatag_shortlink']);
+  unset($head_elements['system_meta_generator']);
+  if (!$mode) {
+    unset($head_elements['metatag_canonical']);
+  }
+
+  foreach ($head_elements as $key => &$item) {
+    if (isset($item['#attributes']['rel']) && $item['#attributes']['rel'] == 'canonical' && $item['#attached']['drupal_add_http_header']) {
+      unset($head_elements[$key]);
+    }
+    $lang_prefix = babybel_domain_get_lang_prefix($item['#attributes']['hreflang']);
+    if ($item['#attributes']['hreflang'] && $item['#attributes']['hreflang'] != 'x-default') {
+      if ($mode) {
+        $protocol = baybel_common_get_protocol();
+        $host_name = variable_get('domain_lang_' . $item['#attributes']['hreflang']);
+        if (!drupal_is_front_page()) {
+          $path = $protocol . '://' . $host_name . '/' . $lang_prefix . '/' . drupal_get_path_alias(implode('/', $arg));
+          $item['#attributes']['href'] = $path;
+        }
+        else {
+          $path = $protocol . '://' . $host_name . '/' . $lang_prefix;
+          $item['#attributes']['href'] = $path;
+        }
+      }
+      else {
+        if (!drupal_is_front_page()) {
+          $item['#attributes']['href'] = '/' . $lang_prefix . '/' . drupal_get_path_alias(implode('/', $arg));
+        }
+        else {
+          $item['#attributes']['href'] = '/' . $lang_prefix;
+        }
+      }
+      $item['#attributes']['hreflang'] = $lang_prefix;
+    }
+  }
+}
+
+/**
+ * Get langauge prefix by language code.
+ */
+function babybel_domain_get_lang_prefix($lang_code) {
+  $languages = language_list('enabled');
+  if ($languages[1]) {
+    return $languages[1][$lang_code]->prefix;
+  }
+  else {
+    return false;
+  }
+}

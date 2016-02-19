@@ -1,0 +1,106 @@
+<?php
+
+/**
+ *  Implements hook_menu().
+ */
+function babybel_products_menu() {
+  $items = array();
+  $items['products'] = array(
+    'title' => 'Products',
+    'page callback' => 'babybel_products_page',
+    'access callback' => TRUE,
+  );
+
+  $items['our-secret'] = array(
+    'title' => 'Our secret recipe page',
+    'page callback' => 'babybel_secret_page',
+    'access callback' => TRUE,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements of hook_theme().
+ */
+function babybel_products_theme($existing, $type, $theme, $path) {
+  return array(
+    'babybel_our_secret' => array(
+      'template' => 'templates/babybel_our_secret',
+      'variables' => array('main_menu' => NULL),
+    ),
+    'babybel_products' => array(
+      'template' => 'templates/babybel_products',
+      'variables' => array('main_menu' => NULL),
+    ),
+  );
+}
+
+/**
+ * Get produts item by lang code.
+ */
+function babybel_common_get_products() {
+  global $language;
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'products')
+      ->propertyCondition('status', 1)
+      ->propertyCondition('language', $language->language)
+      ->execute();
+  $nodes = node_load_multiple(array_keys($result['node']));
+  return $nodes;
+}
+
+function babybel_products_get_tips() {
+  global $language;
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'tips')
+      ->propertyCondition('status', 1)
+      ->propertyCondition('language', $language->language)
+      ->execute();
+  $nodes = node_load_multiple(array_keys($result['node']));
+  return $nodes;
+}
+
+/**
+ * Render content for our-secret page.
+ */
+function babybel_secret_page() {
+  global $language, $base_url;
+  $current_lang = $language->language;
+  //babybel_variable_our_secret_id
+  $secret_nid = babybel_variable_get_nid_translated('babybel_variable_our_secret_id');
+  $milk_nid = babybel_variable_get_nid_translated('babybel_variable_our_secret_blocks_milk_id');
+  $cheese_nid = babybel_variable_get_nid_translated('babybel_variable_our_secret_cheese_id');
+  $our_secret = ($secret_nid) ? node_load($secret_nid) : NULL;
+  $our_secret_status = isset($our_secret->status) ? $our_secret->status : 0;
+  $milk_origins = ($milk_nid) ? node_load($milk_nid) : NULL;
+  $milk_origins_status = isset($milk_origins->status) ? $milk_origins->status : 0;
+  $cheese = ($cheese_nid) ? node_load($cheese_nid) : NULL;
+  $cheese_status = isset($cheese->status) ? $cheese->status : 0;
+  if (($our_secret == NULL) && ($milk_origins == NULL) && ($cheese == NULL)) {
+    drupal_goto('<front>');
+  }
+  $content = theme('babybel_our_secret', array(
+    'our_secret' => $our_secret,
+    'our_secret_status' => $our_secret_status,
+    'milk_origins' => $milk_origins,
+    'milk_origins_status' => $milk_origins_status,
+    'cheese' => $cheese,
+    'cheese_status' => $cheese_status,
+      )
+  );
+
+  return $content;
+}
+
+/**
+ * Render content for products page.
+ */
+function babybel_products_page() {
+  global $language;
+  $fid_footer_products = babybel_variable_get('babybel_variable_products_products_page_background_footer', $language->language);
+  $background_footer_products = file_load($fid_footer_products);
+  return theme('babybel_products', array('background_footer_products' => $background_footer_products));
+}

@@ -1,0 +1,54 @@
+<?php
+
+/**
+ *  Implements hook_menu().
+ */
+function babybel_fun_stuff_menu() {
+  	$items = array();
+  	$items['fun-stuff'] = array(
+    	'title' => 'Fun Stuff',
+    	'page callback' => 'babybel_fun_stuff_page',
+    	'access callback' => TRUE,
+  	);	
+  	return $items;
+}
+
+/**
+ * Get funstuff item by lang code.
+ */
+function babybel_fun_stuff_get_fun_stuff()
+{
+  global $language;
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'fun_stuff')
+    ->propertyCondition('status', 1)
+    ->propertyCondition('language', $language->language)
+    ->execute();
+
+  $nodes = node_load_multiple(array_keys($result['node']));
+  return $nodes;
+}
+
+
+/**
+ * Implements of hook_theme().
+ */
+function babybel_fun_stuff_theme($existing, $type, $theme, $path)
+{
+  return array(
+    'babybel_fun_stuff' => array(
+      'template' => 'templates/babybel_fun_stuff',
+      'variables' => array('main_menu' => NULL),
+    ),
+  );
+}
+
+/**
+ * Render content for fun-stuff page.
+ */
+function babybel_fun_stuff_page() {
+  global $language;
+  $current_lang = $language->language;
+  return theme('babybel_fun_stuff', array('current_lang' => $current_lang));
+}

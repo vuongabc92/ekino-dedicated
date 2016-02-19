@@ -1,0 +1,4 @@
+name = "Babybel Domain Setting"
+package = Babybel Custom Module
+core = "7.x"
+description = "Domain setting field for each language (hostname / can be www.babybel.fr or babybel.de etc...)"
