@@ -1,0 +1,9 @@
+name = Thuraya Footer Bottom Location
+description = Customize Footer - Event.
+core = 7.x
+
+; Information added by drupal.org packaging script on 2015-09-10
+version = "7.x"
+datestamp = "1346768523"
+package = Thuraya
+

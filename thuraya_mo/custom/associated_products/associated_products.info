@@ -1,0 +1,8 @@
+name = Associated Products
+description = display associated products in sector/solution pages
+
+
+; Information added by drupal.org packaging script on 2012-05-17
+version = "7.x-1.0"
+core = "7.x"
+project = "associated_products"

@@ -1,0 +1,83 @@
+<?php
+
+/**
+ * Implement of hook_info()
+ * @return type
+ */
+function thu_m2m_block_info()
+{
+  return array(
+    'link_description' => array(
+      'info' => 'Thuraya M2M Manage Description'
+    ),    
+  );
+  
+}
+
+/**
+ * Implement hook_block_view()
+ * @param type $delta
+ */
+function thu_m2m_block_view($delta)
+{
+  
+  $block = array();
+  switch ($delta) {
+
+    case 'link_description':
+      $block['content'] = array('#markup' => '&nbsp;');
+      break;
+  }
+  $block['subject'] = '';
+  return $block;
+}
+
+/**
+ * Implement hook_block_configure
+ * @param type $delta
+ * @return type
+ */
+function thu_m2m_block_configure($delta = '')
+{
+  $form = array();
+  if ($delta == 'link_description') {
+    $description = variable_get('thu_m2m_description', array('format' => 'full_html'));
+    $form['thu_m2m_description'] = array(
+//      '#type' => 'textarea',
+      '#type' => 'text_format', 
+      '#format' => $description['format'],
+      '#title' => t('Thuraya M2M Description'),
+      '#default_value' => $description['value'],
+      '#required' => TRUE,
+    );
+    $form['thu_m2m_remote_access_description'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Thuraya M2M Remote Access Description'),
+      '#default_value' => variable_get('thu_m2m_remote_access_description'),
+      '#required' => TRUE,
+    );
+    $form['thu_m2m_remote_link'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Thuraya M2M Remote Link'),
+      '#default_value' => variable_get('thu_m2m_remote_link'),
+      '#required' => TRUE,
+    );
+  }
+  
+  return $form;
+}
+
+/**
+ * Implement hook_block_save
+ * @param type $delta
+ * @param type $edite
+ */
+function thu_m2m_block_save($delta = '', $edit = array())
+{
+  if ($delta == 'link_description') {
+    variable_set('thu_m2m_description', $edit['thu_m2m_description']);   
+    variable_set('thu_m2m_remote_access_description', $edit['thu_m2m_remote_access_description']);
+    variable_set('thu_m2m_remote_link', $edit['thu_m2m_remote_link']);
+  }
+  
+}

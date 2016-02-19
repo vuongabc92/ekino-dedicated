@@ -1,0 +1,25 @@
+<?php
+/**
+* @file
+* Code for Restrict search
+**/
+
+/**
+ * Excludes node id "japanese" from search results
+ *
+ * @param object $query
+ */
+function restrict_search_query_alter(&$query) {
+  $is_search = FALSE;
+  foreach ($query->getTables() as $table) {
+    if ($table['table'] == 'search_index') {
+      $is_search = TRUE;
+    }
+  }
+  if ($is_search) {
+	   // $query->condition('n.nid', '950', '<>');
+		$query->condition('n.nid','913', '<>');
+		$query->condition('n.type', 'manage_promos', '<>');
+		$query->condition('n.type', 'news_ticker_service_partners', '<>');
+  }
+}

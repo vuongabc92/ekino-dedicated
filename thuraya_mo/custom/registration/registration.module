@@ -1,0 +1,336 @@
+<?php
+
+global $base_url;
+/**
+ * @file
+ * Customizations to the Drupal registration system.
+ */
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function registration_form_user_register_form_alter(&$form, &$form_state) {
+  global $user;
+  $userRole = $user->roles;
+  if ($user->uid != '1' && $userRole[3] != 'administrator') {
+    // Make this a multi-step form.
+    if (!empty($form_state['step']) && $form_state['step'] == 2) {
+      registration_register_alter_page_two($form, $form_state);
+    }
+    else {
+      // Otherwise we build page 1.   
+      registration_register_alter_page_one($form, $form_state);
+    }
+  }
+}
+
+function registration_form_user_profile_form_alter(&$form, &$form_state) {
+  global $user;
+  $userRole = $user->roles;
+  if ($user->uid != '1' && !isset($_REQUEST['pass-reset-token']) && arg(3) != 'main' && $userRole[3] != 'administrator') {
+    // Make this a multi-step form.
+    if (!empty($form_state['step']) && $form_state['step'] == 2) {
+      registration_register_alter_page_two($form, $form_state);
+    }
+    else {
+      // Otherwise we build page 1.     
+      registration_register_alter_page_one($form, $form_state);
+    }
+  }
+}
+
+/**
+ * Form alter - Step 1 of user registration.
+ */
+function registration_register_alter_page_one(&$form, &$form_state) {
+  global $user;
+  // Set the step.
+  $form_state['step'] = 1;
+  $form['step_level'] = array('#default_value' => '1');
+
+  // Add text for step 1.
+  $form['step'] = array(
+    '#markup' => '<li class="tab1 active"><a href="#"><span class="arrow-up"></span><span class="tab-text">1</span></a></li>
+	<li class="tab2"><a href="#"><span class="arrow-up"></span><span class="tab-text">2</span></a></li>',
+    '#weight' => -10,
+  );
+
+  // Set default values (so they work with back button).
+  $form['account']['name']['#default_value'] = !empty($form_state['values']['name']) ? $form_state['values']['name'] : '';
+  $form['account']['mail']['#default_value'] = !empty($form_state['values']['mail']) ? $form_state['values']['mail'] : '';
+
+  $userRole = $user->roles;
+  if ($userRole[3] == 'administrator') {
+    // Add Submit button for Administrator to create user.
+    // Adjust the submit button to come last.
+    $form['actions']['submit']['#weight'] = 100;
+    // Add our own validation handler.
+    $form['actions']['submit']['#validate'] = array('registration_register_validate');
+    // Add an additional submit handler to the whole form.
+    $form['#submit'][] = 'registration_register_submit';
+  }
+  else {
+    // Add a next button.
+    $form['actions']['next'] = array(
+      '#type' => 'submit',
+      '#value' => 'Next',
+      '#submit' => array('registration_register_next'),
+    );
+    // Remove the 'Create new account' button from step 1.
+    unset($form['actions']['submit']);
+  }
+  if (is_array($form['profile_main']['#field_group_multiple']) && count($form['profile_main']['#field_group_multiple'])) {
+    foreach ($form['profile_main']['#field_group_multiple'] as $item) {
+      $form['profile_main'][$item]['add-more']['#prefix'] = '<div class="r-more">';
+      $form['profile_main'][$item]['add-more']['#suffix'] = '</div>';
+    }
+  }
+}
+
+/**
+ * Form alter - Step 2 of user registration.
+ */
+function registration_register_alter_page_two(&$form, &$form_state) {
+  $form['step_level'] = array('#default_value' => '2');
+
+  // Add text for step 2.
+  $form['step'] = array(
+    '#markup' => '<li class="tab1"><a href="#"><span class="arrow-up"></span><span class="tab-text">1</span></a></li>
+	<li class="tab2 active"><a href="#"><span class="arrow-up"></span><span class="tab-text">2</span></a></li>',
+    '#weight' => -10,
+  );
+
+  // Hide the fields completed on step 1.
+  $form['account']['name']['#access'] = FALSE;
+  $form['account']['mail']['#access'] = FALSE;
+
+  // Set default values (so they validate).
+  $form['account']['name']['#default_value'] = !empty($form_state['values']['name']) ? $form_state['values']['name'] : '';
+  $form['account']['mail']['#default_value'] = !empty($form_state['values']['mail']) ? $form_state['values']['mail'] : '';
+
+  // Add a back button.
+  $form['actions']['back'] = array(
+    '#type' => 'submit',
+    '#value' => t('Back'),
+    '#submit' => array('registration_register_back'),
+    '#limit_validation_errors' => array(),
+  );
+
+  // Adjust the submit button to come last.
+  $form['actions']['submit']['#weight'] = 100;
+  // Add our own validation handler.
+  $form['actions']['submit']['#validate'] = array('registration_register_validate');
+
+  // Add an additional submit handler to the whole form.
+  $form['#submit'][] = 'registration_register_submit';
+}
+
+/**
+ * Validate handler.
+ */
+function registration_register_validate(&$form, &$form_state) {
+  // ...
+}
+
+/**
+ * Submit handler for user registration form.
+ *
+ * Namespace collision demands underscore.
+ */
+function registration_register_submit(&$form, &$form_state) {
+//  ...
+  if (arg(3) != 'main') {
+
+    $form_state['redirect'] = 'user/register';
+  }
+  else {
+    $form_state['redirect'] = 'user/' . arg(1) . '/edit/main';
+  }
+}
+
+/**
+ * Submit handler for next button.
+ *
+ * Capture the values from page one and store them away so they can be used
+ * at final submit time.
+ */
+function registration_register_next($form, &$form_state) {
+  // Save the page 1 values.
+  $form_state['page_values'][1] = $form_state['values'];
+
+  // Load the page 2 values.
+  if (!empty($form_state['page_values'][2])) {
+    $form_state['values'] = $form_state['page_values'][2];
+  }
+
+  // Set the step.
+  $form_state['step'] = 2;
+  // Rebuild the form.
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Submit handler for back button.
+ *
+ * Since #limit_validation_errors = array() is set, values from page 2
+ * will be discarded.
+ */
+function registration_register_back($form, &$form_state) {
+  // Load the page 1 values.
+  $form_state['values'] = $form_state['page_values'][1];
+  // Set the step.
+  $form_state['step'] = 1;
+  // Rebuild the form.
+  $form_state['rebuild'] = TRUE;
+}
+
+function registration_form_alter(&$form, &$form_state, $form_id) {
+
+  if ($form['#id'] == 'views-exposed-form-better-comments-admin-block-1') {
+    $form['#info']['filter-field_industry_experience'] = array('operator' => 'field_industry_experience_op',
+      'value' => 'field_industry_experience',
+      'label' => 'Industry Experience',
+      'description' => '');
+    $form['#info']['filter-field_experience_level'] = array('operator' => 'field_experience_level_op',
+      'value' => 'field_experience_level',
+      'label' => 'Experience Level',
+      'description' => '');
+    $all_fields = field_info_fields();
+    $iexp = array('' => '- Any -');
+    $iexp1 = list_allowed_values($all_fields["field_industry_experience"]);
+    $industry_experience = array_merge($iexp, $iexp1);
+    //print_r($industry_experience);
+    $form['field_industry_experience'] = array('#type' => 'select',
+      '#options' => $industry_experience,
+      '#default_value' => '');
+
+    $yexp = array('' => '- Any -');
+    $yexp1 = list_allowed_values($all_fields["field_experience_level"]);
+    $years_of_experience = array_merge($yexp, $yexp1);
+    $form['field_experience_level'] = array('#type' => 'select',
+      '#options' => $years_of_experience,
+      '#default_value' => '');
+
+    //print_r($form);
+    $form['#submit'] = Array(0 => 'views_exposed_form_submit');
+    return $form;
+  }
+}
+
+function registration_views_api() {
+  return array(
+    'api' => 3,
+  );
+}
+
+function registration_views_query_alter(&$view, &$query) {
+
+  $ind_exp = $_POST['field_industry_experience'];
+  $vacancyCategory = $_POST['field_category_value'];
+  $dateOfAppplication = $_POST['created'];
+  $fieldExperienceLevel = $_POST['field_experience_level'];
+  if ($view->name == 'better_comments_admin') {
+    //echo 'indusexp'.$ind_exp;
+    if ($ind_exp != '' || $fieldExperienceLevel != '') {
+      $views_profile_join_object = new views_join();
+      $def1 = array(
+        'table' => 'profile',
+        'base' => 'profile',
+        'base_field' => 'nid',
+        'group' => 'comment',
+        'handler' => 'views_handler_relationship',
+        'field' => 'uid',
+        'left_table' => 'comment',
+        'left_field' => 'uid',
+        'type' => 'INNER'
+      );
+      $optionsArray1 = array('id' => 'uid',
+        'table' => 'comment',
+        'field' => 'uid',
+        'group_type' => 'group',
+        'ui_name' => '',
+        'relationship' => 'none',
+        'required' => 1);
+      $views_profile_join_object->definition = $def1;
+      $views_profile_join_object->construct('profile', 'comment', 'uid', 'uid', '', 'INNER');
+      $views_profile_join_object->adjusted = TRUE;
+      $views_profile_join_object->options = $optionsArray1;
+      $query->table_queue['profile'] = array('table' => 'profile',
+        'alias' => 'profile',
+        'join' => $views_profile_join_object
+      );
+    }
+    if ($ind_exp != '') {
+      $views_join_indus_field_object = new views_join();
+      $def2 = array(
+        'table' => 'field_data_field_industry_experience',
+        'base' => 'field_data_field_industry_experience',
+        'base_field' => 'entity_id',
+        'group' => 'profile',
+        'handler' => 'views_handler_relationship',
+        'field' => 'entity_id',
+        'left_table' => 'profile',
+        'left_field' => 'pid',
+        'type' => 'INNER'
+      );
+      $optionsArray1 = array('id' => 'entity_id',
+        'table' => 'profile',
+        'field' => 'pid',
+        'group_type' => 'group',
+        'ui_name' => '',
+        'relationship' => 'none',
+        'required' => 1);
+      $views_join_indus_field_object->definition = $def2;
+      $views_join_indus_field_object->construct('field_data_field_industry_experience', 'profile', 'pid', 'entity_id', '', 'INNER');
+      $views_join_indus_field_object->adjusted = TRUE;
+      $views_join_indus_field_object->options = $optionsArray1;
+      $query->table_queue['field_data_field_industry_experience'] = array('table' => 'field_data_field_industry_experience',
+        'alias' => 'field_data_field_industry_experience',
+        'join' => $views_join_indus_field_object
+      );
+
+      if ($vacancyCategory != '' && $dateOfAppplication != '') {
+        $query->where[0]['conditions'][] = array('field' => 'field_data_field_industry_experience.field_industry_experience_value',
+          'value' => $ind_exp,
+          'operator' => '=');
+      }
+    }
+    if ($fieldExperienceLevel != '') {
+      $views_join_indus_field_object = new views_join();
+      $def2 = array(
+        'table' => 'field_data_field_experience_level',
+        'base' => 'field_data_field_experience_level',
+        'base_field' => 'entity_id',
+        'group' => 'profile',
+        'handler' => 'views_handler_relationship',
+        'field' => 'entity_id',
+        'left_table' => 'profile',
+        'left_field' => 'pid',
+        'type' => 'INNER'
+      );
+      $optionsArray1 = array('id' => 'entity_id',
+        'table' => 'profile',
+        'field' => 'pid',
+        'group_type' => 'group',
+        'ui_name' => '',
+        'relationship' => 'none',
+        'required' => 1);
+      $views_join_indus_field_object->definition = $def2;
+      $views_join_indus_field_object->construct('field_data_field_experience_level', 'profile', 'pid', 'entity_id', '', 'INNER');
+      $views_join_indus_field_object->adjusted = TRUE;
+      $views_join_indus_field_object->options = $optionsArray1;
+      $query->table_queue['field_data_field_experience_level'] = array('table' => 'field_data_field_experience_level',
+        'alias' => 'field_data_field_experience_level',
+        'join' => $views_join_indus_field_object
+      );
+
+      if ($vacancyCategory != '' && $dateOfAppplication != '') {
+        $query->where[0]['conditions'][] = array('field' => 'field_data_field_experience_level.field_experience_level_value',
+          'value' => $fieldExperienceLevel,
+          'operator' => '=');
+      }
+    }
+  }
+}
+
+?>

@@ -1,0 +1,115 @@
+<?php
+
+/**
+ * Implement of hook_info()
+ * @return type
+ */
+function thu_variables_header_block_info()
+{
+  return array(
+    'link_header' => array(
+      'info' => 'Thuraya Manage Social Link'
+    ),    
+  );
+  
+}
+
+/**
+ * Implement hook_block_view()
+ * @param type $delta
+ */
+function thu_variables_header_block_view($delta)
+{
+  
+  $block = array();
+  switch ($delta) {
+
+    case 'link_header':
+      $block['content'] = array('#markup' => '&nbsp;');
+      break;
+  }
+  $block['subject'] = '';
+  return $block;
+}
+
+/**
+ * Implement hook_block_configure
+ * @param type $delta
+ * @return type
+ */
+function thu_variables_header_block_configure($delta = '')
+{
+  $form = array();
+  if ($delta == 'link_header') {
+    $form['thu_variables_link_header_linkedIn'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Link LinkedIn'),
+      '#default_value' => variable_get('thu_variables_link_header_linkedIn'),
+      '#required' => TRUE,
+    );
+    $form['thu_variables_link_header_youTube'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Link YouTube'),
+      '#default_value' => variable_get('thu_variables_link_header_youTube'),
+      '#required' => TRUE,
+    );
+    $form['thu_variables_link_header_twitter'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Link Twitter'),
+      '#default_value' => variable_get('thu_variables_link_header_twitter'),
+      '#required' => TRUE,
+    );
+    $form['thu_variables_link_header_instagram'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Link Instagram'),
+      '#default_value' => variable_get('thu_variables_link_header_instagram'),
+      '#required' => TRUE,
+    );
+    $form['thu_variables_link_header_facebook'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Link Facebook'),
+      '#default_value' => variable_get('thu_variables_link_header_facebook'),
+      '#required' => TRUE,
+    );
+    $form['thu_variables_link_header_wav'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Link Wav'),
+      '#default_value' => variable_get('thu_variables_link_header_wav'),
+      '#required' => TRUE,
+    );
+    $form['thu_variables_link_header_block'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Link Blog'),
+      '#default_value' => variable_get('thu_variables_link_header_block'),
+      '#required' => TRUE,
+    );
+    $form['thu_variables_link_header_newlleter'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Link Newlleter'),
+      '#default_value' => variable_get('thu_variables_link_header_newlleter'),
+      '#required' => TRUE,
+    );
+  }
+  
+  return $form;
+}
+
+/**
+ * Implement hook_block_save
+ * @param type $delta
+ * @param type $edite
+ */
+function thu_variables_header_block_save($delta = '', $edit = array())
+{
+  if ($delta == 'link_header') {
+    variable_set('thu_variables_link_header_linkedIn', $edit['thu_variables_link_header_linkedIn']);
+    variable_set('thu_variables_link_header_youTube', $edit['thu_variables_link_header_youTube']);
+    variable_set('thu_variables_link_header_twitter', $edit['thu_variables_link_header_twitter']);    
+    variable_set('thu_variables_link_header_instagram', $edit['thu_variables_link_header_instagram']);
+    variable_set('thu_variables_link_header_facebook', $edit['thu_variables_link_header_facebook']);
+    variable_set('thu_variables_link_header_wav', $edit['thu_variables_link_header_wav']);
+    variable_set('thu_variables_link_header_block', $edit['thu_variables_link_header_block']);
+    variable_set('thu_variables_link_header_newlleter', $edit['thu_variables_link_header_newlleter']);    
+  }
+  
+}

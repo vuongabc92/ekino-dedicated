@@ -1,0 +1,9 @@
+name = Thuraya Landing Page Variables
+description = Get Landing Page variables link
+core = 7.x
+package = Thuraya
+
+; Information added by drupal.org packaging script on 2015-09-10
+version = "7.x"
+datestamp = "1346768523"
+

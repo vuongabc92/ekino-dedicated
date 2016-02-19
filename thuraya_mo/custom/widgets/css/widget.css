@@ -1,0 +1,281 @@
+/*
+The stylesheet to support Ctools Modal content within Panels.
+*/
+
+div#panels-ipe-control-container {
+    background:rgba(0,21,69,0.9)!important;
+    display: block;
+}
+#themer-toggle {
+    opacity: .2;
+    transition: all 0.3s ease;
+}
+.panels-ipe #themer-toggle {
+    bottom: 59px;
+}
+#themer-toggle:hover {
+    opacity: 1;
+}
+.panels-ipe-editing section[class^="mod-"] {
+    margin-top: 0;
+}
+div.ctools-modal-content {
+    background-color: #F0F0F0;
+}
+div.ctools-modal-content fieldset, div.ctools-modal-content .form-radios, div.ctools-modal-content .form-checkboxes {
+    margin-bottom: 15px;
+}
+div.ctools-modal-content div#modal-content form > div {
+    padding-bottom: 10px;
+}
+div.ctools-modal-content input[type="checkbox"] {
+    float: left;
+    margin-right: 10px;
+}
+div.ctools-modal-content label.hidden-options {
+    display: block;
+    margin-left: 10px;
+}
+div.ctools-modal-content .modal-content .modal-throbber-wrapper img {
+    margin: 0 auto;
+}
+div.ctools-modal-content .modal-content .vertical-tabs-panes.vertical-tabs-processed {
+    padding: 20px 10px;
+}
+div.ctools-modal-content #fieldable-panels-panes-fieldable-panels-pane-content-type-edit-form .filter-wrapper {
+    display: none;
+}
+div.ctools-modal-content #fieldable-panels-panes-fieldable-panels-pane-content-type-edit-form .fieldset-wrapper .form-wrapper {
+    margin-bottom: 20px;
+}
+div.ctools-modal-content #fieldable-panels-panes-fieldable-panels-pane-content-type-edit-form .fieldset-wrapper .form-wrapper:last-child {
+    margin-bottom: 0;
+}
+.ui-dialog.linkit-wrapper {
+    z-index: 2000;
+}
+#modalContent {
+    position: fixed !important;
+    top: 70px !important;
+}
+#modalContent a {
+    color: #00295A;
+}
+#modalContent a:hover {
+    text-decoration: underline;
+}
+#modalContent div.ctools-modal-content .modal-content .modal-throbber-wrapper {
+    background-color: #FFFFFF;
+    -moz-border-radius: 7px;
+    -webkit-border-radius: 7px;
+    border-radius: 7px;
+    height: 32px;
+    left: 50%;
+    opacity: .9;
+    padding: 4px;
+    position: fixed;
+    top: 40%;
+    width: 32px;
+    z-index: 1001;
+}
+#modalContent .panels-section-column .content-type-button {
+    line-height: 20px;
+    width: 65%;
+}
+#modalContent .panels-section-column .content-type-button div {
+    padding: 0;
+}
+#modalContent .panels-section-column .content-type-button a.panels-modal-add-config.use-ajax {
+    font-size: 14px;
+    padding-left: 5px;
+}
+#modalContent .panels-section-column .content-type-button .ajax-progress.ajax-progress-throbber {
+    height: 20px;
+    float: right;
+    padding: 0;
+    position: initial;
+    width: 20px;
+}
+#modalContent .panels-section-column .content-type-button .ajax-progress.ajax-progress-throbber .throbber {
+    float: none;
+    height: 20px;
+    margin: 0 auto;
+    padding: 0;
+    position: initial;
+    width: 16px;
+}
+#modalContent .panels-section-column-categories a {
+    font-size: 13px;
+}
+#modalContent form {
+    box-shadow: 0 0 11px #666666;
+    background: #FFF;
+    margin: 15px auto;
+    max-width: 100%;
+    padding: 30px;
+    width: 850px;
+}
+#modalContent .form-wrapper {
+    text-align: left;
+}
+#modalContent input[type="button"], #modalContent input[type="text"], #modalContent input[type="submit"], #modalContent select #modalContent label {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 4px 8px;
+}
+#modalContent fieldset input[type="text"], #modalContent select, #modalContent input[type="pass"], #modalContent input[type="mail"] {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 13px;
+}
+#modalContent select[disabled="disabled"] {
+    color: #AAAAAA;
+}
+#modalContent label {
+    display: inline-block;
+    padding: 4px 8px 4px 0;
+    font-size: 1.5em;
+    text-align: left;
+    width: 33%;
+}
+#modalContent small {
+    display: block;
+    font-size: 90%;
+    margin: 5px 0 10px;
+}
+#modalContent .required, #modalContent .form-required {
+    color: #000;
+}
+#modalContent label.required:after, #modalContent .form-required label:after {
+    color: #E55454;
+    content: " *";
+    font-size: 20px;
+}
+#modalContent input[type="button"], #modalContent input[type="submit"] {
+    background-color: #D8D8D8;
+    border-radius: 0;
+    border: 1px solid #E0E0E0;
+    color: #555;
+    display: inline-block;
+    margin: 8px auto;
+    padding: 6px 10px;
+}
+#modalContent input[type="button"]:hover, #modalContent input[type="submit"]:hover {
+    background-color: #0074BD;
+    color: #fff;
+}
+.image-widget-data {
+    width: 100%;
+}
+.image-widget + small {
+    padding-left: 35%;
+}
+#modalContent input[type="file"] {
+    width: 33%;
+    padding: 4px 8px;
+}
+#modalContent input[type="submit"] {
+    margin-right: 10px;
+}
+#modalContent input[type="submit"]#edit-return {
+    background-color: #4d8f46;
+    color: #fff;
+}
+#modalContent input[type="submit"]#edit-return:hover {
+    background-color: #0a6700;
+    color: #fff;
+}
+#modalContent input[type="submit"]#edit-cancel {
+    background-color: #f69231;
+    color: #fff;
+}
+#modalContent input[type="submit"]#edit-cancel:hover {
+    background-color: #ef6114;
+    color: #fff;
+}
+#modalContent input[type="text"], #modalContent input[type="pass"], #modalContent input[type="mail"] {
+    border-radius: 3px;
+    border: 1px solid #e8e8e8;
+    box-shadow: 0 0 3px rgb(102, 102, 102);
+    width: 60%;
+}
+#modalContent fieldset select {
+    width: 62%;
+}
+#modalContent input[type="button"]:required, #modalContent input[type="text"]:required, #modalContent input[type="submit"]:required, #modalContent select:required {
+    color: #232323;
+}
+#modalContent input[type='checkbox'] {
+    float: none;
+}
+#modalContent input[type='checkbox'] + #modalContent label {
+    width: auto;
+}
+#modalContent .button.linkit-field-button {
+    background: #e3e3e3;
+    border: none;
+    border-radius: 0;
+    color: #555;
+    cursor: pointer;
+    font-weight: normal;
+    font-size: 1.077em;
+    font-family: "Lucida Grande", Verdana, sans-serif;
+    margin-bottom: 1em;
+    margin-right: 1em;
+    padding: 6px 10px;
+    text-align: center;
+}
+#modalContent .button.linkit-field-button:hover {
+    background: #0074BD;
+    color: #fff;
+    text-decoration: none;
+}
+div#panels-ipe-control-container {
+    background: rgba(0, 21, 69, 0.9);
+}
+div.panels-ipe-control input.panels-ipe-save, div.panels-ipe-control input.panels-ipe-cancel {
+    background: #666666;
+    background-image: linear-gradient(bottom, #383838 0%, #666666 100%);
+    background-image: -o-linear-gradient(bottom, #383838 0%, #666666 100%);
+    background-image: -moz-linear-gradient(bottom, #383838 0%, #666666 100%);
+    background-image: -webkit-linear-gradient(bottom, #383838 0%, #666666 100%);
+    background-image: -ms-linear-gradient(bottom, #383838 0%, #666666 100%);
+    background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0, #383838), color-stop(1, #666666));
+    border: 0;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    color: #CCC;
+    cursor: pointer;
+    display: inline-block;
+    font: bold 12px/33px "Open Sans", "Lucida Grande", Tahoma, Verdana, sans-serif;
+    height: 33px;
+    margin: 5px 10px;
+}
+div.panels-ipe-control input.panels-ipe-save:hover, div.panels-ipe-control input.panels-ipe-cancel:hover {
+    background: #999999;
+    background-image: linear-gradient(bottom, #3D3D3D 0%, #999999 100%);
+    background-image: -o-linear-gradient(bottom, #3D3D3D 0%, #999999 100%);
+    background-image: -moz-linear-gradient(bottom, #3D3D3D 0%, #999999 100%);
+    background-image: -webkit-linear-gradient(bottom, #3D3D3D 0%, #999999 100%);
+    background-image: -ms-linear-gradient(bottom, #3D3D3D 0%, #999999 100%);
+    background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0, #3D3D3D), color-stop(1, #999999));
+    color: #FFF;
+}
+.panels-ipe-editing .panels-ipe-portlet-content {
+    margin: 0;
+}
+#modal-content fieldset {
+    border: 1px solid silver;
+    margin: 0 2px;
+    padding: .35em .625em .75em;
+}
+#modal-content a.fieldset-title {
+    color: #0074BD!important;
+    font-size: 20px;
+    font-weight: normal!important;
+}
+
+#modal-content .option-text-aligner {
+    display: none;
+}

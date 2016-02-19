@@ -1,0 +1,172 @@
+<?php
+
+/**
+ * Implement of hook_info()
+ * @return type
+ */
+function thu_landing_page_block_info() {
+  return array(
+    'sector_landing_page_slider' => array(
+      'info' => t('Thuraya Sector Landing Page Manage Slider'),
+    ),
+    'sector_landing_page_description' => array(
+      'info' => t('Thuraya Sector Landing Page Manage Description'),
+    ),
+    'sector_landing_page_list' => array(
+      'info' => t('Thuraya Sector Landing Page List All'),
+    ),
+    'sector_landing_page_breadcrumb' => array(
+      'info' => t('Thuraya Sector Landing Page Breadcrumb'),
+    ),
+  );
+}
+
+/**
+ * Implement hook_block_view()
+ * @param type $delta
+ */
+function thu_landing_page_block_view($delta) {
+  $block = array();
+  switch ($delta) {
+    case 'sector_landing_page_slider':
+//      $video = get_nodes_by_type("landing_video", 1);
+      $slider = get_nodes_by_type("landing_slider", 1);
+      $block['content'] = theme('landing_page_slider', array('sliders' => $slider));
+      break;
+    case 'sector_landing_page_description':
+      $block['content'] = theme('landing_page_description', array());
+      break;
+    case 'sector_landing_page_list':
+      $landing_sectors = get_nodes_by_type('landing_sector_content');
+      $block['content'] = theme('sector_landing_page_list', array('landing_sectors' => $landing_sectors));
+      break;
+    case 'sector_landing_page_breadcrumb':
+      $block['content'] = theme('sector_landing_page_breadcrumb');
+      break;
+  }
+  $block['subject'] = '';
+  return $block;
+}
+
+/**
+ * Implement hook_block_configure
+ * @param type $delta
+ * @return type
+ */
+function thu_landing_page_block_configure($delta = '') {
+  $form = array();
+  if ($delta == 'sector_landing_page_description') {
+    $description = variable_get('thu_landing_page_description', array('format' => 'full_html'));
+    $form['thu_landing_page_description'] = array(
+//      '#type' => 'textarea',
+      '#type' => 'text_format',
+      '#format' => $description['format'],
+      '#title' => t('Thuraya Landing Page Description'),
+      '#default_value' => $description['value'],
+      '#required' => TRUE,
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Implement hook_block_save
+ * @param type $delta
+ * @param type $edite
+ */
+function thu_landing_page_block_save($delta = '', $edit = array()) {
+  if ($delta == 'sector_landing_page_description') {
+    variable_set('thu_landing_page_description', $edit['thu_landing_page_description']);
+  }
+}
+
+/**
+ * Render footer solutions
+ *
+ * @param string $themes
+ *
+ * @return sting HTML
+ */
+function dan_render_footer_solutions($themes) {
+
+  $solutions = get_nodes_by_type('sector_solution_category');
+
+  return theme($themes, array('solutions' => $solutions));
+}
+
+/**
+ * Hook theme
+ * @return array
+ */
+function thu_landing_page_theme() {
+  $themes = array(
+    'landing_page_slider' => array(
+      'template' => 'templates/thu_landing_page_slider',
+      'variables' => array(
+        'sliders' => NULL,
+      ),
+    ),
+    'landing_page_description' => array(
+      'template' => 'templates/thu_landing_page_description',
+    ),
+    'sector_landing_page_list' => array(
+      'template' => 'templates/thu_sector_landing_page_list',
+      'variables' => array('landing_sectors' => NULL),
+    ),
+    'sector_landing_page_breadcrumb' => array(
+      'template' => 'templates/thu_sector_landing_page_breadcrumb'
+    ),
+    'dan_thuraya_solution_theme_footer' => array(
+        'template'  => 'templates/dan_thuraya_solution_theme_footer',
+        'arguments' => array('solutions'),
+    ),
+  );
+  return $themes;
+}
+
+/**
+ * Get nodes by type
+ */
+function get_nodes_by_type($type, $limit = NULL) {
+  $query = db_select('node', 'n');
+  $query->fields('n', array('nid'));
+  $query->condition('type', $type, '=');
+  $query->condition('status', 1, '=');
+  if ($limit != NULL) {
+    $query->range(0, $limit);
+  }
+  $query->orderBy('nid', 'ASC');
+  $nids = $query->execute()->fetchCol();
+  if (!empty($nids)) {
+    $results = node_load_multiple($nids);
+    return $results;
+  }
+}
+
+/**
+ * Get solution categories by landing sector id
+ *
+ * @param int $sector_id
+ *
+ * @return array|NULL An array of categories or NULL
+ */
+function thu_landing_page_get_solution_cat_by_landing_sector($sector_id) {
+
+  $query = db_select('node', 'n');
+  $query->leftJoin('field_data_field_landing_sector', 'r', 'r.entity_id = n.nid');
+  $query->join('node', 'x', 'r.field_landing_sector_nid = x.nid');
+  $query->condition('n.type', 'sector_solution_category', '=');
+  $query->condition('r.field_landing_sector_nid', $sector_id, '=');
+
+  $query->fields('n', array('nid'));
+  $nids = $query->execute()->fetchCol();
+
+  if (!empty($nids)) {
+    $node = node_load_multiple($nids);
+
+    return $node;
+  }
+
+  return NULL;
+}

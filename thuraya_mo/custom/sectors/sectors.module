@@ -1,0 +1,301 @@
+<?php
+
+/**
+ * @file
+ * Code for the sector feature.
+ */
+function sectors_menu() {
+    $items['sector'] = array(
+        // 'title' => 'Sectors',
+        'access callback' => true,
+        'page callback' => 'sectors_display_new'
+    );
+
+    $items['sectors/%'] = array(
+        // 'title' => 'Sectors',
+        'access callback' => true,
+        'page callback' => 'sectors_display_new_ajax',
+        'page arguments' => array(1),
+        'description' => 'display specific sector.'
+    );
+
+    return $items;
+}
+
+function sectors_form_alter(&$form, &$form_state, $form_id) {
+    if ($form_id == 'webform_client_form_45' || $form_id == 'webform_client_form_53') {
+        $form['#validate'][] = 'sales_webform_form_validate';
+    }
+
+    if ($form_id == 'search_block_form') {
+        $form['#submit'][] = 'sectors_box_form_submit';
+    }
+    /*if ($form_id == 'views_exposed_form') {
+        $form['field_products_nid']['#options'] = array('All' => 'Products', '41' => 'Thuraya IP', '27' => 'Thuraya XT', '39' => 'Seagull 5000', '79' => 'Seagull 5000i FaxConnect', '80' => 'SF 2500', '38' => 'Thuraya XT-DUAL', '104' => 'Thuraya GSM', '28' => 'Thuraya XT-Hotspot', '81' => 'Thuraya PCO', '43' => 'Thuraya Payphone');
+    }*/
+    /* if($form_id == 'comment_node_job_posting_form'){
+      $form['actions']['submit']['#submit'][] = 'custom_jobposting_comment_submit';
+      } */
+}
+
+function custom_jobposting_comment_submit($form, &$form_state) {
+    global $user;
+    $form_state['redirect'] = 'applications/' . $user->uid;
+}
+
+function sectors_box_form_submit($form, &$form_state) {
+    // The search form relies on control of the redirect destination for its
+    // functionality, so we override any static destination set in the request,
+    // for example by drupal_access_denied() or drupal_not_found()
+    // (see http://drupal.org/node/292565).
+    if (isset($_GET['destination'])) {
+        unset($_GET['destination']);
+    }
+
+    // Check to see if the form was submitted empty.
+    // If it is empty, display an error message.
+    // (This method is used instead of setting #required to TRUE for this field
+    // because that results in a confusing error message.  It would say a plain
+    // "field is required" because the search keywords field has no title.
+    // The error message would also complain about a missing #title field.)
+    if ($form_state['values']['search_block_form'] == '') {
+        form_set_error('keys', t('Please enter some keywords.'));
+    }
+
+    $form_id = $form['form_id']['#value'];
+    $info = search_get_default_module_info();
+    if ($info) {
+        $wrd = str_replace(' ', ' OR ', trim($form_state['values'][$form_id]));
+
+        $form_state['redirect'] = 'search/' . $info['path'] . '/' . $wrd;
+    } else {
+        form_set_error(NULL, t('Search is currently disabled.'), 'error');
+    }
+}
+
+function isEmail($email) {
+    return preg_match('/^[a-z0-9!#$%&\'*+\/=?^`{}|~_-]+[.a-z0-9!#$%&\'*+\/=?^`{}|~_-]*@[a-z0-9]+[._a-z0-9-]*\.[a-z0-9]+$/ui', $email);
+}
+
+function sales_webform_form_validate(&$form, &$form_state) {
+    if ($form_state['values']['submitted']['email'] != '') {
+        $valid = isEmail($form_state['values']['submitted']['email']);
+
+        $name = 'submitted][email';
+        if ($valid == 0) {
+            form_set_error($name, 'Email field is not valid.');
+        }
+    }
+}
+
+function sectors_theme() {
+    return array(
+        'sectors_page' => array(
+            'variables' => array('sector_details' => null),
+            'file' => 'sectors.module',
+            'template' => 'setors-page',
+        ),
+        'mobile_page' => array(
+            'variables' => array('mobile' => null),
+            'file' => 'sectors.module',
+            'template' => 'mobile-page',
+        ),'mobile_header' => array(
+            'variables' => array('mobile' => null),
+            'file' => 'sectors.module',
+            'template' => 'mobile-header',
+        ),'mobile_footer' => array(
+            'variables' => array('mobile' => null),
+            'file' => 'sectors.module',
+            'template' => 'mobile-footer',
+        ),'wheretobuy_scroller' => array(
+            'variables' => array('service_partners' => null),
+            'file' => 'sectors.module',
+            'template' => 'wheretobuy-scroller',
+        )
+        
+    );
+}
+
+function sectors_display_new($var = null) {
+    if (!empty($var)) {
+        $r_obj = db_query('SELECT n.nid FROM {node} n WHERE n.title = :title', array(':title' => $var));
+        $rs = $r_obj->fetch();
+        if (!empty($rs)) {
+            $id = $rs->nid;
+            if (!empty($id)) {
+                $var2 = node_load($id);
+            } else {
+                $var2 = 'No data';
+            }
+        } else {
+            $var2 = 'No data';
+        }
+    } else {
+        $var2 = 'No data';
+    }
+
+    $output = theme('sectors_page', array('sector_details' => $var2));
+
+    return $output;
+}
+
+function sectors_display_new_ajax($var = null) {
+    global $base_url;
+    if (!empty($var)) {
+        $r_obj = db_query('SELECT n.nid FROM {node} n WHERE n.title = :title', array(':title' => $var));
+        $rs = $r_obj->fetch();
+        if (!empty($rs)) {
+            $id = $rs->nid;
+            if (!empty($id)) {
+                $var2 = node_load($id);
+            } else {
+                $var2 = 'No data';
+            }
+        } else {
+            $var2 = 'No data';
+        }
+    } else {
+        $var2 = 'No data';
+    }
+    $node = $var2;
+    $field_asol = field_get_items('node', $node, 'field_associated_solutions');
+    $sector_url = drupal_lookup_path('alias', "node/" . $node->nid);
+    if (empty($sector_url)) {
+        $sector_url = 'node/' . $node->nid;
+    }
+
+    $small_text_title = $class = '';
+    $str = strtolower($node->title);
+    $pos = strpos($str, 'comms');
+    $title_first_part = substr($str, 0, $pos);
+    $title_second_part = substr($str, $pos);
+    ?>
+    <div>
+        <ul>													
+            <?php
+            if (!empty($field_asol)) {
+                foreach ($field_asol as $key => $value) {
+                    $output_asol = field_view_value('node', $node, 'field_associated_solutions', $field_asol[$key]);
+                    /* echo count($output_asol['#options']['entity']->field_solution_image); */
+
+
+                    $sol_title = $output_asol['#title'];
+                    if (count($output_asol['#options']['entity']->field_small_text) != 0) {
+                        $small_text_title = "(" . $output_asol['#options']['entity']->field_small_text['und']['0']['value'] . ")";
+                    } else {
+                        $small_text_title = 'Lorem ipsum';
+                    }
+                    $sol_url = drupal_lookup_path('alias', $output_asol['#href']);
+                    if (empty($sol_url)) {
+                        $sol_url = $output_asol['#href'];
+                    }
+                    ?>
+                    <li>
+                        <a href="<?php print $base_url . '/' . $sol_url; ?>">
+                            <div class="logo-img">
+                                <?php
+                                $sol_img = count($output_asol['#options']['entity']->field_solution_image);
+                                if ($sol_img == 0) {
+                                    ?>
+                                    <img alt="Solutions" src="<?php print $base_url . '/sites/all/themes/thuraya'; ?>/images/sol_logo.png">
+                                    <?php
+                                } else {
+                                    $sol_image_uri = $output_asol['#options']['entity']->field_solution_image['und']['0']['uri'];
+                                    ?>
+                                    <img alt="Solutions" src="<?php print image_style_url('new', $sol_image_uri) ?>">
+                                <?php } ?>
+                            </div>
+                            <div class="logo-text">
+                                <span>
+                                    <?php print $sol_title; ?>
+                                </span>
+                                <!--<div class="sText"><?php //print $small_text_title;   ?></div>-->
+                            </div>
+                        </a>
+                    </li>
+                <?php
+                }
+            }
+            ?>
+
+
+        </ul>
+    </div>
+    <?php
+    exit;
+}
+
+function common_menu_mobile($full_menu_items,$parent) {
+    foreach ($full_menu_items as $menu_item) {
+        if ($menu_item['link']['plid'] == $parent && $menu_item['link']['hidden'] != 1) {
+            $m_i['href'] = $menu_item['link']['link_path'];
+            $m_i['title'] = $menu_item['link']['link_title'];
+            $id = 'menu-' . $menu_item['link']['mlid'];
+            $links['menu-' . $id] = $m_i;
+          }
+    }
+    return $links;
+}
+
+
+
+function sectors_submenu_tree_all_data($path, $menu = 'main-menu', $curr_level = 0,          $rebuilt_path='', $childtree = array()) {
+$tree = menu_tree_all_data($menu);
+/*$args = explode('/', $path);
+$rebuilt_path = empty($rebuilt_path) ? $args[$curr_level] : $rebuilt_path . '/' .  $args[$curr_level];*/
+
+foreach ($tree as $branch) {
+	if ($branch['link']['link_path'] == $path) {
+	$childtree = $branch['below'];
+	  /* if ($rebuilt_path != $path) {
+		$curr_level++;
+		sectors_submenu_tree_all_data($path, $menu, $curr_level, $rebuilt_path, $childtree);
+		}*/
+	}
+}
+
+$items = array();
+foreach ($childtree as $child) {
+	if($child['link']['hidden'] != 1){
+$items[] = l($child['link']['title'], $child['link']['link_path']);
+	}
+}
+
+return $items;
+}
+
+function wheretobuy_scroller($type){ 
+		if($type=='S'){	 
+		$servicePartnersList = node_load_multiple(array(), array('type' => 'news_ticker_service_partners')); 
+		foreach ($servicePartnersList as  $key => $value){
+			if($value->status == 1){
+				$titles[] = array('title'=>$value->field_service_partner, 'partnertype' =>$value->field_partner_type);
+			}
+		}		
+		$managePromos = node_load_multiple(array(), array('type' => 'manage_promos'));
+		foreach ($managePromos as  $key => $value){
+			if($value->status == 1){
+			$managePromosDetails[] = array('title'=>$value->field_promomessage, 'url' =>$value->field_promourl);
+			}
+		}	
+		}
+		else
+		{
+		$servicePartnersList = node_load_multiple(array(), array('type' => 'news_ticker_retailer_partners')); 
+		foreach ($servicePartnersList as  $key => $value){
+			if($value->status == 1){
+				$titles[] = array('title'=>$value->field_retailer_partner, 'partnertype' =>$value->field_partner_type,'trikar_logo'=>$value->field_triker_logo);
+			}
+		}		
+		$managePromos = node_load_multiple(array(), array('type' => 'manage_retailers_promos'));
+		foreach ($managePromos as  $key => $value){
+			if($value->status == 1){
+			$managePromosDetails[] = array('title'=>$value->field_promomessage, 'url' =>$value->field_promourl);
+			}
+		}	
+
+		}	 
+	   $output = theme('wheretobuy_scroller', array('manage_promos' => $managePromosDetails,'service_partners' => $titles,'display_type'=>$type));
+	  				
+	return $output;
+}

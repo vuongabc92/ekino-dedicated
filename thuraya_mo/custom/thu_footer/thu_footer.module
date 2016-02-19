@@ -1,0 +1,118 @@
+<?php
+
+/**
+ * Implement of hook_info()
+ * @return type
+ */
+function thu_footer_block_info()
+{
+  return array(
+    'footer_bottom' => array(
+      'info' => 'Thuraya Footer Bottom'
+    ),    
+  );
+  
+}
+
+/**
+ * Implement hook_block_view()
+ * @param type $delta
+ */
+function thu_footer_block_view($delta)
+{
+  
+  $block = array();
+  switch ($delta) {
+
+    case 'footer_bottom':
+      $block['content'] = array('#markup' => '&nbsp;');
+      break;
+  }
+  $block['subject'] = '';
+  return $block;
+}
+
+/**
+ * Implement hook_block_configure
+ * @param type $delta
+ * @return type
+ */
+function thu_footer_block_configure($delta = '')
+{
+  $form = array();
+  if ($delta == 'footer_bottom') {
+    $form['thu_variables_description'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Description'),
+      '#default_value' => variable_get('thu_variables_description'),
+      '#required' => TRUE,
+    );
+    $form['thu_variables_copy_right'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Copy Right'),
+      '#default_value' => variable_get('thu_variables_copy_right'),
+      '#required' => TRUE,
+    );
+    $form['thu_variables_terms_of_use'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Title Terms of Use'),
+      '#default_value' => variable_get('thu_variables_terms_of_use'),
+      '#required' => TRUE,
+    );
+    $form['thu_variables_link_terms_of_use'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Link Terms of Use'),
+      '#default_value' => variable_get('thu_variables_link_terms_of_use'),
+      '#required' => TRUE,
+    );
+    $form['thu_variables_privacy'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Title Privacy'),
+      '#default_value' => variable_get('thu_variables_privacy'),
+      '#required' => TRUE,
+    );
+    $form['thu_variables_link_privacy'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Link Privacy'),
+      '#default_value' => variable_get('thu_variables_link_privacy'),
+      '#required' => TRUE,
+    );
+    $form['thu_variables_sitemap'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Title Sitemap'),
+      '#default_value' => variable_get('thu_variables_sitemap'),
+      '#required' => TRUE,
+    );
+    $form['thu_variables_link_sitemap'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Link Sitemap'),
+      '#default_value' => variable_get('thu_variables_link_sitemap'),
+      '#required' => TRUE,
+    );
+  }
+  
+  return $form;
+}
+
+/**
+ * Implement hook_block_save
+ * @param type $delta
+ * @param type $edite
+ */
+function thu_footer_block_save($delta = '', $edit = array())
+{
+  if ($delta == 'footer_bottom') {
+    variable_set('thu_variables_description', $edit['thu_variables_description']);
+    variable_set('thu_variables_copy_right', $edit['thu_variables_copy_right']);
+    
+    variable_set('thu_variables_terms_of_use', $edit['thu_variables_terms_of_use']);
+    variable_set('thu_variables_link_terms_of_use', $edit['thu_variables_link_terms_of_use']);
+    
+    variable_set('thu_variables_privacy', $edit['thu_variables_privacy']);
+    variable_set('thu_variables_link_privacy', $edit['thu_variables_link_privacy']);
+    
+    variable_set('thu_variables_sitemap', $edit['thu_variables_sitemap']);
+    variable_set('thu_variables_link_sitemap', $edit['thu_variables_link_sitemap']);
+  }
+  
+}

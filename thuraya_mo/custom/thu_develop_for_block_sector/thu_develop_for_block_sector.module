@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * Implement of hook_info()
+ * @return type
+ */
+function thu_develop_for_block_sector_block_info() {
+  return array(
+    'sectors' => array(
+      'info' => 'Thuraya Develop For Block Sector'
+    ),
+  );
+  
+}
+
+/**
+ * Implement hook_block_view()
+ * @param type $delta
+ */
+function thu_develop_for_block_sector_block_view($delta) {  
+  $block = array();
+  switch ($delta) {
+    case 'sectors':
+      $block['content'] = array('#markup' => '&nbsp;');
+  }
+  $block['subject'] = '';
+  return $block;
+}

@@ -1,0 +1,80 @@
+<?php
+
+/**
+ * Implement of hook_info()
+ * @return type
+ */
+function thu_develop_block_info()
+{
+  return array(
+    'link_description' => array(
+      'info' => 'Thuraya Develop Manage Description'
+    ),
+  );
+  
+}
+
+/**
+ * Implement hook_block_view()
+ * @param type $delta
+ */
+function thu_develop_block_view($delta) {
+  
+  $block = array();
+  switch ($delta) {
+
+    case 'link_description':
+      $block['content'] = theme('link_description', array());
+  }
+  $block['subject'] = '';
+  return $block;
+}
+
+/**
+ * Implement hook_block_configure
+ * @param type $delta
+ * @return type
+ */
+function thu_develop_block_configure($delta = '') {
+  $form = array();
+  if ($delta == 'link_description') {
+    $description = variable_get('thu_develop_description', array('format' => 'full_html'));
+    $form['thu_develop_description'] = array(
+//      '#type' => 'textarea',
+      '#type' => 'text_format', 
+      '#format' => $description['format'],
+      '#title' => t('Thuraya Develop Description'),
+      '#default_value' => $description['value'],
+      '#required' => TRUE,
+    );    
+    
+  }
+  
+  return $form;
+}
+
+/**
+ * Implement hook_block_save
+ * @param type $delta
+ * @param type $edite
+ */
+function thu_develop_block_save($delta = '', $edit = array())
+{
+  if ($delta == 'link_description') {
+    variable_set('thu_develop_description', $edit['thu_develop_description']);
+  }
+  
+}
+
+/**
+ * Hook theme
+ * @return array
+ */
+function thu_develop_theme() {
+  $themes = array(
+      'link_description' => array(
+          'template' => 'thu_develop',
+      ),
+  );
+  return $themes;
+}

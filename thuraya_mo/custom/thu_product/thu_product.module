@@ -1,0 +1,113 @@
+<?php
+
+/**
+ * @file
+ * Code for associated products
+ * */
+function dan_render_submenu_product($themes) {
+  // Query get categories.
+  $vocabulary = taxonomy_vocabulary_machine_name_load('product_type');
+  $categories = taxonomy_get_tree($vocabulary->vid);
+
+  $content = array();
+  if (!empty($categories)) {
+    foreach ($categories as $category) {
+      $term = taxonomy_term_load($category->tid);
+      if ($term->field_status['und'][0]['value'] == 1) {
+        $content[] = array('id' => $term->tid, 'name' => $term->name, 'icon' => $term->field_icons['und'][0]['uri']);
+      }
+    }
+  }
+  return theme($themes, array('categories' => $content));
+}
+
+/**
+ * Hook theme
+ * @return array
+ */
+function thu_product_theme() {
+  $themes = array(
+      'dan_thuraya_submenu_product_theme' => array(
+          'template' => 'dan_thuraya_submenu_product_theme',
+          'arguments' => array('categories'),
+      ),
+      'dan_thuraya_product_theme_footer' => array(
+          'template' => 'dan_thuraya_product_theme_footer',
+          'arguments' => array('categories'),
+      ),
+  );
+  return $themes;
+}
+
+/**
+ * Get breadcrumb for all page.
+ */
+function thu_get_breadcrumb($nodes = array()) {
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), '<front>');
+  foreach ($nodes as $crumb) {
+    if (!empty($crumb['href'])) {
+      $breadcrumb[] = l($crumb['title'], $crumb['href']);
+    } else {
+      $breadcrumb[] = $crumb['title'];
+    }
+  }
+
+  return drupal_set_breadcrumb($breadcrumb);
+}
+
+/**
+ * Get nodes by taxonomy
+ */
+function get_node_by_taxonomy_id($tax_id) {
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', 'product')
+          ->propertyCondition('status', NODE_PUBLISHED)
+          ->fieldCondition('field_product_type', 'tid', $tax_id);
+
+  $result = $query->execute();
+  $nids = array_keys($result['node']);
+  $nodes = entity_load('node', $nids);
+  
+  return $nodes;
+}
+
+/**
+ * Implement of hook form_alter
+ */
+function thu_product_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id === 'taxonomy_form_term' && $form_state["term"]->vocabulary_machine_name === 'product_type') {
+    $term_id = $form_state["term"]->tid;
+    $products = get_node_by_taxonomy_id($term_id);
+
+    $option = array();
+    foreach ($products as $product) {
+      $option[$product->nid] = $product->title;
+    }
+    
+    $form["field_node_term_products"][LANGUAGE_NONE]["#options"] = $option;
+  }
+}
+
+/**
+ * get related-products
+ */
+function get_product_related_type_list($node_type, $prod_id){
+	$result_obj = db_query('SELECT fas.entity_id FROM {field_data_field_product_type} fas, {field_data_field_sort_order} fs, {node} n WHERE fas.entity_id = n.nid AND fs.entity_id = n.nid AND fas.field_product_type_tid = :fas_nid AND n.status = 1 AND fas.entity_id != :fas_id ORDER BY fs.field_sort_order_value', array(':fas_nid' => $node_type, ':fas_id'=> $prod_id));
+    $result = $result_obj->fetchAll();
+    
+	return $result;
+ }
+ 
+ /**
+ * Implements hook_node_view_alter()
+ */
+function thu_product_node_view_alter(&$build) {
+  if (isset($build['#node']) && $build['#view_mode'] == 'teaser') {
+    $node = $build['#node'];
+    if (!empty($node->nid)) {
+      $build['#contextual_links']['node'] = array('node', array($node->nid));
+    }
+  }
+}

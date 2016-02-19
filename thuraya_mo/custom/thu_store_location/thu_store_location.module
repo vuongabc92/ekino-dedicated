@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * Implement of hook_info()
+ * @return type
+ */
+function thu_store_location_block_info()
+{
+  return array(
+    'footer_store_location' => array(
+      'info' => 'Thuraya Manage Store Location'
+    ),    
+  );
+  
+}
+
+/**
+ * Implement hook_block_view()
+ * @param type $delta
+ */
+function thu_store_location_block_view($delta)
+{
+  
+  $block = array();
+  switch ($delta) {
+
+    case 'footer_store_location':
+      $block['content'] = array('#markup' => '&nbsp;');
+      break;
+  }
+  $block['subject'] = '';
+  return $block;
+}
+
+/**
+ * Hook theme
+ * @return array
+ */
+function thu_store_location_theme() {
+  $themes = array(
+      'thu_store_location' => array(
+          'template' => 'thu_store_location',
+      ),
+  );
+  return $themes;
+}

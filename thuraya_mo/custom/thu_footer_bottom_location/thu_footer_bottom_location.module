@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * Implement of hook_info()
+ * @return type
+ */
+function thu_footer_bottom_location_block_info()
+{
+  return array(
+    'footer_bottom_location' => array(
+      'info' => 'Thuraya Footer Bottom - Event'
+    ),
+  );
+  
+}
+
+function thu_footer_bottom_location_block_view($delta='') {
+  $block = array();
+  
+  switch($delta) {
+    case 'footer_bottom_location' :
+      $block['content'] = array('#markup' => '&nbsp;');
+      break;
+  }
+  
+  return $block;
+}
+
+function get_latest_event($type) {
+  $query = db_select('node', 'n');
+  $query->condition('type', $type, '=');
+  $query->fields('n', array('nid'));  
+  $query->range(0, 1)->orderBy('nid', 'DESC');
+  $nids = $query->execute()->fetchCol();
+  if (!empty($nids)) {
+    $node = node_load_multiple($nids);
+    return $node;
+  }
+
+  return NULL;
+}

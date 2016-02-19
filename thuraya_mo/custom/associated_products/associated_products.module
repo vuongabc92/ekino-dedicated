@@ -1,0 +1,529 @@
+<?php
+/**
+* @file
+* Code for associated products
+**/
+function associated_products_theme(){
+ return array(
+  'associated_products' => array(
+   'variables' => array('products'=>null),
+    'file' => 'associated_products.module',
+    'template' =>'associated-products', 
+  ),
+  'other_products' => array(
+   'variables' => array('products'=>null),
+    'file' => 'associated_products.module',
+    'template' =>'other-products', 
+  ),
+  'brand_data' => array(
+   'variables' => array('branddata'=>null),
+    'file' => 'associated_products.module',
+    'template' =>'brand-data', 
+  ),
+  'campaign_data' => array(
+   'variables' => array('campaigndata'=>null),
+    'file' => 'associated_products.module',
+    'template' =>'campaign-data', 
+  )
+ );
+}
+
+ function associated_products_list($id){
+  drupal_add_js(drupal_get_path('module', 'associated_products') . '/js/jquery.carouFredSel.js');
+  drupal_add_js(drupal_get_path('module', 'associated_products') . '/js/associated_products.js');
+
+    $result_obj = db_query(' SELECT fas.entity_id FROM field_data_field_associated_solutions fas LEFT JOIN field_data_field_sort_order fs ON fs.entity_id = fas.entity_id WHERE fas.bundle = :fas_pro AND fas.field_associated_solutions_nid = :fas_nid ORDER BY fs.field_sort_order_value', array(':fas_pro'=>'product',':fas_nid' => $id));
+
+
+  $result = $result_obj->fetchAll();
+   foreach($result as $r){
+	   $nd = node_load($r->entity_id);
+	   if($nd->status == '1'){
+	    $all_r[] = $r->entity_id;
+	   }
+	   }
+	   if(count($all_r)>0){
+    $output = theme('associated_products', array('products' => $all_r));
+	   } else {
+      $output = '';
+	   }
+  return $output;
+ }
+ 
+ 
+function solutions_related_sectors($id){
+ 
+$result_obj = db_query('SELECT fas.entity_id FROM {field_data_field_associated_solutions} fas WHERE fas.bundle=:fas_pro and fas.field_associated_solutions_nid = :fas_nid', array(':fas_pro'=>'sector',':fas_nid' => $id));
+$all_r= array();
+       $results = $result_obj->fetchAll();
+	   foreach($results as $result){
+	    $all_r[] = $result->entity_id;
+	   }
+
+  return $all_r;
+ }
+
+
+ 
+  function associated_product_type_list($node_type, $prod_id){
+	drupal_add_js(drupal_get_path('module', 'associated_products') . '/js/jquery.carouFredSel.js');
+	drupal_add_js(drupal_get_path('module', 'associated_products') . '/js/associated_products.js');
+
+	$result_obj = db_query('SELECT fas.entity_id FROM {field_data_field_product_type} fas, {field_data_field_sort_order} fs, {node} n WHERE fas.entity_id = n.nid AND fs.entity_id = n.nid AND fas.field_product_type_tid = :fas_nid AND n.status = 1 AND fas.entity_id != :fas_id ORDER BY fs.field_sort_order_value', array(':fas_nid' => $node_type, ':fas_id'=> $prod_id));
+
+    $result = $result_obj->fetchAll();
+	$output = theme('other_products', array('products' => $result));
+	return $output;
+ }
+ 
+  function get_brand_data(){
+	
+	$result_obj = db_query('SELECT nid FROM {node} fas WHERE fas.type = :nType AND fas.status = 1 ORDER BY fas.created DESC LIMIT 1', array(':nType' => 'brand_data'));
+    //$result = $result_obj->fetchAll();
+	//$output = theme('brand_data', array('branddata' => $result));
+	
+	$output = "";
+	foreach ($result_obj as $record) {
+		$nid = $record->nid;
+		//echo "nid=".$nid; exit;
+		if(!empty($nid)){
+			$mNode = node_load($nid);
+			//print_r($mNode); exit;
+			$output .= '<div style="padding: 20px;"><h1>'.$mNode->title.'</h1><br/>';
+			if($mNode->body){
+				$output .= $mNode->body['und'][0]["safe_value"];
+			}
+				
+			if($mNode->field_screen_width){
+				$mob = getMobile();
+			  if($mob == '1'){
+				$output .= '<p id="swidth" style="display: none">320px</p>';
+			  } else {
+                $output .= '<p id="swidth" style="display: none">'.$mNode->field_screen_width[$mNode->language][0]["value"].'</p>';
+			  }
+			}
+				
+			if($mNode->field_screen_height) {
+				$output .= '<p id="sheight" style="display: none">'.$mNode->field_screen_height[$mNode->language][0]["value"].'</p>';
+			}
+      $output .= '</div>';
+		}
+	}
+	return $output;
+ }
+ 
+  function get_campaign_pages(){
+	$result_obj = db_query('SELECT n.nid FROM  `taxonomy_term_data` td, `taxonomy_index` ti, node n WHERE (td.name = :cname or td.name = :ctypename ) and  td.tid = ti.tid and n.nid = ti.nid and n.status = 1 Order by n.nid desc limit 4', array(':cname' => 'Campaigns',':ctypename' => 'Campaigns-SingleColumn'));
+	$result = $result_obj->fetchAll();	
+	$output = theme('campaign_data', array('campaigndata' => $result));
+	return $output;
+ }
+ 
+ function get_all_campaigns(){
+	$result_obj = db_query('SELECT n.nid FROM  `taxonomy_term_data` td, `taxonomy_index` ti, node n WHERE td.name = :cname and  td.tid = ti.tid and n.nid = ti.nid and n.status = 1 ORDER BY n.nid DESC', array(':cname' => 'Campaigns'));
+	
+	return $result_obj;
+ }
+ 
+  function get_products_by_category($categoryId, $pageType){
+	$result_obj = db_query('SELECT pt.entity_id FROM {field_data_field_product_type} pt, {node} n, {field_data_field_sort_order} fsort WHERE pt.entity_id = n.nid AND fsort.entity_id = n.nid AND pt.bundle = :bundle  AND  pt.field_product_type_tid = :category_id AND pt.deleted = 0 AND pt.entity_id IN(SELECT DISTINCT (`field_product_nid`) FROM `field_data_field_product` WHERE bundle = :page_type) ORDER BY fsort.field_sort_order_value', array(':bundle' => 'product', ':category_id' => $categoryId, ':page_type' =>$pageType));
+	
+	$result = $result_obj->fetchAll();
+	return $result; 
+ }
+ 
+ function get_products_by_categoryid($categoryId){
+	$result_obj = db_query('SELECT pt.entity_id FROM `field_data_field_product_type` pt, `node` n, field_data_field_sort_order fsort WHERE pt.entity_id = n.nid AND fsort.entity_id = n.nid AND pt.bundle = :bundle AND n.status = 1 AND  pt.field_product_type_tid = :category_id AND pt.deleted = 0 AND pt.entity_id ORDER BY fsort.field_sort_order_value', array(':bundle' => 'product', ':category_id' => $categoryId));
+	
+	$result = $result_obj->fetchAll();
+	return $result; 
+ }
+ 
+ function get_countries_list(){
+	include_once DRUPAL_ROOT . '/includes/iso.inc';
+	$countries = _country_get_predefined_list();
+	return $countries;
+}
+
+function associated_products_menu(){
+  $items['network_partners/%'] = array(
+    'access callback' => true,
+    'page callback' => 'show_roaming_partners_by_country',
+    'page arguments' => array(1),
+    'description' => 'Display Roaming Partners list by country.'
+  );
+  
+  $items['milestone/%'] = array(
+    'access callback' => true,
+    'page callback' => 'get_milestone_by_year',
+    'page arguments' => array(1),
+    'description' => 'Display Milestone data by year.'
+  );
+  $items['jobapplications/%'] = array(
+    'access callback' => true,
+    'page callback' => 'job_applications',
+    'page arguments' => array(1),
+    'description' => 'Display job applications.',
+    'type' => MENU_CALLBACK,
+  );  
+ /* $items['servicePartner/%'] = array(
+    'access callback' => true,
+    'page callback' => 'wheretobuy_action',
+    'page arguments' => array(1),
+    'description' => 'Display partner Map content.'
+  ); */    
+  return $items;       
+}
+
+function wheretobuy_action($title=null){	
+	 /* $view = views_get_view('where_to_buy');
+	  var_dump($view);  
+	  $view->set_display('title');
+	  $view->exposed_input['title'] = $title;
+	  $view->set_use_ajax(TRUE);
+      $view->pre_execute();
+      $output = t("This is some content delivered via AJAX");
+      $output = $view->render(); 
+	  print 'pradeep';
+	  print $output;*/
+	  
+	 /*  $buildmap = openlayers_build_map('clone_of_geofield_formatter_map');
+	 var_dump($buildmap);
+	 $map = openlayers_map_load('clone_of_geofield_formatter_map');
+	  var_dump($map->data);
+	  var_dump($map->name);
+	  $output = openlayers_render_map($map->data,$map->name);	  
+	  print $output;
+	  print '<iframe src="'.$base_url.'/where-to-buy?title='.$title.'" id="openLayerIframe" width="100%" height="500" scrolling="no" frameBorder="0"></iframe> ';*/
+	  exit;	      
+}
+function job_applications($status){	
+	global $user;
+ 	$userRole = $user->roles;
+ 	if($user->uid == '1' || $userRole[3] == 'administrator'){
+		if($status == 'approve'){
+			$commentsObj = db_query('select n.title,c.subject,c.name,c.status from {comment} c INNER JOIN {node} n ON n.nid = c.nid WHERE c.status = 1 AND n.status = 1');
+		}elseif($status == 'reject'){
+			$commentsObj = db_query('select n.title,c.subject,c.name,c.status from {comment} c INNER JOIN {node} n ON n.nid = c.nid WHERE c.status = 0 AND n.status = 1');
+		}elseif($status == 'all'){
+			$commentsObj = db_query('select n.title,c.subject,c.name,c.status from {comment} c INNER JOIN {node} n ON n.nid = c.nid WHERE n.status = 1');
+		}else{
+			$not_found_url = variable_get('site_404');      
+     	    drupal_goto($not_found_url);	 
+		}	
+		$result = $commentsObj->fetchAll();				
+		foreach ($result as $fields) 
+		{
+		 $fileItemsArray[] = (array)$fields;		
+		}
+		$header = array('Job Title','Subject','Request by','Status');
+		$csv = "\"".implode('","',$header)."\"\r\n";
+		foreach($fileItemsArray as $file){						
+			$file['status'] = ($file['status'] == 1) ? 'Approved' : 'Rejected';
+			$csv .= "\"".implode('","',$file)."\"\r\n";    			
+		}		 															
+		header('Content-Description: File Transfer');
+		header("Content-Type: text/csv") ;		
+		header("Content-Disposition: attachment;filename=jobApplications.csv");		
+		header("Expires: 0");			
+		echo $csv;				
+		
+	}else{
+	  $not_found_url = variable_get('site_404');      
+      drupal_goto($not_found_url);	 
+	}	
+	exit;
+}
+
+function get_milestone_by_year($year=null){
+	$resFormat = "No Data"; 
+	if(!empty($year)){ 
+		 $r_obj = db_query('SELECT n.nid, n.title, b.body_value FROM {field_data_field_milestone_year} y, {node} n, {field_data_body} b WHERE y.entity_id = n.nid AND y.entity_id = b.entity_id AND field_milestone_year_value = :year', array(':year' => $year));
+		
+		//echo '<pre>';print_r($r_obj);echo '</pre>'; exit
+		$mStoneData = '<div class="subheader">No Data</div>';
+		
+		$i=0;
+		foreach ($r_obj as $record) {
+			if($i == 0){
+				$mStoneData = "";
+				$i++;
+			}
+			$mStoneData .= '<div class="subheader">'.$record->title.'</div>';
+			$mStoneData .= '<p>'.$record->body_value.'</p>';
+			$nid = $record->nid;
+			//echo "nid=".$nid; exit;
+			if(!empty($nid)){
+				$mNode = node_load($nid);
+				$mStoneData .= '<div class="milestone-img"><img src="'.image_style_url('milestone_image', $mNode->field_page_image[$mNode->language][0]['uri']).'" alt="'.$record->title.'"  title="'.$record->title.'" /></div>';
+			}
+		}
+		$resFormat = $mStoneData;
+	}
+	print $resFormat;
+	exit;
+}
+
+function get_roaming_partners_countries(){
+	
+    $all_fields = field_info_fields();
+    $roam_countries= list_allowed_values($all_fields["field_country"]);
+ 
+	return $roam_countries;
+}
+
+function show_roaming_partners_by_country($countryId=null){
+	$resFormat = "No Data"; 
+	if(!empty($countryId)){ 
+		 $r_obj = db_query('SELECT n.nid, n.title FROM {node} n, {field_data_field_country} c WHERE n.nid = c.entity_id AND n.type = :type AND c.field_country_value = :country_id order by n.title', array(':type' => 'roaming_partners', ':country_id' => $countryId));
+		
+		//echo '<pre>';print_r($r_obj);echo '</pre>'; 
+		$pList = ""; $continentName="";
+		foreach ($r_obj as $record) {
+			$pList .= '<li>'.$record->title.'</li>';
+			$nid = $record->nid;
+			//echo "nid=".$nid; exit;
+			if(!empty($nid) && $continentName == ""){
+				$continentName = get_continent_name_by_nid($nid);
+				if(!empty($continentName)){
+					$continentName = $continentName." / ";
+				}
+			}
+		}
+		
+		//echo $continentName; exit;
+		$countryName = get_country_by_id($countryId);
+		$resFormat = '<h2>'.$continentName.$countryName.'</h2>';
+		$resFormat .= '<ul>';
+		if($pList == "")
+			$resFormat .= "<li>No partners found</li>";
+		else
+			$resFormat .= $pList;
+		$resFormat .= '</ul>';
+	}
+	print $resFormat;
+	exit;
+}
+
+function get_country_by_id($countryId){
+	    $all_fields = field_info_fields();
+       $countries = list_allowed_values($all_fields["field_country"]);
+
+	
+	if(array_key_exists($countryId, $countries))
+		return $countries[$countryId];
+	else
+		return "no country";
+}
+
+function get_continent_name_by_nid($nid){
+	$cname = "";
+	if(!empty($nid)){ 
+		$rs_obj = db_query('SELECT c.field_continent_value FROM {field_data_field_continent} c WHERE c.entity_id = :nid AND c.deleted = 0', array(':nid' => $nid));
+		$res = $rs_obj->fetch();
+		//echo '<pre>';print_r($res);echo '</pre>';exit;
+		if(!empty($res)){
+			$cname = $res->field_continent_value;
+		}
+	}
+	return $cname;
+}
+
+function getMapLocations($countryId, $productId, $partnerTier, $company){
+	
+	if($productId == '%' && $partnerTier == '%'){
+		$r_obj = db_query("SELECT node.title AS node_title, node.nid AS nid, node.created AS node_created, loc.field_location_lat, loc.field_location_lon FROM {node} node LEFT JOIN {field_data_field_location} loc ON node.nid = loc.entity_id LEFT JOIN {field_data_field_address} addr ON node.nid = addr.entity_id WHERE node.status = '1' AND node.type ='service_partner' AND addr.field_address_country LIKE :countryId AND node.title LIKE :company ORDER BY node_created DESC", array(':countryId'=> $countryId, ':company' => $company));
+	} else {
+		//$r_obj = db_query("SELECT node.title AS node_title, node.nid AS nid, node.created AS node_created, loc.field_location_lat, loc.field_location_lon FROM {node} node,  {field_data_field_location} loc WHERE node.nid = loc.entity_id AND node.status = '1' AND node.type ='service_partner' ORDER BY node_created DESC");
+		if($productId != '%' && $partnerTier == '%'){
+			$r_obj = db_query("SELECT node.title AS node_title, node.nid AS nid, node.created AS node_created, loc.field_location_lat, loc.field_location_lon FROM {node} node LEFT JOIN {field_data_field_location} loc ON node.nid = loc.entity_id LEFT JOIN {field_data_field_address} addr ON node.nid = addr.entity_id INNER JOIN {field_data_field_products} prod ON node.nid = prod.entity_id WHERE node.status = '1' AND node.type ='service_partner' AND addr.field_address_country LIKE :countryId AND node.title LIKE :company AND prod.field_products_nid = :productId ORDER BY node_created DESC", array(':countryId'=> $countryId, ':company' => $company, ':productId' => $productId));
+		} else if($partnerTier != '%' && $productId == '%'){
+			$r_obj = db_query("SELECT node.title AS node_title, node.nid AS nid, node.created AS node_created, loc.field_location_lat, loc.field_location_lon FROM {node} node LEFT JOIN {field_data_field_location} loc ON node.nid = loc.entity_id LEFT JOIN {field_data_field_address} addr ON node.nid = addr.entity_id INNER JOIN {field_data_field_partner_tier} partner ON node.nid = partner.entity_id WHERE node.status = '1' AND node.type ='service_partner' AND addr.field_address_country LIKE :countryId AND node.title LIKE :company AND partner.field_partner_tier_value = :partnerTier ORDER BY node_created DESC", array(':countryId'=> $countryId, ':company' => $company, ':partnerTier' => $partnerTier));
+		} else {
+			$r_obj = db_query("SELECT node.title AS node_title, node.nid AS nid, node.created AS node_created, loc.field_location_lat, loc.field_location_lon FROM {node} node LEFT JOIN {field_data_field_location} loc ON node.nid = loc.entity_id LEFT JOIN {field_data_field_address} addr ON node.nid = addr.entity_id INNER JOIN {field_data_field_products} prod ON node.nid = prod.entity_id INNER JOIN {field_data_field_partner_tier} partner ON node.nid = partner.entity_id WHERE node.status = '1' AND node.type ='service_partner' AND addr.field_address_country LIKE :countryId AND node.title LIKE :company AND prod.field_products_nid = :productId AND partner.field_partner_tier_value = :partnerTier ORDER BY node_created DESC", array(':countryId'=> $countryId, ':company' => $company, ':productId' => $productId, ':partnerTier' => $partnerTier));
+		}
+	}
+	
+	$cnt = 0;
+	foreach ($r_obj as $record) {
+		$node_obj = node_load($record->nid);
+	  
+		$tmz = $node_obj->field_timezone['und'][0]['value'];
+		$vl = "";
+		
+		if(!empty($tmz)){
+			$dateTime = new DateTime($tmz);
+			$dateTime->setTimeZone($tmz);
+			$d1 = $dateTime->format('Y-M-d H:i:s'); 
+			$d2 = gmdate("Y-M-d H:i:s",time());
+			$difference= strtotime($d1)-strtotime($d2);
+			$hours = $difference / 3600; // 3600 seconds in an hour
+			$minutes = ($hours - floor($hours)) * 60; 
+			$final_hours = floor($hours);
+			$final_minutes = round($minutes);
+
+			$tz = new DateTimeZone($tmz);
+			$trans = $tz->getTransitions(strtotime(date('Y-m')),strtotime(date('Y-m')));
+			$daylight_saving = $trans[count($trans) - 1]['isdst'];
+
+
+			if ($daylight_saving == '1'){
+				if ($final_hours[0] != "-"){ $final_hours=$final_hours-1;  }
+				else { $final_hours=$final_hours+1; }
+			}
+			if($final_hours > 0){ $final_hours = '+'. $final_hours;}
+				$vl = '(GMT '.$final_hours.' h '.$final_minutes.' m )';
+		}//end of if statement
+			
+		for($i=0;$i<count($node_obj->field_partner_tier['und']);$i++){			
+			$prt[$i] = $node_obj->field_partner_tier['und'][$i]['value'];
+		}
+		$v = implode($prt,',');
+		
+		$dataArray['marker'][$cnt++] = array('title'=>$record->node_title,'nid'=>$record->nid, 'tel'=>$node_obj->field_telephone_number['und'][0]['value'],'fax'=>$node_obj->field_fax_number['und'][0]['value'],'email'=>$node_obj->field_email['und'][0]['value'], 'website'=>$node_obj->field_website['und'][0]['value'],'partner'=>$v, 'contact'=>$node_obj->field_contact_person['und'][0]['value'],'skype'=>$node_obj->field_skype['und'][0]['value'],'timezone'=>$vl,'position'=>$record->field_location_lat.','.$record->field_location_lon);
+		unset($prt);
+	}//end of for loop
+	
+	$output = json_encode((object)$dataArray);
+	return $output;
+}
+ 
+function curPageURL() {
+ $pageURL = 'http';
+ if ($_SERVER["HTTPS"] == "on") {$pageURL .= "s";}
+ $pageURL .= "://";
+ if ($_SERVER["SERVER_PORT"] != "80") {
+  $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
+ } else {
+  $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+ }
+ return urlencode($pageURL);
+}
+
+/** Function to get node teaser **/
+function getNodeTeaser($node){
+	$node = node_load($node->vid);
+	if($node->body != '' ) {
+		$body = field_get_items('node', $node, 'body');		
+		$teaser = field_view_value('node', $node, 'body', $body[0],'teaser');
+		$teaserMarkup =  $teaser['#markup'];	
+		$summary = preg_replace("/<[^>]*>/","",$teaserMarkup);		
+	}else{
+		$summary = $node->title;		
+	}
+	return urlencode($summary);
+}
+
+/** Function to get node teaser By id **/
+function getNodeTeaserById($data){		
+	$nodeID = $data->nid;
+	$node = node_load($nodeID);	
+	$jobpurpose = $node->field_job_purpose;
+	$summary = $jobpurpose['und'][0]['safe_value'];
+	return urlencode($summary);
+}
+
+/** Function to get jop postings nodes teaser By id **/
+function getJobPostingNodeTeaser($node){		
+	$nodeID = $node->nid;
+	$node = node_load($nodeID);	
+	$jobpurpose = $node->field_job_purpose;
+	$summary = $jobpurpose['und'][0]['safe_value'];
+	return urlencode($summary);
+}
+
+function getBrowser() 
+{ 
+    $u_agent = $_SERVER['HTTP_USER_AGENT']; 
+    $bname = 'Unknown';
+    $platform = 'Unknown';
+    $version= "";
+
+    //First get the platform?
+    if (preg_match('/linux/i', $u_agent)) {
+        $platform = 'linux';
+    }
+    elseif (preg_match('/macintosh|mac os x/i', $u_agent)) {
+        $platform = 'mac';
+    }
+    elseif (preg_match('/windows|win32/i', $u_agent)) {
+        $platform = 'windows';
+    }
+    
+    // Next get the name of the useragent yes seperately and for good reason
+    if(preg_match('/MSIE/i',$u_agent) && !preg_match('/Opera/i',$u_agent)) 
+    { 
+        $bname = 'Internet Explorer'; 
+        $ub = "MSIE"; 
+    } 
+    elseif(preg_match('/Firefox/i',$u_agent)) 
+    { 
+        $bname = 'Mozilla Firefox'; 
+        $ub = "Firefox"; 
+    } 
+    elseif(preg_match('/Chrome/i',$u_agent)) 
+    { 
+        $bname = 'Google Chrome'; 
+        $ub = "Chrome"; 
+    } 
+    elseif(preg_match('/Safari/i',$u_agent)) 
+    { 
+        $bname = 'Apple Safari'; 
+        $ub = "Safari"; 
+    } 
+    elseif(preg_match('/Opera/i',$u_agent)) 
+    { 
+        $bname = 'Opera'; 
+        $ub = "Opera"; 
+    } 
+    elseif(preg_match('/Netscape/i',$u_agent)) 
+    { 
+        $bname = 'Netscape'; 
+        $ub = "Netscape"; 
+    } 
+    
+    // finally get the correct version number
+    $known = array('Version', $ub, 'other');
+    $pattern = '#(?<browser>' . join('|', $known) .
+    ')[/ ]+(?<version>[0-9.|a-zA-Z.]*)#';
+    if (!preg_match_all($pattern, $u_agent, $matches)) {
+        // we have no matching number just continue
+    }
+    
+    // see how many we have
+    $i = count($matches['browser']);
+    if ($i != 1) {
+        //we will have two since we are not using 'other' argument yet
+        //see if version is before or after the name
+        if (strripos($u_agent,"Version") < strripos($u_agent,$ub)){
+            $version= $matches['version'][0];
+        }
+        else {
+            $version= $matches['version'][1];
+        }
+    }
+    else {
+        $version= $matches['version'][0];
+    }
+    
+    // check if we have a number
+    if ($version==null || $version=="") {$version="?";}
+    
+    return array(
+        'userAgent' => $u_agent,
+        'name'      => $bname,
+        'version'   => $version,
+        'platform'  => $platform,
+        'pattern'    => $pattern
+    );
+} 
+
+function getMobile(){
+	$mobile = 0;
+$useragent=$_SERVER['HTTP_USER_AGENT'];
+
+if(preg_match('/android|avantgo|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i',$useragent)||preg_match('/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|e\-|e\/|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(di|rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|xda(\-|2|g)|yas\-|your|zeto|zte\-/i',substr($useragent,0,4))) {
+  $mobile = 1;
+  }
+  return $mobile;
+}
