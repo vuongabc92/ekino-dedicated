@@ -1,0 +1,483 @@
+/*********************Register CSS starts here****************************/
+.register{float:left; margin:0; padding:0; width:100%;}
+.register .colums{overflow:hidden; clear:both;}
+.register .col1{width:35%; float:left;}
+.register .col2{width:64%; float:left; margin-bottom:30px;}
+.register .in-container{padding-right:20px;}
+.register .left-menu{overflow:hidden; margin:5px 0px 10px 0px;}
+.register .col1 ul{margin:0px; padding:0px;}
+.register .col1 ul li{margin:0px; padding:0px; border-bottom:1px solid #E8E9E8; clear:both;}
+.register .col1 ul li:first-child{margin:0px; padding:0px; border-top:1px solid #E8E9E8;}
+.login{background-position:-1190px -96px; float:left; margin:-5px 0 0 0; width:30px;}
+.job-listing{background-position:-1271px -96px; float:left; margin:-5px 0 0 0; width:30px;}
+.register .col1 ul li a:hover .job-listing{background-position:-1232px -96px; float:left; margin:-5px 0 0 0; width:30px;}
+.register .left-arrow{background-position:-722px -7px; width:10px; height:10px; float:right;}
+.register .col1 ul li a{padding:18px 14px 17px 21px; display:block; font-family:'NewJuneBook', Arial, Geneva, sans-serif; font-size:12px; color:#404040; text-decoration:none;text-transform:uppercase;}
+.register .col1 ul li a:hover{color:#0AA9EE; background:#F9F9F9; }
+.register .col1 ul li.active a{ color:#0AA9EE; background:#F9F9F9; font-weight:bold; font-family:'NewJuneMedium', Arial, Geneva, sans-serif;}
+.register .col1 ul li.active a .left-arrow{ background-position:-722px -23px;  }
+.register .col1 ul li a:hover .left-arrow{background-position:-722px -23px; width:10px; height:10px; float:right;}
+.register .col2 ul{margin:0px; padding:0px;}
+.register .col2 h1{margin:0; padding:0; font:normal 24px 'NewJuneBold', Arial, Geneva, sans-serif; color:#0AA9EE;}
+.register .col2 h2{margin:0; padding:0; font:normal 18px 'NewJuneBook', Arial, Geneva, sans-serif; color:#0AA9EE;}
+.register .col2 .in-container{padding-right:0px}
+.register .col2 ul li{border-bottom:1px solid #E8E9E8}
+.register .col2 .in-container ul{float:left; margin:0; width:100%;}
+.register .col2 .in-container ul.tabs-div {margin-top:10px; clear:both; padding:0; width:100%}
+.register .col2 .in-container ul.tabs-div li a{font:normal 14px 'NewJuneBold', Arial, Geneva, sans-serif; color:#d7d7d7; text-decoration:none}
+.register .col2 .in-container ul.tabs-div li.active a{color:#0aa9ee;}
+.register .col2 .in-container ul.tabs-div .tab-text{margin:0 auto; text-align:center; margin:0 auto; clear:both;}
+.register .col2 .in-container ul.tabs-div li.active{margin:0; padding:0 0 5px 0; width:50%; height:20px; float:left; color: #d7d7d7; border-bottom: 4px solid #0aa9ee; text-align:center; font-weight:bold;}
+.register .col2 .in-container ul.tabs-div .tab2{margin:0; padding:0 0 5px 0; width:50%; height:20px; float:right; color: #d7d7d7; border-bottom: 4px solid #d7d7d7; text-align:center; font-weight:bold;}
+.register .col2 .in-container ul.tabs-div li.active{background:url(../images/arrow-active.png) no-repeat 50% 17px;}
+.register .col2 .in-container .personal-info{float:left; margin:10px 0 0 0; padding:0; width:100%;}
+.register .col2 .in-container .personal-info h3{float:left; margin:0 0 10px 0; padding:0; width:100%; font-weight:normal;font-size:18px; font-family: 'NewJuneMedium', Arial, Geneva, sans-serif; color:#0aa9ee;}
+.register .col2 .in-container .personal-info .contact-us-form{float:left; margin:0; padding:0; clear:both; display:block; width:100%;}
+.register .col2 .in-container .personal-info .contact-us-form ul{float:left; margin:0; padding:0; display:block; width:100%;}
+.register .col2 .in-container .personal-info .contact-us-form ul li{margin:0; padding:0; display:inline; width:48.5%; float:left; border:none;}
+.register .col2 .in-container .personal-info .contact-us-form ul li .select_box,
+.register .col2 .in-container .personal-info .contact-us-form ul li .date-month,
+.register .col2 .in-container .personal-info .contact-us-form ul li .date-day,
+.register .col2 .in-container .personal-info .contact-us-form ul li .date-year
+{margin:0 0 0 5px; margin:0 0 0 8px\9; padding:5px 0; display:block; position: relative;}
+.register .col2 .in-container .personal-info .contact-us-form ul li .date-year{width:57px;}
+.media-solutions-bg .solutions-details .columns .col2 .personal-info .contact-us-form .form-item .date-padding .form-item {margin-left:10px;}
+.register .col2 .in-container .personal-info .contact-us-form ul li .select_box .selectbox-bg{float:left; margin:0; padding:0 0 0 7px; display:block; width:97%;}
+.right{float:right !important;}
+.register .col2 .in-container .personal-info .contact-us-form ul li input{border:1px solid #E8E9E8; padding:7px 0px 7px 5px; margin:5px 0px; color:#616161; font-family: Arial, Geneva, sans-serif; font-size:12px; width:98%;}
+.register .col2 .in-container .personal-info .contact-us-form ul li input[type="text"]{ padding:9px 0 9px 5px;}
+.border-bottom {border-bottom: 1px solid #E8E9E8; float:left; margin:15px 0; width:100%;}
+.register select{width:99.5%; margin:1px 0 0 0;}
+.register select {
+    font-size: 12px;
+    height: 32px;
+    opacity: 0;
+    position: relative;
+    width: 100%;
+    z-index: 5;
+	color: #616161;
+	filter:alpha(opacity=0);
+}
+.register .col2 .in-container .personal-info .contact-us-form ul li textarea{border:1px solid #E8E9E8; padding:7px 0px 25px 5px; resize:none; margin:5px 0px; color:#616161; font-family:Arial, Helvetica, sans-serif; font-size:12px; width:100% !important;}
+.register .col2 .in-container .personal-info .contact-us-form ul.multi-input{float:left; margin:0; padding:0;}
+.register .col2 .in-container .personal-info .contact-us-form ul.multi-input li{width:22%; margin-left:3%; float:left; padding:0;}
+.register .col2 .in-container .personal-info .contact-us-form ul.multi-input li.r-more{float:right;}
+.register .col2 .in-container .personal-info .contact-us-form ul.multi-input li:first-child{margin-left:0;}
+.register .col2 .in-container .personal-info .contact-us-form ul.multi-input .r-more a{min-width:90px; float:right;}
+.register .col2 .in-container .personal-info .contact-us-form .btn-reset{
+    background: url("../images/btn-reset.png") no-repeat right 0 transparent;       
+    cursor: pointer;
+    height: 39px;  
+    width: 40px;
+	border:none;
+	padding-right:78px;
+	padding-right:84px\9;
+	margin:0px;
+	font-family: 'NewJuneMedium',Arial,Geneva,sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+	color:#646464;
+	}
+.register .col2 .in-container .personal-info .contact-us-form ul li.btn-res{width:25%; text-align:right;}	
+.register .col2 .in-container .personal-info .contact-us-form .btn-reset{
+    background: url("../images/btn-reset.png") no-repeat right 0 transparent;       
+    cursor: pointer;
+    height: 39px;  
+    width: 40px;
+	border:none;
+	padding-right:100px;
+	padding-right:100px\9;
+	margin:0px;
+	font-family: 'NewJuneMedium',Arial,Geneva,sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+	color:#646464;
+	}
+.register .col2 .in-container .personal-info .contact-us-form .btn-reset:hover, .register .col2 .in-container .personal-info .form-btns ul li.btn-sub .btn-submit:hover{text-decoration:underline;}
+.add-more-content li,.add-more-content1 li{float:left; width:73% !important;}
+.add-more-content li.r-more, .add-more-content1 li.r-more{width:17% !important; float:right !important;}
+.add-more-content input{background-color:#fafafa;}
+.add-more-content1 input{background-color:#fff;}
+.register .col2 .in-container .personal-info .form-btns ul li.btn-sub{border-bottom:0; width:99%; text-align:right;}
+.register .col2 .in-container .personal-info .form-btns ul li.btn-sub .btn-submit{
+    background: url("../images/btn-sub.png") no-repeat right 0 transparent;       
+    cursor: pointer;
+    height: 39px;  
+    width: 40px;
+	border:none !important;
+	padding-right:71px;
+	padding-right:71px\9;
+	margin:0px;
+	font-family: 'NewJuneMedium',Arial,Geneva,sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+	color:#0AA9EE;
+	}
+.register .col2 .in-container .personal-info .date-text {margin:0; padding:15px 0; float:left; color: #616161; width:16%;}	
+.register .col2 .in-container .personal-info .date-select-box {margin:0; padding:0; float:left; color: #616161; width:84%;}
+.register .col2 .in-container .personal-info .date-select-box ul li{width:22%; margin-left:15px;}
+.register .col2 .in-container .personal-info .date-select-box ul li:first-child{margin-left:0;}
+.register .col2 .in-container .personal-info .date-select-box ul li.year-div{width:41% !important;}
+
+
+/*********************Register CSS ends here****************************/
+
+/*********************Register2 CSS starts here****************************/
+.register .col2 .in-container ul.tabs-div .tab1{margin:0; padding:0 0 5px 0; width:50%; height:20px; float:left; color: #d7d7d7; border-bottom: 4px solid #d7d7d7; text-align:center; font-weight:bold;}
+.register .col2 .in-container ul.tabs-div li{background:url(../images/arrow-inactive.png) no-repeat 50% 17px;}
+.register .col2 .in-container .careers-list{float:left; overflow:hidden; width:100%; margin-top:-15px;}
+.register .col2 .in-container .careers-list .plus,.register .col2 .in-container  .careers-list .minus{float:right;}
+.minus{background-position:-916px -44px;}
+.careers-list .firstjobposting li{margin-left:0 !important;}
+.register .col2 .in-container .careers-list h3{margin:0; padding:0; float:none;}
+.register .col2 .in-container .careers-list ul li{width:100%; float:left;}
+.register .col2 .in-container .careers-list .hline {margin:5px 0px 5px 0px;}
+.register .col2 .in-container .careers-list .hline a{color:#0AA9EE; font-family:'NewJuneBook', Arial, Geneva, sans-serif; font-size:15px; text-decoration:none; line-height:41px; display:block; overflow:hidden;}
+.register .col2 .in-container .careers-list .carrer-holder{overflow:hidden; float:left;}
+.register .col2 .in-container .careers-list p{float:left; margin:0px 0px 19px 0px; padding:0px; color:#3e3e3e; font-family: Arial, Geneva, sans-serif; font-size:12px;}
+.register .col2 .in-container .careers-list p.bold{font-weight:bold; margin:0px 0px 4px 0px; padding:0px;}
+.register .col2 .in-container .careers-list .sn-links{border:none; margin:0px; padding:0px 0px 20px 0px}
+.register .col2 .in-container .careers-list ul.ul-sn{margin-top:6px;}
+.register .col2 .in-container .careers-list ul.ul-sn li{border:none;}
+.register .col2 .in-container .careers-list .sn-links ul.ul-sn li a{float:left; margin-right:3px;}
+.register .col2 .in-container .careers-list .carrer-holder{overflow:hidden; width:100%;}
+.register .col2 .in-container .careers-list .carrer-holder .regis-form{float:left; width:100%; padding-bottom:15px;}
+.register .col2 .in-container .careers-list .carrer-holder .regis-form ul li{width:48%; padding:3px 5px; border:none; color:#616161;}
+.register .col2 .in-container .careers-list .carrer-holder .regis-form ul li.others input[type="textarea"]{width:80%; border-bottom:1px solid #6b6b6b; border-left:none; border-right:none;  border-top:none; min-height:20px;}
+.register .col2 .in-container .careers-list .carrer-holder .regis-form h3{float:left; font-size:12px; color:#616161; margin:15px 0 5px 0; padding:0 5px; font-weight:bold;}
+.register .col2 .in-container .careers-list .minus{background-position:-1032px -100px; height:15px; width:25px; margin-top:13px;}
+.register .col2 .in-container .careers-list .plus{background-position:-1094px -100px; height:15px; width:25px; margin-top:13px;}
+.careers-submit{float:left; margin:0; padding:0; width:100%;}
+.careers-submit ul{float:left; margin:0; padding:0; width:100%;}
+.careers-submit ul li{float:left; margin:10px 0 !important; padding:0; width:50%; border:none !important;}
+.careers-submit ul li.btn-sub .left{float:left; text-align:left;}
+.careers-submit ul li.btn-sub .left .back-btn{float:left; margin:10px 0 0 45px; font-family: 'NewJuneMedium',Arial,Geneva,sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+	color:#0AA9EE;}
+.careers-submit ul li.btn-sub .left .back-btn:hover{text-decoration:underline;}
+.register .col2 .in-container .personal-info .careers-submit ul li.btn-sub .btn-submit{padding-right:82px;}
+
+.checkBox{background-position: -19px 0px;}
+.checkBoxClear{background-position: 0px 0px;}
+.checkBox, .checkBoxClear{background-image:url(../images/check.png);
+    background-repeat: no-repeat;
+    display: inline-block;
+    float: left;
+    width: 18px;
+    height: 21px;
+    padding: 0px;
+    margin-right: 3px;
+    cursor: hand;
+}
+.register .col2 .in-container .careers-list .carrer-holder .regis-form ul li.checkBox{padding-left:26px; width:44%;}
+/*********************Register2 CSS ends here****************************/
+
+
+
+/* start login and register pages details */
+
+.login-register {clear: both; overflow: hidden;width: 100%;}
+.login-register .colums {clear: both;overflow: hidden;}
+.login-register .col1 {float: left;width: 35%;}
+.login-register .in-container {padding-right: 20px;}
+.login-register .left-menu {margin: 0 0 10px 0;overflow: hidden;}
+.login-register .col1 ul {margin: 0; padding: 0;}
+.login-register .col1 ul li:first-child {border-top: 1px solid #E8E9E8;margin: 0;padding: 0;}
+.login-register .col1 ul li {border-bottom: 1px solid #E8E9E8;margin: 0;padding: 0;}
+.login-register .col1 img {height: auto; max-width: 100%;}
+.login-register .col1 ul li.active a { background: #F9F9F9;color: #0AA9EE;font-family: 'NewJuneMedium',Arial,Geneva,sans-serif;font-weight: bold;}
+.login-register .col1 ul li a {color: #404040;display: block;font-family: 'NewJuneBook',Arial,Geneva,sans-serif;font-size: 12px;padding: 18px 14px 17px 21px;text-decoration: none;text-transform: uppercase;}
+.ui-icon { background-image: url("../images/sprite.png");background-repeat: no-repeat;display: block;height: 41px;width: 41px;}
+.login {background-position: -1190px -96px; float: left; margin: -5px 0 0; width: 30px;}
+.job-listing{background-position:-1271px -96px; float:left; margin:-5px 0 0 0; width:30px;}
+.login-register .col1 ul li.active a .left-arrow {background-position: -722px -23px;}
+.login-register .left-arrow{background-position:-722px -7px; width:10px; height:10px; float:right;}
+.login-register .col2 {float: left;margin-bottom: 30px;width: 65%;}
+.login-register .col2 .in-container {clear: both; display: block;float: left;margin: 0;padding: 0; width: 100%;}
+.login-register .col2 .in-container ul {display: block;float: left; margin: 0; padding: 0;width: 100%;}
+.login-register .col2 .in-container ul li{display: inline;margin: 0;padding: 0 40px 0 0; width:43%;float:left;}
+.login-register .col2 .in-container ul li h2{color: #0AA9EE; float: left; font: 18px Arial,Helvetica,sans-serif; margin: 0; padding: 0;}
+.login-register .col2 .in-container ul li ul{display: block;float: left; margin: 0; padding: 0;width: 100%;}
+.login-register .col2 .in-container ul li ul li{display: inline;margin: 0;padding: 0; width:100%;float:left;}
+.login-register .col2 .in-container ul li ul li p{color: #0AA9EE; float: left; font: 16px Arial,Helvetica,sans-serif; margin: 0; padding: 0 0 15px 0;}
+.login-register .col2 .in-container ul li ul li input {border: 1px solid #E8E9E8;color: #616161;font-family: Arial,Geneva,sans-serif;font-size: 12px; margin: 5px 0; padding: 7px 0 7px 5px;width: 98%;}
+.login-register .col2 .in-container ul li ul li.btn-log {text-align: right;;}
+.login-register .col2 .in-container .btn-login {background: url("../images/btn-sub.png") no-repeat scroll right 0 transparent;border: medium none;color: #0AA9EE;cursor: pointer; font-family: 'NewJuneMedium',Arial,Geneva,sans-serif; font-size: 11px;font-weight: bold; margin: 0;padding-right: 9px;height: 41px;width: 82px; text-indent:-41px;}
+.login-register .col2 .in-container ul li ul li.btn-reg {text-align: left;}
+.login-register .col2 .in-container .btn-register {background: url("../images/btn-sub.png") no-repeat scroll right 0 transparent;border: medium none;color: #0AA9EE;cursor: pointer; font-family: 'NewJuneMedium',Arial,Geneva,sans-serif; font-size: 11px;font-weight: bold; margin: 0;padding:0 9px 0 0;height: 40px;width: 121px; outline:none; line-height:35px;}
+.login-register .columns .col2 .in-container .form-item,.login-register .columns .col2 .in-container .form-actions{margin:0 !important;}
+
+/* end login and register pages details */
+
+/** Start style for careers job position page **/
+.border-bottom {border-bottom: 1px solid #E8E9E8;}
+.careers-job {clear: both; overflow: hidden;width: 100%;font-family:Arial,Geneva,sans-serif;}
+.careers-job .colums {clear: both;overflow: hidden;}
+.careers-job .col1 {float: left;width: 35%;}
+.careers-job .in-container {padding-right: 20px;}
+.careers-job .left-menu {margin: 0 0 10px 0;overflow: hidden;}
+.careers-job .col1 ul {margin: 0; padding: 0;}
+.careers-job .col1 ul li:first-child {border-top: 1px solid #E8E9E8;margin: 0;padding: 0;}
+.careers-job .col1 ul li {border-bottom: 1px solid #E8E9E8;margin: 0;padding: 0;}
+.careers-job .col1 img {height: auto; max-width: 100%;}
+.careers-job .col1 ul li.active a { background: #F9F9F9;color: #0AA9EE;font-family: 'NewJuneMedium',Arial,Geneva,sans-serif;font-weight: bold;}
+.careers-job .col1 ul li a {color: #404040;display: block;font-family: 'NewJuneBook',Arial,Geneva,sans-serif;font-size: 12px;padding: 18px 14px 17px 21px;text-decoration: none;text-transform: uppercase;}
+.ui-icon { background-image: url("../images/sprite.png");background-repeat: no-repeat;display: block;height: 41px;width: 41px;}
+.login {background-position: -1190px -96px; float: left; margin: -5px 0 0; width: 30px;}
+.job-listing{background-position:-1271px -96px; float:left; margin:-5px 0 0 0; width:30px;}
+.careers-job .col1 ul li.active a .left-arrow {background-position: -722px -23px;}
+.careers-job .left-arrow{background-position:-722px -7px; width:10px; height:10px; float:right;}
+.careers-job .col2 {float: left;margin-bottom: 30px;width: 64.5%;}
+.careers-job .col2 .in-container {clear: both; display: block;float: left;margin: 0;padding: 0; width: 100%;}
+.careers-job .col2 .in-container h1 {color: #0AA9EE; font: 24px 'NewJuneBold',Arial,Geneva,sans-serif; margin: 0 0 10px 0; line-height:19px; padding: 0;}
+.careers-job .col2 .in-container h2 {color: #0AA9EE;font: 18px 'NewJuneBook',Arial,Geneva,sans-serif; margin: 0;  padding: 0;}
+.careers-job .col2 .in-container .job-container {display: block;float: left; margin: 0; padding: 0;width: 100%;font-family: Arial, Helvetica, sans-serif; font-size:12px;color:#3e3e3e;}
+.careers-job .col2 .in-container .job-container ul {display: block;float: left; margin: 0; padding: 0;/*width: 100%;*/}
+.careers-job .col2 .in-container .job-container ul li{display: inline;margin: 0;padding: 0 0 0 0; width:100%;float:left;font-family: Arial, Helvetica, sans-serif; font-size:12px;}
+.careers-job .col2 .in-container .job-container ul li h2{color: #0AA9EE; float: left; margin: 0; padding: 15px 0; width: 100%;}
+.careers-job .col2 .in-container .job-container ul li h3{float: left;sans-serif; margin: 0; padding: 10px 0 4px 0; width: 100%;font-weight:bold; }
+.careers-job .col2 .in-container .job-container ul li p{float: left;sans-serif; margin: 0; padding: 0 0 10px 0; width: 100%;}
+.careers-job .col2 .in-container .sn-links{ border-bottom: 1px solid #E8E9E8;border-top:none;margin-top:11px;}
+
+
+
+
+/** End style for careers job position page **/
+
+
+/*********************Register CSS starts here****************************/
+.register{float:left; margin:0; padding:0;}
+.register .colums{overflow:hidden; clear:both;}
+.register .col1{width:35%; float:left;}
+.register .col2{width:64%; float:left; margin-bottom:30px;}
+.register .in-container{padding-right:20px;}
+.register .left-menu{overflow:hidden; margin:5px 0px 10px 0px;}
+.register .col1 ul{margin:0px; padding:0px;}
+.register .col1 ul li{margin:0px; padding:0px; border-bottom:1px solid #E8E9E8; clear:both;}
+.register .col1 ul li:first-child{margin:0px; padding:0px; border-top:1px solid #E8E9E8;}
+.login{background-position:-1190px -96px; float:left; margin:-5px 0 0 0; width:30px;}
+.active .job-listing{background-position: -1231px -96px;}
+.active .login{background-position:-1147px -96px;}
+.job-listing{background-position:-1271px -96px; float:left; margin:-5px 0 0 0; width:30px;}
+.register .col1 ul li a:hover .job-listing{background-position:-1232px -96px; float:left; margin:-5px 0 0 0; width:30px;}
+.register .left-arrow{background-position:-722px -7px; width:10px; height:10px; float:right;}
+.register .col1 ul li a{padding:18px 14px 17px 21px; display:block; font-family:'NewJuneBook', Arial, Geneva, sans-serif; font-size:12px; color:#404040; text-decoration:none;text-transform:uppercase;}
+.register .col1 ul li a:hover{color:#0AA9EE; background:#F9F9F9; }
+.register .col1 ul li.active a{ color:#0AA9EE; background:#F9F9F9; font-weight:bold; font-family:'NewJuneMedium', Arial, Geneva, sans-serif;}
+.register .col1 ul li.active a .left-arrow{ background-position:-722px -23px;  }
+.register .col1 ul li a:hover .left-arrow{background-position:-722px -23px; width:10px; height:10px; float:right;}
+.register .col2 ul{margin:0px; padding:0px;}
+.register .col2 h1{margin:0; padding:0; font:normal 24px 'NewJuneBold', Arial, Geneva, sans-serif; color:#0AA9EE;}
+.register .col2 h2{margin:0; padding:0; font:normal 18px 'NewJuneBook', Arial, Geneva, sans-serif; color:#0AA9EE;}
+.register .col2 .in-container{padding-right:0px}
+.register .col2 ul li{border-bottom:1px solid #E8E9E8}
+.register .col2 .in-container ul{float:left; margin:0; width:100%;}
+.register .col2 .in-container ul.tabs-div {margin-top:10px; clear:both; padding:0; width:100%}
+.register .col2 .in-container ul.tabs-div li a{font:normal 14px 'NewJuneBold', Arial, Geneva, sans-serif; color:#d7d7d7; text-decoration:none}
+.register .col2 .in-container ul.tabs-div li.active a{color:#0aa9ee;}
+.register .col2 .in-container ul.tabs-div .tab-text{margin:0 auto; text-align:center; margin:0 auto; clear:both;}
+.register .col2 .in-container ul.tabs-div li.active{margin:0; padding:0 0 5px 0; width:50%; height:20px; float:left; color: #d7d7d7; border-bottom: 4px solid #0aa9ee; text-align:center; font-weight:bold;}
+.register .col2 .in-container ul.tabs-div .tab2{margin:0; padding:0 0 5px 0; width:50%; height:20px; float:right; color: #d7d7d7; border-bottom: 4px solid #d7d7d7; text-align:center; font-weight:bold;}
+.register .col2 .in-container ul.tabs-div li.active{background:url(../images/arrow-active.png) no-repeat 50% 17px;}
+.register .col2 .in-container .personal-info{float:left; margin:10px 0 0 0; padding:0; width:100%;}
+.register .col2 .in-container .personal-info h3{float:left; margin:0 0 10px 0; padding:0; width:100%; font-weight:normal;font-size:18px; font-family: 'NewJuneMedium', Arial, Geneva, sans-serif; color:#0aa9ee;}
+.register .col2 .in-container .personal-info .contact-us-form{float:left; margin:0; padding:0; clear:both; display:block; width:100%;}
+.register .col2 .in-container .personal-info .contact-us-form ul{float:left; margin:0; padding:0; display:block; width:100%;}
+.register .col2 .in-container .personal-info .contact-us-form ul li{margin:0; padding:0; display:inline; width:48.5%; float:left; border:none;}
+.register .col2 .in-container .personal-info .contact-us-form ul li .select_box{margin:0; padding:5px 0; display:block; position: relative;}
+.register .col2 .in-container .personal-info .contact-us-form ul li .select_box .selectbox-bg{float:left; margin:0; padding:0 0 0 7px; display:block; width:97%;}
+.right{float:right !important;}
+.register .col2 .in-container .personal-info .contact-us-form ul li input{border:1px solid #E8E9E8; padding:7px 0px 7px 5px; margin:5px 0px; color:#616161; font-family: Arial, Geneva, sans-serif; font-size:12px; width:97%;}
+.register .col2 .in-container .personal-info .contact-us-form ul li input[type="text"]{ padding:9px 0 9px 5px;}
+.border-bottom {border-bottom: 1px solid #E8E9E8; float:left; margin:15px 0; width:100%;}
+.register select.styled{width:99.5%; margin:1px 0 0 0;}
+.register .col2 .in-container .personal-info .contact-us-form ul li textarea{border:1px solid #E8E9E8; padding:7px 0px 25px 5px; resize:none; margin:5px 0px; color:#616161; font-family:Arial, Helvetica, sans-serif; font-size:12px; width:98%;}
+.register .col2 .in-container .personal-info .contact-us-form ul.multi-input{float:left; margin:0; padding:0;}
+.register .col2 .in-container .personal-info .contact-us-form ul.multi-input li{width:22%; margin-left:3%; float:left; padding:0;}
+.register .col2 .in-container .personal-info .contact-us-form ul.multi-input li.r-more{float:right;}
+.register .col2 .in-container .personal-info .contact-us-form ul.multi-input li:first-child{margin-left:0;}
+.register .col2 .in-container .personal-info .contact-us-form ul.multi-input .r-more a{min-width:90px; float:right;}
+.register .col2 .in-container .personal-info .contact-us-form .btn-reset{
+    background: url("../images/btn-reset.png") no-repeat right 0 transparent;       
+    cursor: pointer;
+    height: 39px;  
+    width: 40px;
+	border:none;
+	padding-right:78px;
+	padding-right:84px\9;
+	margin:0px;
+	font-family: 'NewJuneMedium',Arial,Geneva,sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+	color:#646464;
+	}
+.register .col2 .in-container .personal-info .contact-us-form ul li.btn-res{width:25%; text-align:right;}	
+.register .col2 .in-container .personal-info .contact-us-form .btn-reset{
+    background: url("../images/btn-reset.png") no-repeat right 0 transparent;       
+    cursor: pointer;
+    height: 39px;  
+    width: 40px;
+	border:none;
+	padding-right:100px;
+	padding-right:100px\9;
+	margin:0px;
+	font-family: 'NewJuneMedium',Arial,Geneva,sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+	color:#646464;
+	}
+.register .col2 .in-container .personal-info .contact-us-form .btn-reset:hover, .register .col2 .in-container .personal-info .form-btns ul li.btn-sub .btn-submit:hover{text-decoration:underline;}
+.add-more-content li,.add-more-content1 li{float:left; width:73% !important;}
+.add-more-content li.r-more, .add-more-content1 li.r-more{width:17% !important; float:right !important;}
+.add-more-content input{background-color:#fafafa;}
+.add-more-content1 input{background-color:#fff;}
+.register .col2 .in-container .personal-info .form-btns ul li.btn-sub{width:99%; text-align:right;}
+.register .col2 .in-container .personal-info .form-btns ul li.btn-sub .form-actions .form-submit{
+    background: url("../images/btn-sub.png") no-repeat right 0 transparent;       
+    cursor: pointer;
+    height: 39px;  
+    width: 40px;
+	border:none !important;
+	padding-right:71px;
+//	padding-right:71px\9;
+	margin:10px 0;
+	font-family: 'NewJuneMedium',Arial,Geneva,sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+	color:#0AA9EE;
+	}
+.register .col2 .in-container .personal-info .date-text {margin:0; padding:15px 0; float:left; color: #616161; width:22%;}	
+.register .col2 .in-container .personal-info .date-select-box {margin:0; padding:0; float:left; color: #616161; width:78%;}
+.register .col2 .in-container .personal-info .date-select-box ul li{width:22%; margin-left:15px;}
+.register .col2 .in-container .personal-info .date-select-box ul li:first-child{margin-left:0;}
+.register .col2 .in-container .personal-info .date-select-box ul li.year-div{width:41% !important;}
+
+
+/*********************Register CSS ends here****************************/
+
+/*********************Register2 CSS starts here****************************/
+.register .col2 .in-container ul.tabs-div .tab1{margin:0; padding:0 0 5px 0; width:50%; height:20px; float:left; color: #d7d7d7; border-bottom: 4px solid #d7d7d7; text-align:center; font-weight:bold;}
+.register .col2 .in-container ul.tabs-div li{background:url(../images/arrow-inactive.png) no-repeat 50% 17px;}
+.register .col2 .in-container .careers-list{float:left; overflow:hidden; width:100%; margin-top:-15px;}
+.register .col2 .in-container .careers-list .plus,.register .col2 .in-container  .careers-list .minus{float:right;}
+.minus{background-position:-916px -44px;}
+.register .col2 .in-container .careers-list h3{margin:0; padding:0; float:none;}
+.register .col2 .in-container .careers-list ul li{width:100%; float:left;}
+.register .col2 .in-container .careers-list .hline {margin:5px 0px 5px 0px;}
+.register .col2 .in-container .careers-list .hline a{color:#0AA9EE; font-family:'NewJuneBook', Arial, Geneva, sans-serif; font-size:15px; text-decoration:none; line-height:41px; display:block; overflow:hidden;}
+.register .col2 .in-container .careers-list .carrer-holder{overflow:hidden; float:left;}
+.register .col2 .in-container .careers-list p{float:left; margin:0px 0px 19px 0px; padding:0px; color:#3e3e3e; font-family: Arial, Geneva, sans-serif; font-size:12px;}
+.register .col2 .in-container .careers-list p.bold{font-weight:bold; margin:0px 0px 4px 0px; padding:0px;}
+.register .col2 .in-container .careers-list .sn-links{border:none; margin:0px; padding:0px 0px 20px 0px}
+.register .col2 .in-container .careers-list ul.ul-sn{margin-top:6px;}
+.register .col2 .in-container .careers-list ul.ul-sn li{border:none;}
+.register .col2 .in-container .careers-list .sn-links ul.ul-sn li a{float:left; margin-right:3px;}
+.register .col2 .in-container .careers-list .carrer-holder{overflow:hidden; width:100%;}
+.register .col2 .in-container .careers-list .carrer-holder .regis-form{float:left; width:100%; padding-bottom:15px;}
+.register .col2 .in-container .careers-list .carrer-holder .regis-form ul li{width:48%; padding:3px 5px; border:none; color:#616161;}
+.register .col2 .in-container .careers-list .carrer-holder .regis-form ul li.others input[type="textarea"]{width:80%; border-bottom:1px solid #6b6b6b; border-left:none; border-right:none;  border-top:none; min-height:20px;}
+.register .col2 .in-container .careers-list .carrer-holder .regis-form h3{float:left; font-size:12px; color:#616161; margin:15px 0 5px 0; padding:0 5px; font-weight:bold;}
+.register .col2 .in-container .careers-list .minus{background-position:-1032px -100px; height:15px; width:25px; margin-top:13px;}
+.register .col2 .in-container .careers-list .plus{background-position:-1094px -100px; height:15px; width:25px; margin-top:13px;}
+.careers-submit{float:left; margin:0; padding:0; width:100%;}
+.careers-submit ul{float:left; margin:0; padding:0; width:100%;}
+.careers-submit ul li{float:left; margin:10px 0 !important; padding:0; width:50%; border:none !important;}
+.careers-submit ul li.btn-sub .left{float:left; text-align:left;}
+.careers-submit ul li.btn-sub .left .back-btn{float:left; margin:10px 0 0 45px; font-family: 'NewJuneMedium',Arial,Geneva,sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+	color:#0AA9EE;}
+.careers-submit ul li.btn-sub .left .back-btn:hover{text-decoration:underline;}
+.register .col2 .in-container .personal-info .careers-submit ul li.btn-sub .btn-submit{padding-right:82px;}
+
+.checkBox{background-position: -19px 0px;}
+.checkBoxClear{background-position: 0px 0px;}
+.checkBox, .checkBoxClear{background-image:url(../images/check.png);
+    background-repeat: no-repeat;
+    display: inline-block;
+    float: left;
+    width: 18px;
+    height: 21px;
+    padding: 0px;
+    margin-right: 3px;
+    cursor: hand;
+}
+.register .col2 .in-container .careers-list .carrer-holder .regis-form ul li.checkBox{padding-left:26px; width:44%;}
+/*********************Register2 CSS ends here****************************/
+
+/*********************************My Applications starts here***************************************/
+.register .col1 .left-menu h1{color: #616161;font-family: 'NewJuneBook',Arial,Geneva,sans-serif;font-weight: bold; font-size:24px;}
+.register .col1 .left-menu .name{color: #616161; font-family: 'NewJuneBook',Arial,Geneva,sans-serif;font-weight:normal !important; font-size:36px;}
+.my-profile{background-position:-1415px -96px; float:left; margin:-5px 0 0 0; width:30px !important;}
+.logout{background-position:-1488px -96px; float:left; margin:-5px 0 0 0; width:30px !important;}
+.register .col1 ul li a:hover .my-profile{background-position:-1381px -96px; float:left; margin:-5px 0 0 0; width:30px;}
+.register .col1 ul li a:hover .logout{background-position:-1452px -96px; float:left; margin:-5px 0 0 0; width:30px;}
+.personal-info ul.title-desc{float:left; margin:0; padding:0px; width:100%; list-style:none; display:inline;}
+.personal-info ul.title-desc li{float:left; margin:0; padding:20px 0; width:21%; list-style:none; display:inline; text-align:center; font-family:'NewJuneMedium',Arial,Geneva,sans-serif; font-size:18px; color:#616161; }
+.personal-info ul.title-desc li:first-child{width:31%; list-style:none; display:inline-block;}
+.personal-info ul.title-desc li.last-content{float:left; margin:0; padding:20px 0; width:5%; text-align:center; list-style:none; display:inline-block;}
+.my-app {float:left; margin-bottom:44px; padding:0; width:100%; clear:both;}
+.my-app ul{margin:0; padding:0; width:100%; list-style:none; display:inline-block; clear:both; float:left; border-bottom:1px solid #E8E9E8;}
+.my-app ul.content-desc{margin:0; padding:0; width:100%; list-style:none; display:inline-block; float:left;}
+.my-app ul.content-desc li{margin:0; padding:0; width:21%; border:none; text-align:center; list-style:none; display:inline-block; float:left; font-family: 'NewJuneMedium',Arial,Geneva,sans-serif; font-size:14px; color:#0aa9ee; padding:20px 0;}
+.my-app ul.content-desc li:first-child{width:31%; text-align:left;}
+.my-app ul.content-desc li.last-content{width:6%; padding:9px 0 8px 0; text-align:center;}
+.my-app ul.content-desc li.last-content .ui-icon{width:41px !important; float:right;}
+.my-app ul.content-desc li.last-content .plus{background-position:-665px 0; height:41px; width:41px;}
+.my-app ul.content-desc .carrer-holder {width:98%; float:left; padding:10px; margin-bottom:20px; color:#3e3e3e;}
+.my-app ul.closed li{color:#616161;}
+
+.form-item .description{display:none;}
+
+/*********************************My Applications ends here*****************************************/
+
+
+.multi-input .form-item{
+width:80%;
+float:left;
+}
+
+@media screen and (max-width:800px){
+
+	.multi-input .form-item{
+	width:73%;
+	}
+	.login-register .col2 .in-container ul li{width:auto;}
+}
+@media screen and (max-width:680px){
+.login-register .col1, .login-register .col2, .register .col1, .register .col2 {width:100%;}
+.login-register .col2 .in-container ul li, .register .col2 .in-container .personal-info .contact-us-form ul li  {width:100%;}
+.login-register .col2 .in-container ul li ul li input, .register .col2 .in-container .personal-info .contact-us-form ul li ul li input {width:95%;}
+.sn-links ul.ul-sn{float:right;}
+	.careers-job .col1, .careers-job .col2{width:100%;}
+	.careers-job .col1 ul li a{text-align:left;}
+	.sn-links{margin-top: 25px;}
+}
+@media screen and (min-width:400px) and (max-width:680px){
+.register .contact-us-form .multi-input .form-item .field-group-multiple .multiple-inline-element .form-item .selectbox-bg{width:20%}
+.select_box .form-item label{display:none;}
+.register .col2 .in-container .personal-info .contact-us-form ul li .select_box{padding-left:1px;}
+.register .col2 .in-container .personal-info .contact-us-form ul li input{width:98%;}
+}
+@media screen and (max-width:360px){
+.register .col2 .in-container .personal-info .contact-us-form ul li input{width:97%;}
+.media-solutions-bg .solutions-details .register .columns .col2 .personal-info .contact-us-form .form-item .date-padding .form-item{margin-left:0px;}
+.register .contact-us-form .multi-input .form-item .field-group-multiple .multiple-inline-element .form-item{width:auto;}
+.media-solutions-bg .solutions-details .register .columns .col2 .personal-info .contact-us-form .date-padding input{width:310px;}
+.register .multi-input .form-item{width:auto;}
+.register .contact-us-form .multi-input .form-item .field-group-multiple .multiple-inline-element .form-item input[type="text"]{width:97%;}
+.register .contact-us-form .multi-input .form-item .field-group-multiple .multiple-inline-element .form-item .selectbox-bg{width:90%;}
+.register .col2 .in-container .personal-info .contact-us-form ul li .select_box .selectbox-bg{width:96%;}
+.register .contact-us-form .multi-input .form-item .field-group-multiple .multiple-field-skill-level .form-item,
+.register .contact-us-form .multi-input .form-item .field-group-multiple .multiple-field-lang-skill-level .form-item{width:100%;}
+.register .contact-us-form .multi-input .form-item .field-group-multiple .multiple-field-skill-level .form-item select,
+.register .contact-us-form .multi-input .form-item .field-group-multiple .multiple-field-lang-skill-level .form-item select{width:100%;}
+.register .col2 .in-container .personal-info .contact-us-form ul li .select_box{padding-left:1px;}
+.select_box .form-item label{display:none;}
+.register .col2 .in-container .careers-list .carrer-holder .regis-form ul li{width:95%;}
+.register select{margin-bottom:7px;}
+.register .careers-list .hline .text{width:80%;}
+.register .col2 .in-container .careers-list .plus, .register .col2 .in-container .careers-list .minus{margin-top:3px;}
+.register .careers-list .hline .text{line-height:25px;}
+}

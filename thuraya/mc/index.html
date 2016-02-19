@@ -1,0 +1,176 @@
+<!DOCTYPE html">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Mail Chimp Newsletter</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;" />
+<style type="text/css">
+body{margin:0px; padding:0px;font-family:arial;font-size:12px;background-color: #f8fdf9;}
+.left {float:left;}
+.right {float:right;}
+.black {color: #292a25;}
+.pipe {color: #00A59E;font-weight:bold;}
+.border-bottom {border-bottom:1px solid #cacaca;}
+.max-width {max-width:100%;}
+#mainTable {margin:0 auto; padding:0; max-width:650px;border: 1px solid #ccc;line-height: 18px;}
+#mainTable .headerBar {width:97%;float:left; padding:10px; color: #fff; background-color: #111;text-transform: uppercase;font-weight:bold;font-size:15px;}
+#mainTable .headerDiv {width:97%;float:left; padding:10px; color: #60706d; background-color: #d1efef;text-align:center;line-height: 19px;border-bottom:1px solid #ccc; }
+#mainTable .headerDiv h1{font-size:18px; font-weight:bold; color: #111;text-transform: uppercase;}
+#mainTable .newsHeading {margin:0; padding:10px;width:97%; float:left;border-bottom:1px solid #ccc;}
+#mainTable .newsHeading h2{font-size:17px; font-weight:bold; color: #00a59e;text-transform: uppercase; text-align:center;margin:0; padding:0;}
+#mainTable .mainContent {margin:0; padding:0px; width:100%; float:left;border-bottom:1px solid #ccc;}
+#mainTable .mainContent .insideContainer {margin:0 15px; padding:10px 0;width:95%; float:left;}
+#mainTable .mainContent .insideContainer .imgDiv {width:25%; height:152px; border:1px solid #ccc; background-color: #999999;float:left;box-shadow: 1px 0 8px #CACACA;}
+#mainTable .mainContent .insideContainer .content {width:71%; float:left;margin:0; padding:0 10px; color: #7a7a7a; padding-right: 10px;}
+#mainTable .mainContent .insideContainer .content h3{padding-bottom:10px;font-size:15px; font-weight:bold;text-transform: uppercase;color: #2c2b27;margin:0;}
+#mainTable .mainContent .insideContainer .content .text {margin:0; padding-bottom:10px;float:left}
+#mainTable .mainContent .insideContainer .content .left img {margin-right:5px;}
+#mainTable .mainContent .insideContainer .content .readmore {float:right;padding-top: 5px;}
+#mainTable .mainContent .insideContainer .content .readmore a{padding:5px;background-color: #00b09c; color: #fff;text-transform: uppercase;text-decoration:none;}
+#mainTable .mainContent .insideContainer .content .readmore a:hover {text-decoration: underline;}
+#mainTable .mainContent .jumboDiv {background: url("images/jumbo-img.jpg") margin:0; padding: 10px 9px; float:left; width:97%;border-top: 1px solid #cacaca; border-bottom:1px solid #cacaca;}
+#mainTable .mainContent .colDiv {width:97%;float:left; padding:10px; border-bottom:1px solid #ccc; }
+#mainTable .mainContent .colDiv h2 {padding-bottom:10px;font-size:17px; font-weight:bold;text-transform: uppercase;color: #111;margin:0;text-align:center;}
+#mainTable .mainContent .colDiv .insideDiv {margin:0; padding:10px; float:left; width:30%;}
+#mainTable .mainContent .colDiv .insideDiv .imgDiv{width:100%; height:130px; box-shadow: 1px 0 8px #CACACA; background-color: #999999;float:left;}
+#mainTable .mainContent .colDiv .insideDiv h3 {float:left;padding:10px 0;font-size:15px; font-weight:bold;text-transform: uppercase;color: #00A59E;margin:0;}
+#mainTable .mainContent .colDiv .insideDiv .text {margin:0; padding-bottom:10px;float:left; color: #7A7A7A;}
+#mainTable .mainContent .colDiv .insideDiv .readmore {float:right;padding-top: 5px;}
+#mainTable .mainContent .colDiv .insideDiv .readmore a{padding:5px;background-color: #00b09c; color: #fff;text-transform: uppercase;text-decoration:none;}
+#mainTable .mainContent .colDiv .insideDiv .readmore a:hover {text-decoration: underline;}
+#mainTable .mainContent .bottomDiv {margin:0 15px; padding:10px 0;width:95%; float:left;}
+#mainTable .mainContent .bottomDiv .border-insidediv {margin:0; padding:10px 0; width:100%; float:left;border-top-style: double;border-bottom-style: double;border-color: #9a9a9a;}
+#mainTable .mainContent .bottomDiv .border-insidediv .imgDiv {margin:0; padding:0 10px 0 0; float:left;max-width:140px;}
+#mainTable .mainContent .bottomDiv .border-insidediv .rightSec {margin:0; padding:0; float:left;width:75%;}
+#mainTable .mainContent .bottomDiv .border-insidediv .rightSec h2 {padding:10px 0;font-size:17px; font-weight:bold;text-transform: uppercase;color: #00A59E;margin:0;}
+#mainTable .mainContent .bottomDiv .border-insidediv .rightSec .text {margin:0; padding-bottom:10px;float:left; color: #7A7A7A;}
+#mainTable .footer {margin:0; padding:10px 0; float:left; width:100%;text-align:center}
+#mainTable .footer a{color: #7A7A7A; text-decoration:none;}
+#mainTable .footer a:hover{text-decoration:underline;}
+
+@media (min-width: 640px) {
+#mainTable {width:97%;border:none;}
+#mainTable .headerBar {width:97%;}
+#mainTable .headerDiv {width:97%;}
+#mainTable .newsHeading {width:97%;}
+#mainTable .mainContent {width:99%;}
+#mainTable .footer {width:99%;}
+#mainTable .mainContent .bottomDiv .border-insidediv .rightSec {width:74%;}
+#mainTable .mainContent .colDiv .insideDiv {width:28%;}
+#mainTable .mainContent .bottomDiv .border-insidediv .rightSec{width:73%;}
+}
+
+@media (max-width: 480px){
+#mainTable {width: 99%;border:none;}
+#mainTable .mainContent {width:99%;}
+#mainTable .footer {width:99%;}
+#mainTable .mainContent .bottomDiv .border-insidediv .rightSec {width:74%;}
+#mainTable .headerBar {width:96%;}
+#mainTable .headerDiv {width:96%;}
+#mainTable .newsHeading {width:96%;}
+#mainTable .mainContent .insideContainer .content {width:55%;}
+#mainTable .mainContent .insideContainer .imgDiv {width:39%;margin-top: 10px;}
+#mainTable .mainContent .colDiv .insideDiv {width:28%;}
+#mainTable .mainContent .bottomDiv .border-insidediv .rightSec{width:43%;}
+}
+
+@media (min-width: 320px) and (max-width: 360px) {
+#mainTable {width:95%;border:none;}
+#mainTable .mainContent {width:99%;}
+#mainTable .footer {width:99%;}
+#mainTable .mainContent .bottomDiv .border-insidediv .rightSec {width:74%;}
+#mainTable .headerBar {width:94%;}
+#mainTable .headerDiv {width:94%;}
+#mainTable .newsHeading {width:94%;}
+#mainTable .mainContent .insideContainer .content {width:93%;}
+#mainTable .mainContent .insideContainer .imgDiv {width:93%;margin-top: 10px;}
+#mainTable .mainContent .colDiv .insideDiv {width:88%;}
+#mainTable .mainContent .bottomDiv .border-insidediv .rightSec{width:43%;}
+}
+</style>
+</head>
+<body>
+<div id="mainTable">
+	<div class="headerBar">
+		<span class="left">m&c saatchi mobile</span>
+		<span class="right">month 2013</span>
+	</div>
+	<div class="headerDiv">
+		<h1>newsletter heading</h1>
+		Consectetur adipiscing elit. Phasellus a ipsum a risus volupat placerat in nec<br>mauris. Fusce sit amet enim erat, in sagittis arcu. Aliquam dolor dolor, semper id<br>tempor et, varius pulvinar tellus.  
+	</div>
+	<div class="newsHeading">
+		<h2>- Latest News -</h2>
+	</div>
+	<div class="mainContent">
+		<div class="insideContainer border-bottom">
+			<div class="content"><h3>lorem ipsum dolor sit amet</h3>
+				<div class="text">Consectetur adipiscing elit. Phasellus a ipsum a risus volupat placerat in nec mauris. Fusce sit amet enim erat, in sagittis arcu. Aliquam dolor dolor, sempor id tempor et, varius pulvinar tellus. Maurtis commando urna at dui bibendum quis euismod velit egestas. <span class="black">Vestibulum</span> ante ipsum primis in faucibus orci luctus et ultrices.</div>
+				<div class="left"><img src="images/twitter.png"><img src="images/horn.png"></div>
+				<div class="readmore"><a href="">read more</a></div>
+			</div>
+			<div class="imgDiv"></div>
+		</div>
+		<div class="insideContainer border-bottom">
+			<div class="imgDiv"></div>
+			<div class="content"><h3>lorem ipsum dolor sit amet</h3>
+				<div class="text">Consectetur adipiscing elit. Phasellus a ipsum a risus volupat placerat in nec mauris. Fusce sit amet enim erat, in sagittis arcu. Aliquam dolor dolor, sempor id tempor et, varius pulvinar tellus. Maurtis commando urna at dui bibendum quis euismod velit egestas. <span class="black">Vestibulum</span> ante ipsum primis in faucibus orci luctus et ultrices.</div>
+				<div class="left"><img src="images/twitter.png"><img src="images/horn.png"></div>
+				<div class="readmore"><a href="">read more</a></div>
+			</div>
+		</div>
+		<div class="insideContainer">
+			<div class="content"><h3>lorem ipsum dolor sit amet</h3>
+				<div class="text">Consectetur adipiscing elit. Phasellus a ipsum a risus volupat placerat in nec mauris. Fusce sit amet enim erat, in sagittis arcu. Aliquam dolor dolor, sempor id tempor et, varius pulvinar tellus. Maurtis commando urna at dui bibendum quis euismod velit egestas. <span class="black">Vestibulum</span> ante ipsum primis in faucibus orci luctus et ultrices.</div>
+				<div class="left"><img src="images/twitter.png"><img src="images/horn.png"></div>
+				<div class="readmore"><a href="">read more</a></div>
+			</div>
+			<div class="imgDiv"></div>
+		</div>
+		<div class="jumboDiv">
+			<img src="images/jumbo-img.jpg" usemap="#usemap" border="0" class="max-width">
+		</div>
+		<div class="colDiv">
+			<h2>lorem ipsum dolor sit amet</h2>
+			<div class="insideDiv">
+				<div class="imgDiv"></div>
+				<h3>lorem ipsum dolor sit amet</h3>
+				<div class="text">Consectetur adipiscing elit. Phasellus a ipsum a risus volupat placerat in nec mauris. Fusce sit amet enim erat...</div>
+				<div class="readmore"><a href="">read more</a></div>
+			</div>
+			<div class="insideDiv">
+				<div class="imgDiv"></div>
+				<h3>lorem ipsum dolor sit amet</h3>
+				<div class="text">Consectetur adipiscing elit. Phasellus a ipsum a risus volupat placerat in nec mauris. Fusce sit amet enim erat...</div>
+				<div class="readmore"><a href="">read more</a></div>
+			</div>
+			<div class="insideDiv">
+				<div class="imgDiv"></div>
+				<h3>lorem ipsum dolor sit amet</h3>
+				<div class="text">Consectetur adipiscing elit. Phasellus a ipsum a risus volupat placerat in nec mauris. Fusce sit amet enim erat...</div>
+				<div class="readmore"><a href="">read more</a></div>
+			</div>
+		</div>
+		<div class="bottomDiv">
+			<div class="border-insidediv">
+				<div class="imgDiv"><img src="images/bottomdiv-img.jpg" class="max-width"></div>
+				<div class="rightSec">
+					<h2>app/mobile site of the month</h2>
+					<div class="text">Consectetur adipiscing elit. Phasellus a ipsum a risus volupat placerat in nec mauris. Fusce sit amet enim erat, in sagittis arcu. Aliquam dolor dolor, sempor id tempor et, varius pulvinar tellus. Maurtis commando urna at dui bibendum quis euismod velit egestas.</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="footer">
+		<a href="">www.mcsaatchimobile.com</a> <span class="pipe">|</span>
+		<a href="">Unsubscribe</a> <span class="pipe">|</span>
+		<a href="">Contact Us</a>
+	</div>
+</div>
+<map name="usemap">
+  <area shape="rect" coords="498,128,621,157" href="#">
+</map> 
+</body>
+</html>

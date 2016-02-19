@@ -1,0 +1,73 @@
+/* Tagadelic default example stylesheet **/
+
+.wrapper.tagadelic {
+  text-align : justify;
+  margin-right: 1em;
+}
+.cloud div { display:inline-block; float:none; clear:none;}
+.tagadelic.level1  { background:#0aa9ee; 
+	line-height:14px;
+	float:left;
+	-moz-border-radius:8px; 
+	-webkit-border-radius: 8px; 
+	border-radius:8px; 
+	padding:2px 8px;
+	margin:0 8px 3px 0;
+	color:#FFF;
+	text-transform:uppercase;
+	text-decoration:none;
+} 
+.tagadelic.level1 a { text-decoration:none; color:#FFF;}
+/*{ font-size : 1em; }
+.tagadelic.level2 {
+  font-size : 1.2em;
+}
+.tagadelic.level3 {
+  font-size : 1.4em;
+}
+.tagadelic.level4 {
+  font-size : 1.6em;
+}*/
+.tagadelic.level2 {
+	background: none repeat scroll 0 0 #CCEBF9;
+    border-radius: 8px 8px 8px 8px;
+    color: #FFFFFF;
+	float:left;
+    line-height: 14px;
+    padding:2px 8px;
+	margin:0 8px 3px 0;
+    text-transform: uppercase;
+	text-decoration:none;
+}
+.tagadelic.level2 a { text-decoration:none; color:#FFF;}
+/*.tagadelic.level5 {
+  font-size : 1.8em;
+}
+.tagadelic.level6 {
+  font-size : 2em;
+}*/
+.tagadelic.level3 , .tagadelic.level4, .tagadelic.level5, .tagadelic.level6
+{
+	background: none repeat scroll 0 0 #83D3F5;
+    border-radius: 8px 8px 8px 8px;
+    color: #FFFFFF;
+    line-height: 25px;
+    margin: 0 0 10px;
+    padding: 2px 8px;
+    text-transform: uppercase;
+	text-decoration:none;
+}
+.tagadelic.level3 a, .tagadelic.level4 a, .tagadelic.level5 a, .tagadelic.level6 a { color: #FFFFFF; text-decoration: none; }
+.tagadelic.level7 {
+  font-size : 2.2em;
+}
+.tagadelic.level8 {
+  font-size : 2.4em;
+}
+.tagadelic.level9 {
+  font-size : 2.6em;
+}
+.tagadelic.level10 {
+  font-size : 2.8em;
+}
+

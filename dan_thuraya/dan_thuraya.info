@@ -1,0 +1,58 @@
+name        = dan_thuraya
+description = A flexible, recolorable theme with many regions.
+package = Thuraya
+version = VERSION
+core = 7.x
+
+; Then we add our own stylesheets.
+stylesheets[all][] = css/libs.css
+stylesheets[all][] = css/style.css
+stylesheets[print][] = css/print.css
+
+; Optionally add some JavaScripts to your theme.
+; scripts[] = js/l10n.js
+; scripts[] = js/libs.js
+; scripts[] = js/modernizr.js
+; scripts[] = js/script.js
+
+regions[header]         = Header
+regions[sector_generic] = Sector Generic page
+regions[main_menu]      = Main Menu
+regions[share_icons]    = Share Icons
+regions[search_form]    = Search Form
+regions[navigation]     = Navigation bar
+regions[highlighted]    = Highlighted
+regions[help]           = Help
+regions[content]        = Content
+regions[sidebar_first]  = First sidebar
+regions[sidebar_second] = Second sidebar
+regions[partner_login]  = Partner Login
+
+regions[bottom]         = Page bottom
+regions[media_contact]  = Media Contact
+;regions[top_menu]  	= Top Menu
+regions[page_top]       = Page top
+regions[page_bottom]    = Page bottom
+
+regions[menu_top_menu]             = Top Menu
+regions[thu_custom_search]         = Custom Search Form
+regions[footer_bottom_location]    = Footer Bottom Location
+regions[footer_bottom]             = Footer Bottom
+regions[footer_store_location]     = Manage Store Location
+regions[footer_store_location_m2m] = Manage Store Location M2M
+
+regions[footer]          = Footer
+regions[footer_location] = Store Location
+
+regions[footer_dan_thuraya]          = Footer Dan Thuraya
+
+
+; Panels layouts. You can place multiple layouts under the "layouts" folder.
+plugins[panels][layouts] = layouts
+
+settings[shortcut_module_link] = 0
+
+; Information added by Drupal.org packaging script on 2015-09-08
+version   = "7.39"
+project   = "drupal"
+datestamp = "1434567286"
