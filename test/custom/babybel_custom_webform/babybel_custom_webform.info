@@ -1,0 +1,4 @@
+name = "Babybel Custom Webform"
+package = Babybel Custom Module
+core = "7.x"
+description = "Custom webforms for site"

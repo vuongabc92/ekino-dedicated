@@ -1,0 +1,88 @@
+<?php
+
+/*
+ * @file babybel_custom_webform.module
+ * Custom webforms for site.
+ */
+
+/*
+ * Implement hook_form_alter().
+ */
+
+function babybel_custom_webform_form_alter(&$form, $form_state, $form_id) {
+  global $language;
+  $webform_id = variable_get('babybel_variable_contact_us_webform_id_' . $language->language . '');
+  if ($form_id == 'webform_client_form_' . $webform_id) {
+    // Add class for submit button.
+    $form['actions']['submit']['#attributes']['class'][] = "btn-viewmore";
+    // Add attribute for form.
+    $form['#attributes']['novalidate'] = '';
+    $form['#attributes']['data-parsley-validate'] = '';
+    // Config radio and select box for styling.
+    // Radios.
+    $form['submitted']['group_1']['title']['#attributes']['data-parsley-errors-container'] = '.' . $form['submitted']['group_1']['title']['#wrapper_attributes']['class'][0];
+    $form['submitted']['group_2']['subjecttype']['#attributes']['data-parsley-errors-container'] = '#edit-submitted-group-2-subjecttype';
+    $form['submitted']['group_3']['storage']['#attributes']['data-parsley-errors-container'] = '#edit-submitted-group-3-storage';
+    $form['submitted']['group_4']['mbclub']['#attributes']['data-parsley-errors-container'] = '#edit-submitted-group-4-mbclub';
+    $form['submitted']['group_1']['title']['#attributes']['data-parsley-class-handler'] = '.webform-component-radios';
+    $form['submitted']['group_2']['subjecttype']['#attributes']['data-parsley-class-handler'] = '.webform-component-radios';
+    $form['submitted']['group_3']['storage']['#attributes']['data-parsley-class-handler'] = '.webform-component-radios';
+    $form['submitted']['group_4']['mbclub']['#attributes']['data-parsley-class-handler'] = '.webform-component-radios';
+    // Select box.
+    $form['submitted']['group_2']['subject']['#attributes']['data-parsley-class-handler'] = '.' . $form['submitted']['group_2']['subject']['#wrapper_attributes']['class'][0];
+    $form['submitted']['group_3']['variety']['#attributes']['data-parsley-class-handler'] = '.' . $form['submitted']['group_3']['variety']['#wrapper_attributes']['class'][0];
+    $form['submitted']['group_3']['purchasedate']['#attributes']['data-parsley-class-handler'] = '.' . $form['submitted']['group_3']['purchasedate']['#wrapper_attributes']['class'][0];
+
+    // Add error message for field empty.
+    $form['submitted']['group_1']['title']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_1']['lastname']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_1']['firstname']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_1']['company']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_1']['address']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_1']['address2']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_1']['zipcode']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_1']['city']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_1']['country']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_1']['email']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_1']['email_confirm']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_1']['phone1']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_1']['phone2']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_2']['subject']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_2']['subjecttype']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_2']['brand']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_2']['variety']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_2']['format']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_2']['weight']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_3']['bestbeforedate']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_3']['batchcode']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_3']['purchasedate']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_3']['store']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_3']['storage']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_4']['comment']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    $form['submitted']['group_4']['mbclub']['#attributes']['data-parsley-required-message'] = variable_get('babybel_variable_contact_us_required_field_message_' . $language->language . '', 'Field is required');
+    // Add error message for wrong email type.
+    $form['submitted']['group_1']['email']['#attributes']['data-parsley-type'] = 'email';
+    $form['submitted']['group_1']['email_confirm']['#attributes']['data-parsley-type'] = 'email';
+    $form['submitted']['group_1']['email']['#attributes']['data-parsley-type-message'] = variable_get('babybel_variable_contact_us_incorrect_email_message_' . $language->language . '', 'Wrong email');
+    $form['submitted']['group_1']['email_confirm']['#attributes']['data-parsley-type-message'] = variable_get('babybel_variable_contact_us_incorrect_email_message_' . $language->language . '', 'Wrong email');
+    // Add error message for re-email is not match.
+    $form['submitted']['group_1']['email_confirm']['#attributes']['data-parsley-equalto'] = '#edit-submitted-group-1-email';
+    $form['submitted']['group_1']['email_confirm']['#attributes']['data-parsley-equalto-message'] = variable_get('babybel_variable_contact_us_email_not_match_' . $language->language . '', 'Email is not match');
+    // Add error message for phone number.
+    $form['submitted']['group_1']['phone1']['#attributes']['data-parsley-type'] = 'number';
+    $form['submitted']['group_1']['phone2']['#attributes']['data-parsley-type'] = 'number';
+    $form['submitted']['group_1']['phone1']['#attributes']['data-parsley-type-message'] = variable_get('babybel_variable_contact_us_type_phone_' . $language->language . '', 'Wrong email');
+    $form['submitted']['group_1']['phone2']['#attributes']['data-parsley-type-message'] = variable_get('babybel_variable_contact_us_type_phone_' . $language->language . '', 'Wrong email');
+    // Test
+    $form['submitted']['group_2']['subjecttype']['#attributes']['data-required-show'] = '';
+    $form['submitted']['group_2']['brand']['#attributes']['data-required-show'] = '';
+    $form['submitted']['group_2']['variety']['#attributes']['data-required-show'] = '';
+    $form['submitted']['group_2']['format']['#attributes']['data-required-show'] = '';
+    $form['submitted']['group_2']['weight']['#attributes']['data-required-show'] = '';
+    $form['submitted']['group_3']['bestbeforedate']['#attributes']['data-required-show'] = '';
+    $form['submitted']['group_3']['batchcode']['#attributes']['data-required-show'] = '';
+    $form['submitted']['group_3']['purchasedate']['#attributes']['data-required-show'] = '';
+    $form['submitted']['group_3']['store']['#attributes']['data-required-show'] = '';
+    $form['submitted']['group_3']['storage']['#attributes']['data-required-show'] = '';
+  }
+}

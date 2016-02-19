@@ -1,0 +1,6 @@
+name = "Babybel Duplicate Content"
+package = Babybel Custom Module
+core = "7.x"
+description = "Babybel module contain duplication content functional"
+
+//dependencies[] = baby_variable

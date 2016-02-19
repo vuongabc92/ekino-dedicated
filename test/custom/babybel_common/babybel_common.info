@@ -1,0 +1,6 @@
+name = "Babybel Common"
+package = Babybel Custom Module
+core = "7.x"
+description = "Babybel module contain common functional"
+
+//dependencies[] = baby_variable

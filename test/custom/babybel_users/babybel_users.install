@@ -1,0 +1,10 @@
+<?php
+/**
+ *  Implements hook_install().
+ */
+function babybel_users_install() {
+	db_update('system')
+    ->fields(array('weight' => 99999))
+    ->condition('name', 'babybel_users')
+    ->execute();
+}

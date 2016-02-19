@@ -1,0 +1,855 @@
+<?php
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/**
+ *  Implements hook_menu().
+ */
+function babybel_contextual_menu() {
+  $items = array();
+  $items['admin/babybel-settings/variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/products-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/homepage-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/social-network-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/fun-stuff-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/our-secret-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/newsletter-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/news-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+  $items['admin/babybel-settings/charity-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+  $items['admin/babybel-settings/social-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+    
+  $items['admin/babybel-settings/dispatch-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/error-page-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/banner-cookies-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/term-conditions-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/privacy-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'page arguments' => array(4),
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function babybel_contextual_theme() {
+  return array(
+    'babybel_contextual__' => array(
+      'render element' => 'element',
+      'template' => 'templates/products_homepage_info',
+    ),
+    'background_footer' => array(
+      'render element' => 'element',
+      'template' => 'templates/background_footer',
+    ),
+    'background_header' => array(
+      'render element' => 'element',
+      'template' => 'templates/background_header',
+    ),
+    'product_info' => array(
+      'render element' => 'element',
+      'template' => 'templates/product_info',
+    ),
+    'product_push_block' => array(
+      'render element' => 'element',
+      'template' => 'templates/product_push_block',
+    ),
+    'social_network_icons' => array(
+      'render element' => 'element',
+      'template' => 'templates/social_network_icons',
+    ),
+    'main_menu_general' => array(
+      'render element' => 'element',
+      'template' => 'templates/main_menu_general',
+    ),
+    'menu_footer_general' => array(
+      'render element' => 'element',
+      'template' => 'templates/menu_footer_general',
+    ),
+    'button_general' => array(
+      'render element' => 'element',
+      'template' => 'templates/button_general',
+    ),
+    'content_general' => array(
+      'render element' => 'element',
+      'template' => 'templates/content_general',
+    ),
+  );
+}
+
+/**
+ * Put variables to file template.
+ */
+function babybel_contextual_render($position, $params = array()) {
+  global $language;
+  switch ($position) {
+    // Footer
+    case 'background_footer_products_page':
+      $fid_footer_products = babybel_variable_get('babybel_variable_products_products_page_background_footer', $language->language, '');
+      $background_footer_products = file_load($fid_footer_products);
+      $image_path = '';
+      if ($background_footer_products->uri) {
+        $image_path = image_style_url('639x350', $background_footer_products->uri);
+      }
+      return babybel_contextual_renderable_array(
+        'background_footer', 'admin/babybel-settings/products-variable/products-info', array(
+        'image_path' => $image_path
+        )
+      );
+
+      break;
+    case 'background_footer_home_page':
+      $fid_footer_home = babybel_variable_get('babybel_variable_homepage_background', $language->language);
+      $background_footer_home = file_load($fid_footer_home);
+      $image_path = '';
+      if ($background_footer_home->uri) {
+        $image_path = image_style_url('940x576', $background_footer_home->uri);
+      }
+      return babybel_contextual_renderable_array(
+        'background_footer', 'admin/babybel-settings/homepage-variable/homepage-info', array(
+        'image_path' => $image_path
+        )
+      );
+
+      break;
+
+    // Products
+    case 'product_info_products':
+      $producs_title = variable_get('babybel_variable_products_title_products_' . $language->language);
+      $producs_subtitle = variable_get('babybel_variable_products_subtitle_products_' . $language->language);
+
+      $producs_title = isset($producs_title) ? $producs_title : '';
+      $producs_subtitle = isset($producs_subtitle) ? $producs_subtitle : '';
+
+      return babybel_contextual_renderable_array(
+        'product_info', 'admin/babybel-settings/products-variable/products-info', array(
+        'title' => $producs_title,
+        'subtitle' => $producs_subtitle
+        )
+      );
+
+      break;
+
+    case 'product_info_homepage':
+      $producs_title = variable_get('babybel_variable_products_title_' . $language->language);
+      $producs_subtitle = variable_get('babybel_variable_products_subtitle_' . $language->language);
+
+      $producs_title = isset($producs_title) ? $producs_title : '';
+      $producs_subtitle = isset($producs_subtitle) ? $producs_subtitle : '';
+
+      return babybel_contextual_renderable_array(
+        'product_info', 'admin/babybel-settings/homepage-variable/products-info', array(
+        'title' => $producs_title,
+        'subtitle' => $producs_subtitle
+        )
+      );
+
+      break;
+
+    case 'product_push_block':
+      $button_cta_title = babybel_variable_get('babybel_variable_products_push_block_cta_link_title', $language->language, '');
+      $button_cta_url = babybel_variable_get('babybel_variable_products_push_block_cta_link_url', $language->language, '');
+      $fid_desktop_img = babybel_variable_get('babybel_variable_products_push_block_desktop_img', $language->language, '');
+      $fid_tablet_img = babybel_variable_get('babybel_variable_products_push_block_tablet_img', $language->language, '');
+
+      if ($fid_desktop_img) {
+        $desktop_img = file_load($fid_desktop_img);
+      }
+
+      if ($fid_tablet_img) {
+        $tablet_img = file_load($fid_tablet_img);
+      }
+
+      $push_block_title = babybel_variable_get('babybel_variable_products_push_block_title', $language->language, '');
+
+      return babybel_contextual_renderable_array(
+        'product_push_block', 'admin/babybel-settings/products-variable/products-info', array(
+        'title' => $push_block_title,
+        'desktop_img_uri' => isset($desktop_img) ? $desktop_img->uri : '',
+        'tablet_img_uri' => isset($tablet_img) ? $tablet_img->uri : '',
+        'button_cta_title' => $button_cta_title,
+        'button_cta_url' => $button_cta_url
+        )
+      );
+
+      break;
+
+    case 'background_header_products_page':
+      $fid_header = babybel_variable_get('babybel_variable_products_products_page_background_header', $language->language, '');
+      $background_header = file_load($fid_header);
+
+      return babybel_contextual_renderable_array(
+        'background_header', 'admin/babybel-settings/products-variable/products-info', array(
+        'uri' => $background_header->uri
+        )
+      );
+
+      break;
+
+    // Social Network
+    case 'social_network_icons':
+      $twitter_url = babybel_variable_get('babybel_variable_twitter_url', $language->language, '');
+      $twitter_title = babybel_variable_get('babybel_variable_twitter_title', $language->language, '');
+
+      $facebook_url = babybel_variable_get('babybel_variable_facebook_url', $language->language, '');
+      $facebook_title = babybel_variable_get('babybel_variable_facebook_title', $language->language, '');
+
+      $youtube_url = babybel_variable_get('babybel_variable_youtube_url', $language->language, '');
+      $youtube_title = babybel_variable_get('babybel_variable_youtube_title', $language->language, '');
+
+      $instagram_url = babybel_variable_get('babybel_variable_instagram_url', $language->language, '');
+      $instagram_title = babybel_variable_get('babybel_variable_instagram_title', $language->language, '');
+
+
+      return babybel_contextual_renderable_array(
+        'social_network_icons', 'admin/babybel-settings/social-network-variable/page-info', array(
+        'twitter_url' => $twitter_url,
+        'twitter_title' => $twitter_title,
+        'facebook_url' => $facebook_url,
+        'facebook_title' => $facebook_title,
+        'youtube_url' => $youtube_url,
+        'youtube_title' => $youtube_title,
+        'instagram_url' => $instagram_url,
+        'instagram_title' => $instagram_title,
+        )
+      );
+
+      break;
+
+    // Menu
+    case 'main_menu_header':
+      $main_menu = babybel_common_get_main_menu('head', 'main-menu');
+      $content = render($main_menu);
+
+      return babybel_contextual_renderable_array(
+        'main_menu_general', 'admin/structure/menu/manage/main-menu/main-menu-header-info', array(
+        'content' => $content,
+        )
+      );
+      break;
+
+    case 'main_menu_footer':
+      $main_menu = babybel_common_get_main_menu('footer', 'main-menu');
+      $class_name = isset($params['class']) ? $params['class'] : '';
+
+      $content = '<ul class="' . $class_name . '">' . babybel_common_render_footer_menu($main_menu) . '</ul>';
+
+      return babybel_contextual_renderable_array(
+        'main_menu_general', 'admin/structure/menu/manage/main-menu/main-menu-footer-info', array(
+        'content' => $content,
+        )
+      );
+
+      break;
+
+    case 'menu_footer':
+      $footer_menu = babybel_common_get_main_menu('footer', 'menu-footer-menu');
+      $menu_footer_content = '';
+      if ($footer_menu) {
+        foreach ($footer_menu as $item) {
+          $dispatch_page = $language_selection_page_url = variable_get('language_selection_page_path', 'language_selection');
+          if ($dispatch_page == $item['#href']) {
+            $menu_footer_content .= '<li><a href="/' . $item['#href'] . '">' . $item['#title'] . '</a></li>';
+          }
+          else {
+            $ext_link = url_is_external($item['#href']) ? 'target="_blank"' : '';
+            if ($ext_link) {
+              $menu_footer_content .= '<li><a ' . $ext_link . ' href="' . $item['#href'] . '">' . $item['#title'] . '</a></li>';
+            }
+            else {
+              $menu_footer_content .= '<li><a  href="' . url($item['#href']) . '">' . $item['#title'] . '</a></li>';
+            }
+          }
+        }
+      }
+
+      return babybel_contextual_renderable_array(
+        'menu_footer_general', 'admin/structure/menu/manage/menu-footer-menu/menu-footer-info', array(
+        'menu_footer_content' => $menu_footer_content,
+        )
+      );
+
+      break;
+
+    case 'homepage_button_product':
+      $button_text = babybel_variable_get('babybel_variable_products_button_text', $language->language, '');
+
+      return babybel_contextual_renderable_array(
+        'button_general', 'admin/babybel-settings/homepage-variable/products-info', array(
+        'content' => $button_text,
+        )
+      );
+
+      break;
+
+    // Funstuff contextual links
+    case 'background_header_fun_stuff':
+      $fid_header = babybel_variable_get('babybel_variable_funstuff_page_background_header', $language->language, '');
+      $background_header = file_load($fid_header);
+
+      return babybel_contextual_renderable_array(
+        'background_header', 'admin/babybel-settings/fun-stuff-variable/funstuff-info', array(
+        'uri' => $background_header->uri
+        )
+      );
+
+      break;
+        
+    case 'background_footer_fun_stuff':
+      $fid_footer_products = babybel_variable_get('babybel_variable_funstuff_page_background_footer', $language->language, '');
+      $background_footer_fun_stuff = file_load($fid_footer_products);
+      $image_path = '';
+      if ($background_footer_fun_stuff->uri) {
+        $image_path = image_style_url('940x576', $background_footer_fun_stuff->uri);
+      }
+      return babybel_contextual_renderable_array(
+        'background_footer', 'admin/babybel-settings/fun-stuff-variable/funstuff-info', array(
+        'image_path' => $image_path
+        )
+      );
+
+      break;
+      // Charity contextual links
+    case 'background_header_charity':
+      $fid_header = babybel_variable_get('babybel_variable_charity_page_background_header', $language->language, '');
+      $background_header = file_load($fid_header);
+
+      return babybel_contextual_renderable_array(
+        'background_header', 'admin/babybel-settings/charity-variable/charity-info', array(
+        'uri' => $background_header->uri
+        )
+      );
+
+      break;    
+    
+    case 'background_footer_charity':
+      $fid_footer_products = babybel_variable_get('babybel_variable_charity_page_background_footer', $language->language, '');
+      $background_footer_charity = file_load($fid_footer_products);
+      $image_path = '';
+      if ($background_footer_charity->uri) {
+        $image_path = image_style_url('940x576', $background_footer_charity->uri);
+      }
+      return babybel_contextual_renderable_array(
+        'background_footer', 'admin/babybel-settings/charity-variable/charity-info', array(
+        'image_path' => $image_path
+        )
+      );
+
+      break;
+      
+      // Social feed
+    case 'social_content_facebook_feed':
+      $block = module_invoke('babybel_social', 'block_view', 'social_latest_feed');
+      $content = $block['content'];
+      if($content['code'] == 1){
+        $content =  '<h4>'.$block['content']['message'].'</h4>';
+      }else {
+        $content = $content;
+      }
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/social-variable/social-info', array(
+        'content' => $content
+        )
+      );
+
+      break;
+    
+    // Cheese-making (Our-secrect)
+    case 'background_header_our_secret':
+      $fid_header_oursecret = babybel_variable_get('babybel_variable_our_secret_background_header', $language->language, '');
+      $background_header_oursecret = file_load($fid_header_oursecret);
+
+      return babybel_contextual_renderable_array(
+        'background_header', 'admin/babybel-settings/our-secret-variable/our-secret-info', array(
+        'uri' => $background_header_oursecret->uri
+        )
+      );
+
+      break;
+
+    case 'button_discover_all_products_our_secret':
+      $text_button = babybel_variable_get('babybel_variable_our_secret_button_text', $language->language, '');
+      if ($text_button) {
+         $content = '<div class="text-center">
+                        <a href="' . url("products") . '" title="' . $text_button . '" class="btn-viewmore style-2">' . $text_button . '</a>
+                    </div>';
+      }
+
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/our-secret-variable/our-secret-info', array(
+        'content' => $content
+        )
+      );
+
+    // News
+    case 'button_load_more_news':
+      $text_button = babybel_variable_get('babybel_variable_news_text_button', $language->language, '');
+      $text_button = trim($text_button) ? $text_button : t('Load more');
+      if ($text_button) {
+        $content = '<div class="text-center" style="padding-bottom:80px">
+        <a href="#" title="' . $text_button . '" class="btn-viewmore">' . $text_button . '</a>
+      </div>';
+      }
+
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/news-variable/news-info', array(
+        'content' => $content
+        )
+      );
+      // Charity
+    case 'button_load_more_charity':
+      $text_button = babybel_variable_get('babybel_variable_charity_text_button', $language->language, '');
+      $text_button = trim($text_button) ? $text_button : t('Load more');
+      if ($text_button) {
+        $content = '<div class="text-center">
+        <a href="#" title="' . $text_button . '" class="btn-viewmore">' . $text_button . '</a>
+      </div>';
+      }
+
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/charity-variable/charity-info', array(
+        'content' => $content
+        )
+      );
+
+      break;
+      case 'text_date_news':
+      $text_date = babybel_variable_get('babybel_variable_news_text_date', $language->language, '');
+      if ($text_date) {
+        $content = trim($text_date);
+      }else{
+        $content = t('Date');
+      }
+
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/news-variable/news-info', array(
+        'content' => $content
+        )
+      );
+      break;
+    case 'text_share_news':
+      $text_share = babybel_variable_get('babybel_variable_news_text_share', $language->language, '');
+      if ($text_share) {
+        $content = '<a href="#" title="' . $text_share . '" class="btn-share">
+                      <span class="icon-share"></span>
+                      ' . $text_share . '</a>';
+      }
+
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/news-variable/news-info', array(
+        'content' => $content
+        )
+      );
+      break;
+      
+    // Newsletter
+    case 'image_form_input_newsletter':
+      $fid_image_form_input = babybel_variable_get('babybel_variable_newsletter_form_input_image', $language->language, '');
+      $background_form_input = file_load($fid_image_form_input);
+      $image_path = '';
+      if ($background_form_input->uri) {
+        $image_path = image_style_url('375x310', $background_form_input->uri);
+      }
+
+      $content = '';
+      if ($image_path) {
+        $content = '<img src="' . $image_path . '" alt="">';
+      }
+
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/newsletter-variable/newsletter-info', array(
+        'content' => $content
+        )
+      );
+      break;
+
+    case 'image_form_success_newsletter':
+
+      $fid_image_form_success = babybel_variable_get('babybel_variable_newsletter_form_success_image', $language->language, '');
+      $background_form_success = file_load($fid_image_form_success);
+      $image_path = '';
+      if ($background_form_success->uri) {
+        $image_path = image_style_url('275x225', $background_form_success->uri);
+      }
+
+      $content = '';
+      if ($image_path) {
+        $content = '<div class="photo">
+          <img src="' . $image_path . '" alt="">
+        </div>';
+      }
+
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/newsletter-variable/newsletter-info', array(
+        'content' => $content
+        )
+      );
+
+      break;
+
+    case 'message_form_success_newsletter':
+      $success_content = babybel_variable_get('babybel_variable_newsletter_form_success_content', $language->language, '');
+      $content = '';
+      if ($success_content) {
+        $content = "<div class='desc'>
+            <p>" . $success_content['value'] . "</p>
+        </div>";
+      }
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/newsletter-variable/newsletter-info', array(
+        'content' => $content
+        )
+      );
+      break;
+
+    case 'button_form_input_newsletter':
+      $content = '';
+      if ($text_button) {
+        $content = '<div class="text-center">' . render($form['actions']['submit']) . '</div>';
+      }
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/newsletter-variable/newsletter-info', array(
+        'content' => $content
+        )
+      );
+      break;
+
+    case 'button_form_success_newsletter':
+      global $base_root;
+      $button_url = babybel_variable_get('babybel_variable_newsletter_form_success_cta_link_url', $language->language, '');
+      $button_title = babybel_variable_get('babybel_variable_newsletter_form_success_cta_link_title', $language->language, '');
+
+      $content = '';
+      if ($button_url && $button_title) {
+        $content = '<a href="' . $base_root . url($button_url) . '" title="' . $button_title . '" class="btn-green">' . $button_title . '</a>';
+      }
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/newsletter-variable/newsletter-info', array(
+        'content' => $content
+        )
+      );
+      break;
+
+    case 'title_form_newsletter':
+      $title = babybel_variable_get('babybel_variable_newsletter_form_input_title', $language->language, '');
+      $content = '';
+      if ($title) {
+        $content = '<h2 class="title-1">' . $title . '</h2>';
+      }
+
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/newsletter-variable/newsletter-info', array(
+        'content' => $content
+        )
+      );
+      break;
+
+    // Dispatch
+    case 'map_sticky_dispatch':
+      $fid_map_sticky = babybel_variable_get('babybel_variable_dispatch_map_sticky', $language->language);
+      $map_sticky = file_load($fid_map_sticky);
+      $image_path = '';
+      if ($map_sticky->uri) {
+        $image_path = image_style_url('840x476', $map_sticky->uri);
+      }
+      $content = '';
+      if ($image_path) {
+        $content = '<div class="container sticky-wrap">
+            <div class="sticky"><img src="' . $image_path . '" alt="Map sticky"></div>
+        </div>';
+      }
+
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/dispatch-variable/dispatch-info', array(
+        'content' => $content
+        )
+      );
+
+      break;
+
+    case 'title_dispatch':
+      $title = babybel_variable_get('babybel_variable_dispatch_title', $language->language);
+      if ($title) {
+        $content = '<div class="col-xs-12 text-center">
+                    <p class="title-intro">' . $title . '</span></p>
+                </div>';
+      }
+
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/dispatch-variable/dispatch-info', array(
+        'content' => $content
+        )
+      );
+
+      break;
+
+    case 'menu_dispatch':
+      $content = '';
+      if (isset($params['menu_content'])) {
+        $menu_content = $params['menu_content'];
+        $content = '<div data-expandable data-column class="list-language">' . $menu_content . '</div>';
+      }
+
+      return babybel_contextual_renderable_array(
+        'main_menu_general', 'admin/structure/menu/manage/menu-dispatch/dispatch-info', array(
+        'content' => $content,
+        )
+      );
+      break;
+
+    // 404
+    case 'banner_404':
+      $fid_banner_404 = babybel_variable_get('babybel_variable_404_background', $language->language, '');
+      $banner_404 = file_load($fid_banner_404);
+      $image_path = '';
+      if ($banner_404->uri) {
+        $image_path = image_style_url('855x334', $banner_404->uri);
+      }
+
+      $content = '';
+      if ($image_path) {
+        $content = '<div class="banner">
+                      <img src="' . $image_path . '" alt="Banner 404" class="img-not-found picto">
+                    </div>';
+      }
+
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/error-page-variable/error-page-info', array(
+        'content' => $content
+        )
+      );
+
+      break;
+
+    case 'content_404':
+      $title = babybel_variable_get('babybel_variable_404_title', $language->language, '');
+
+      $content = '';
+      if ($title['value']) {
+        $content = '<div class="center-block description">
+                        ' . nl2br($title['value']) . '
+                    </div>';
+      }
+
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/error-page-variable/error-page-info', array(
+        'content' => $content
+        )
+      );
+
+      break;
+
+    case 'googleplay_appstore_icon':
+      $app_logo = babybel_common_check_file('img-apple-app.png', 'en');
+      $google_logo = babybel_common_check_file('img-google-app.png', 'en');
+
+      $appstore_url = babybel_variable_get('babybel_variable_appstore_url', $language->language, '');
+      $appstore_title = babybel_variable_get('babybel_variable_appstore_title', $language->language, '');
+      $appstore_icon_fid = babybel_variable_get('babybel_variable_appstore_icon', $language->language);
+      $appstore_icon = file_load($appstore_icon_fid);
+
+      $apple_path = ($appstore_icon->uri) ? file_create_url($appstore_icon->uri) : $app_logo;
+
+      $googleplay_url = babybel_variable_get('babybel_variable_google_play_url', $language->language, '');
+      $googleplay_title = babybel_variable_get('babybel_variable_google_play_title', $language->language, '');
+      $googleplay_icon_id = babybel_variable_get('babybel_variable_google_play_icon', $language->language);
+      $googleplay_path = file_load($googleplay_icon_id);
+      $google_path = ($googleplay_path->uri) ? file_create_url($googleplay_path->uri) : $google_logo;
+
+      //$content = '<div class="group">';
+      $content = '';
+      if ($appstore_url) {
+        $content .= '<div class="apps-link">
+            <a target="_blank" href="' . $appstore_url . '" title="' . $appstore_title . '" class="link">
+                <img src="' . $apple_path . '" alt="' . $appstore_title . '">
+            </a>
+        </div>';
+      }
+      if ($googleplay_url) {
+        $content .= '<div class="apps-link">
+            <a target="_blank" href="' . $googleplay_url . '" title="' . $googleplay_title . '" class="link">
+                <img src="' . $google_path . '" alt="' . $googleplay_title . '">
+            </a>
+        </div>';
+      }
+      //$content .= '</div>';
+
+
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/social-network-variable/page-info', array(
+        'content' => $content
+        )
+      );
+
+      break;
+    case 'banner_cookies':
+      $content = '<div class="cookies-banner"></div>';
+      return babybel_contextual_renderable_array(
+        'content_general', 'admin/babybel-settings/banner-cookies-variable/banner-cookies-info', array(
+        'content' => $content
+        )
+      );
+
+      break;
+
+    // Term conditions
+    case 'background_header_term_conditions_page':
+      $fid_header = babybel_variable_get('babybel_variable_term_conditions_background', $language->language, '');
+      $background_header = file_load($fid_header);
+
+      return babybel_contextual_renderable_array(
+        'background_header', 'admin/babybel-settings/term-conditions-variable/term-conditions-info', array(
+        'uri' => $background_header->uri
+        )
+      );
+
+      break;
+
+    // Privacy
+    case 'background_header_privacy_page':
+      $fid_header = babybel_variable_get('babybel_variable_privacy_background', $language->language, '');
+      $background_header = file_load($fid_header);
+
+      return babybel_contextual_renderable_array(
+        'background_header', 'admin/babybel-settings/privacy-variable/privacy-info', array(
+        'uri' => $background_header->uri
+        )
+      );
+
+      break;
+
+
+    default:
+      break;
+  }
+}
+
+/**
+ * Render html contain contextual link.
+ */
+function babybel_contextual_renderable_array($theme, $path, $resource) {
+  $build = array(
+    '#theme' => sprintf($theme),
+    '#content' => $resource,
+    '#contextual_links' => array(
+      $theme => array(
+        $path, array()
+      ),
+    ),
+  );
+
+  return drupal_render($build);
+}
+
+/**
+ * Implement hook_node_view_alter()
+ */
+function babybel_contextual_node_view_alter(&$build) {
+  $node = $build['#node'];
+  if (!empty($node->nid) && $node->type == 'page') {
+    $build['#contextual_links']['node'] = array('node', array($node->nid));
+  }
+}

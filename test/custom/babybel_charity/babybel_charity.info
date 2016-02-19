@@ -1,0 +1,4 @@
+name = "Babybel Charity"
+package = Babybel Custom Module
+core = "7.x"
+description = "Babybel module contain charity functional"

@@ -1,0 +1,964 @@
+<?php
+
+/**
+ * @file
+ * Defines features and functions common to the Babybel modules.
+ */
+
+/**
+ * Implements of hook_block_info().
+ */
+function babybel_common_block_info() {
+  $blocks['babybel_header'] = array(
+    'info' => t('Babybel Header'),
+    'region' => 'header',
+    'cache' => DRUPAL_NO_CACHE,
+    'status' => 1,
+  );
+
+  $blocks['babybel_footer'] = array(
+    'info' => t('Babybel Footer'),
+    'region' => 'footer',
+    'cache' => DRUPAL_NO_CACHE,
+    'status' => 1,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements of hook_block_view().
+ */
+function babybel_common_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'babybel_header':
+      $block['subject'] = '';
+      $block['content'] = theme('babybel_header', array());
+      break;
+
+    case 'babybel_footer':
+      $block['subject'] = '';
+      $block['content'] = theme('babybel_footer', array('main_menu' => ''));
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implements of hook_theme().
+ */
+function babybel_common_theme($existing, $type, $theme, $path) {
+  return array(
+    'babybel_header' => array(
+      'template' => 'templates/babybel_header',
+      'variables' => array(),
+    ),
+    'babybel_footer' => array(
+      'template' => 'templates/babybel_footer',
+      'variables' => array('main_menu' => NULL),
+    ),
+    'babybel_newsletter' => array(
+      'template' => 'templates/babybel_newsletter',
+      'variables' => array(),
+    ),
+    'babybel_newsletter_form_theme' => array(
+      'render element' => 'form',
+      'template' => 'templates/babybel_newsletter_form_theme',
+    ),
+    'babybel_newsletter_success' => array(
+      'template' => 'templates/babybel_newsletter_success',
+      'variables' => array(),
+    ),
+    'babybel_cookie_banner' => array(
+      'template' => 'templates/babybel_cookie_banner',
+      'variables' => array(),
+    ),
+  );
+}
+
+/**
+ * Get main menu.
+ */
+function babybel_common_get_main_menu($position = 'head', $menu) {
+  $tree = menu_tree_all_data($menu);
+  $variables = menu_tree_output(i18n_menu_localize_tree($tree));
+
+  unset($variables['#sorted']);
+  unset($variables['#theme_wrappers']);
+  if ($position == 'head') {
+    $menu = babybel_common_render_main_menu($variables);
+    return $menu;
+  } else {
+    return $variables;
+  }
+}
+
+/**
+ * Render Main menu to html.
+ */
+function babybel_common_render_main_menu($main_menu) {
+  global $base_root, $language;
+  $html = '<li class="display-mobile"><a href="' . url('/') . '" title="' . t('Home') . '">' . t('Home') . '</a></li>';
+  if ($main_menu) {
+    $position = 1;
+    foreach ($main_menu as $menu_item) {
+      $str = '';
+      if ($position == baby_common_check_current_path()) {
+        $str = 'class="active current"';
+      }
+      $html .= '<li ' . $str . '>';
+      if ($menu_item['#below']) {
+        $html .='<a href="#" title="' . $menu_item['#title'] . '" class="sub-menu-title" data-subnav>' . $menu_item['#title'] . '<span class="icon icon-arrow-white"></span></a>';
+        $html .= '<ul data-subnav-list class="sub-menu">' . babybel_filter_menu_array($menu_item['#below']) . '</ul>';
+      } else {
+        if ($menu_item['#href'] == '<front>') {
+          $html .='<a href="' . url($menu_item['#href']) . '" title="' . $menu_item['#title'] . '">' . $menu_item['#title'] . '</a>';
+        } else {
+
+          $html .='<a href="' . url($menu_item['#href']) . '" title="' . $menu_item['#title'] . '">' . $menu_item['#title'] . '</a>';
+        }
+      }
+      $html .= '</li>';
+
+      $position++;
+    }
+  }
+  $html .= '<li class="display-mobile"><a href="#" title="' . t('Follow us') . '">' . t('Follow us') . '</a></li>';
+  return $html;
+}
+
+/**
+ * Filter and unset params not necessary.
+ */
+function babybel_filter_menu_array($variables) {
+  global $base_root, $language;
+
+  unset($variables['#sorted']);
+  unset($variables['#theme_wrappers']);
+  $html = '';
+  if ($variables) {
+    foreach ($variables as $item) {
+      $html .= '<li><a href="' . url($item['#href']) . '" title="' . $item['#title'] . '">' . $item['#title'] . '</a></li>';
+    }
+  }
+  return $html;
+}
+
+/**
+ * Render Main menu to html.
+ */
+function babybel_common_render_footer_menu($main_menu) {
+  global $language;
+  $html = '';
+  foreach ($main_menu as $item) {
+    if ($item['#below']) {
+      unset($item['#below']['#sorted']);
+      unset($item['#below']['#theme_wrappers']);
+      foreach ($item['#below'] as $sub) {
+        $html .= '<li><a href="' . url($sub['#href']) . '">' . $sub['#title'] . '</a></li>';
+      }
+    } else {
+      $html .= '<li><a href="' . url($item['#href']) . '">' . $item['#title'] . '</a></li>';
+    }
+  }
+  return $html;
+}
+
+/**
+ * Get video id from uri.
+ */
+function babybel_common_Video_Id($uri) {
+  $allowedService = array(
+    'youtube.com',
+  );
+  $type = '';
+  $uri_info = parse_url($uri);
+  if ($uri_info && $uri_info['host']) {
+    $pos = strstr($uri_info['host'], 'www.');
+    $host = ($pos ? substr($uri_info['host'], 4) : $uri_info['host']);
+    if (in_array($host, $allowedService)) {
+      $result = $uri;
+      $match = array();
+      if ($host == 'youtube.com') {
+        parse_str(parse_url($uri, PHP_URL_QUERY), $result);
+        $result = isset($result['v']) ? $result['v'] : '';
+        $type = 'youtube';
+      }
+      return array('type' => $type, 'id' => $result);
+    }
+  } else {
+    return FALSE;
+  }
+}
+
+/*
+ * Define Color and hex code.
+ */
+
+function babybel_common_switch_color_key_to_string($key) {
+  switch ($key) {
+    case '#cf0303':
+      return 'red';
+      break;
+    case '#57b9e7':
+      return 'blue';
+      break;
+    case '#772f8e':
+      return 'purple';
+      break;
+    case '#f27e36':
+      return 'orange';
+      break;
+    case '#ffcc46':
+      return 'yellow';
+      break;
+    case '#0daf5a':
+      return 'green';
+      break;
+    case '#c9a97a':
+      return 'brown-light-1';
+      break;
+    case '#572700':
+      return 'brown-dark-2';
+      break;
+    case '#8a8a8a':
+      return 'grey';
+      break;
+    default:
+      return 'red';
+  }
+}
+
+/*
+ * Define domain country
+ */
+
+function babybel_common_switch_country_from_key_to_path($key) {
+  global $language;
+  $all_language = language_list();
+  if($key) {
+    $lang = $all_language[$key];
+    return $lang->prefix;
+  }
+
+  return $language->prefix;
+}
+
+/*
+ * Get position active on menu
+ */
+
+function baby_common_check_current_path() {
+  $path = arg(0);
+  switch ($path) {
+    case 'products':
+    case 'our-secret':
+      return 1;
+      break;
+    case 'fun-stuff':
+      return 2;
+      break;
+    case 'news':
+      return 3;
+      break;
+    case 'charity':
+      return 4;
+      break;
+    default:
+      return FALSE;
+      break;
+  }
+}
+
+/*
+ * Define name social network
+ */
+
+function babybel_common_switch_socialnetwork_from_key_to_string($key) {
+  switch ($key) {
+    case 'fb':
+      return 'facebook';
+      break;
+    case 'gg':
+      return 'google_plusone_share';
+      break;
+    case 'tw':
+      return 'twitter';
+      break;
+    default:
+      return '';
+      break;
+  }
+}
+
+/**
+ * Implements of hook_form_alter().
+ */
+function babybel_common_form_alter(&$form, &$form_state, $form_id) {
+  global $language, $user;
+  $current_lang = $language->language;
+  $webform = babybel_variable_get('babybel_variable_newsletter_webform_id', $current_lang);
+  if ($webform) {
+    if ($form_id == 'webform_client_form_' . $webform) {
+      $submit_title = babybel_variable_get('babybel_variable_newsletter_form_input_text_button', $current_lang, t('Get our newsletter'));
+
+      $form['#theme'] = 'babybel_newsletter_form_theme';
+      unset($form['#attached']['css']);
+      unset($form['#attached']['js']);
+      $form['#attributes']['class'] = 'newsletter-form content-block default-block';
+      $form['#id'] = 'newsletter-form';
+      // Firstname
+      $form['submitted']['first_name']['#attributes'] = array('class' => array('form-control input-1'));
+      $form['submitted']['first_name']['#attributes']['data-placeholder'] = '';
+      $form['submitted']['first_name']['#attributes']['autocomplete'] = 'off';
+      $form['submitted']['last_name']['#attributes'] = array('class' => array('form-control input-1'));
+      $form['submitted']['last_name']['#attributes']['data-placeholder'] = '';
+      $form['submitted']['last_name']['#attributes']['autocomplete'] = 'off';
+      $form['submitted']['email']['#attributes'] = array('class' => array('form-control input-1'));
+      $form['submitted']['email']['#attributes']['data-placeholder'] = '';
+      $form['submitted']['email']['#attributes']['autocomplete'] = 'off';
+      $form['actions']['submit']['#attributes']['class'] = 'btn-green';
+
+      $form['actions']['submit']['#value'] = $submit_title;
+
+      $form['#validate'][] = 'babybel_common_newsletter_validate';
+      // AJAX
+      $form['actions']['submit']['#ajax'] = array(
+        'callback' => 'ajax_newsletter_submit',
+        'wrapper' => 'newsletter-form',
+        'method' => 'replace',
+        'effect' => 'fade',
+        'progress' => array('type' => 'none'),
+      );
+      return $form;
+    }
+  }
+
+  // Process admin/content and add more counter.
+  if ($form_id == "video_player_node_form") {
+    $field_video_count = count(babybel_common_filter_field_video($form['field_videos'][LANGUAGE_NONE]));
+    if ($field_video_count > 4) {
+      unset($form['field_videos'][LANGUAGE_NONE]['add_more']);
+    }
+    $form['#validate'][] = 'babybel_common_video_player_validate';
+    return $form;
+  }
+  // Validate node slider form.
+  if ($form_id == "slider_node_form") {
+    $field_slider_count = count(babybel_common_filter_field_video($form['field_slides'][LANGUAGE_NONE]));
+    if ($field_slider_count > 9) {
+      unset($form['field_slides'][LANGUAGE_NONE]['add_more']);
+    }
+    $form['#validate'][] = 'babybel_common_slider_validate';
+    return $form;
+  }
+  // Fix overlap color switcher for theme adminimal.
+  $array_form = array('products_node_form', 'fun_stuff_node_form', 'tips_node_form');
+  if (in_array($form_id, $array_form)) {
+    drupal_add_css(
+      '.field-type-color-field-rgb label {margin-bottom: 20px;}', array(
+      'group' => CSS_THEME,
+      'type' => 'inline',
+      'media' => 'screen',
+      'preprocess' => FALSE,
+      'weight' => '9999',
+      )
+    );
+  }
+
+  // Alter Form admin/content.
+  if ($form_id == 'node_admin_content') {
+    if (in_array('Single Country Manager', $user->roles)) {
+      $result = babybel_common_admin_nodes();
+      if ($result) {
+        unset($form['filter']['filters']['status']['filters']['language']);
+        $form['admin'] = $result;
+      }
+    }
+  }
+
+  //Alter nodereference_select widget to add the nodes language.
+  if ($form_id === 'article_node_form') {
+    global $language;
+    $fields = field_info_fields(null, $form['#node']->type);
+
+    $temp = node_load($form['nid']['#value']);
+
+    $video_id = $temp->field_video_player[LANGUAGE_NONE][0]['nid'];
+    if($temp->language != 'en') {
+      $video_id = babybel_variable_get_nid_node_translated($temp->field_video_player[LANGUAGE_NONE][0]['nid'], $temp->nid);
+    }
+
+    foreach ($fields as $field) {
+      if ($field['type'] === 'node_reference' && is_array($form[$field['field_name']])) {
+        $form[$field['field_name']]['#pre_render'] = array('change_node_reference_follow_language');
+        $form[$field['field_name']][LANGUAGE_NONE]['#default_value'][0] = $video_id;
+      }
+    }
+
+  }
+  
+  //Alter nodereference_select widget to add the nodes language.
+  if ($form_id === 'charity_node_form') {
+    global $language;
+    $fields = field_info_fields(null, $form['#node']->type);
+    $temp = node_load($form['nid']['#value']);
+    $video_id = $temp->field_video_player[LANGUAGE_NONE][0]['nid'];
+    if($temp->language != 'en') {
+      $video_id = babybel_variable_get_nid_node_translated($temp->field_video_player[LANGUAGE_NONE][0]['nid'], $temp->nid);
+    }
+
+    foreach ($fields as $field) {
+      if ($field['type'] === 'node_reference' && is_array($form[$field['field_name']])) {
+        $form[$field['field_name']]['#pre_render'] = array('change_node_reference_follow_language');
+        $form[$field['field_name']][LANGUAGE_NONE]['#default_value'][0] = $video_id;
+      }
+    }
+
+  }
+  
+}
+
+/**
+ * Implements hook_form_form_id_alter().
+ */
+function babybel_common_form_menu_edit_item_alter(&$form, &$form_state) {
+  if ($form['original_item']['#value']['menu_name'] == 'menu-dispatch') {
+    // Cusotm menu-item for dispatch menu.
+    $form['link_path']['#title'] = t('External link');
+    $form['link_path']['#description'] = t('Input the full external url of this menu item or input &#60;nolink&#62; for referencing an internal version (in that case, select the correct Language code below)');
+    // Remove unusefull suggestion.
+    unset($form['menu_fields']['fields']['field_language_code']['und']['#options']['authors_default']);
+    unset($form['menu_fields']['fields']['field_language_code']['und']['#options']['current_interface']);
+    unset($form['menu_fields']['fields']['field_language_code']['und']['#options']['site_default']);
+    drupal_add_js("jQuery(document).ready(function () {if(!jQuery('#edit-menu-fields-enabled').prop('checked')){jQuery('#edit-menu-fields-enabled').click()}  });", 'inline');
+  }
+}
+
+/**
+ * Ajax alter submit form newsletter.
+ */
+function ajax_newsletter_submit(&$form, &$form_state) {
+  global $language;
+  drupal_get_messages();
+  if (!form_get_errors()) {
+    ctools_include('ajax');
+    $commands[] = ajax_command_invoke('.success-form-block', 'show');
+    $commands[] = ajax_command_invoke('.newsletter-form', 'hide');
+
+    return array('#type' => 'ajax', '#commands' => $commands);
+  } else {
+    $error_message = '<div class="error-text"><p class="require">' . strip_tags(babybel_variable_get('babybel_variable_newsletter_message_error_name', $language->language, t('Field is required'))) . '</p></div>';
+    $email_error_message = '<div class="error-text"><p class="require">' . strip_tags(babybel_variable_get('babybel_variable_newsletter_message_error_email', $language->language, t('Field is required'))) . '</p></div>';
+    $email_already_message = '<div class="error-text"><p class="require">' . strip_tags(babybel_variable_get('babybel_variable_newsletter_message_error_email_exists', $language->language, t('Field is required'))) . '</p></div>';
+
+
+    if (!trim($form_state['input']['submitted']['first_name'])) {
+      $commands[] = ajax_command_invoke('.webform-component--first-name input', 'addClass', array('error'));
+      $commands[] = ajax_command_remove('.wrap-first-name .error-text');
+      $commands[] = ajax_command_invoke('.wrap-first-name', 'addClass', array('error-form'));
+      $commands[] = ajax_command_append('.wrap-first-name', $error_message);
+    } else {
+      $commands[] = ajax_command_invoke('.webform-component--first-name input', 'removeClass', array('error'));
+      $commands[] = ajax_command_invoke('.wrap-first-name', 'removeClass', array('error-form'));
+      $commands[] = ajax_command_remove('.wrap-first-name .error-text');
+    }
+    if (!trim($form_state['input']['submitted']['last_name'])) {
+      $commands[] = ajax_command_invoke('.webform-component--last-name input', 'addClass', array('error'));
+      $commands[] = ajax_command_remove('.wrap-last-name .error-text');
+      $commands[] = ajax_command_invoke('.wrap-last-name', 'addClass', array('error-form'));
+      $commands[] = ajax_command_append('.wrap-last-name', $error_message);
+    } else {
+      $commands[] = ajax_command_invoke('.webform-component--last-name input', 'removeClass', array('error'));
+      $commands[] = ajax_command_invoke('.wrap-last-name', 'removeClass', array('error-form'));
+      $commands[] = ajax_command_remove('.wrap-last-name .error-text');
+    }
+    if (!$form_state['input']['submitted']['email']) {
+      $commands[] = ajax_command_invoke('.webform-component--email input', 'addClass', array('error'));
+      $commands[] = ajax_command_invoke('.wrap-email', 'addClass', array('error-form'));
+      $commands[] = ajax_command_remove('.wrap-email .error-text');
+      $commands[] = ajax_command_append('.wrap-email', $error_message);
+    } else {
+      $valid = valid_email_address($form_state['input']['submitted']['email']);
+      $commands[] = ajax_command_invoke('.wrap-email', 'removeClass', array('error-form'));
+      $commands[] = ajax_command_remove('.wrap-email .error-text');
+      if (!$valid) {
+        $commands[] = ajax_command_invoke('.webform-component--email input', 'addClass', array('error'));
+        $commands[] = ajax_command_invoke('.wrap-email', 'addClass', array('error-form'));
+        $commands[] = ajax_command_remove('.wrap-email .error-text');
+        $commands[] = ajax_command_append('.wrap-email', $email_error_message);
+      } else {
+        $domain = array_pop(explode('@', $form_state['input']['submitted']['email']));
+        $blak_list = babybel_common_check_blacklist($domain);
+
+        // CASE blacklist in BO.
+        if ($blak_list) {
+          $commands[] = ajax_command_invoke('.webform-component--email input', 'addClass', array('error'));
+          $commands[] = ajax_command_invoke('.wrap-email', 'addClass', array('error-form'));
+          $commands[] = ajax_command_remove('.wrap-email .error-text');
+          $commands[] = ajax_command_append('.wrap-email', $email_error_message);
+        } else {
+          $commands[] = ajax_command_invoke('.webform-component--email input', 'removeClass', array('error'));
+          $commands[] = ajax_command_invoke('.wrap-email', 'removeClass', array('error-form'));
+          $commands[] = ajax_command_remove('.wrap-email .error-text');
+          // CASE Unique
+          $email_unique = babybel_common_check_email_unique($form_state['input']['submitted']['email'], $form['#node']->nid, $form['submitted']['email']['#webform_component']['cid']);
+          if ($email_unique) {
+            $commands[] = ajax_command_invoke('.webform-component--email input', 'addClass', array('error'));
+            $commands[] = ajax_command_invoke('.wrap-email', 'addClass', array('error-form'));
+            $commands[] = ajax_command_remove('.wrap-email .error-text');
+            $commands[] = ajax_command_append('.wrap-email', $email_already_message);
+          } else {
+            $commands[] = ajax_command_invoke('.webform-component--email input', 'removeClass', array('error'));
+            $commands[] = ajax_command_invoke('.wrap-email', 'removeClass', array('error-form'));
+            $commands[] = ajax_command_remove('.wrap-email .error-text');
+          }
+        }
+      }
+    }
+    return array('#type' => 'ajax', '#commands' => $commands);
+  }
+  return $form;
+}
+
+/**
+ * Validate email from black list.
+ */
+function babybel_common_check_blacklist($value) {
+  global $language;
+  $current_lang = $language->language;
+  $black_list = babybel_variable_get('babybel_variable_newsletter_email_blacklist', $current_lang);
+  $array = preg_split("/\\r\\n|\\r|\\n/", $black_list);
+  if ($array) {
+    return in_array($value, $array);
+  }
+}
+
+/**
+ * Check email unique in submition data webform.
+ */
+function babybel_common_check_email_unique($email, $nid, $cid) {
+  $result = db_select('webform_submitted_data', 'w')
+    ->fields('w')
+    ->condition('cid', $cid, '=')
+    ->condition('data', $email, '=')
+    ->execute()
+    ->fetchAll();
+  if ($result) {
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
+/**
+ * Validate newsletter.
+ */
+function babybel_common_newsletter_validate(&$form, &$form_state) {
+  if (!$form_state['input']['submitted']['first_name']) {
+    form_set_error('submitted][first_name', t('First name should not be blank'));
+  }
+
+  if (valid_email_address($form_state['input']['submitted']['email'])) {
+    $domain = array_pop(explode('@', $form_state['input']['submitted']['email']));
+    $blak_list = babybel_common_check_blacklist($domain);
+    if ($blak_list) {
+      form_set_error('submitted][email', t('Email has exist in blacklist'));
+    }
+  } else {
+    form_set_error('submitted][email', t('Email invalid'));
+  }
+}
+
+/**
+ * Change node reference in select list follow current language
+ */
+function change_node_reference_follow_language($element) {
+  $title = $element[LANGUAGE_NONE]['#title'];
+  $entity = $element[LANGUAGE_NONE]['#entity'];
+  $lang = $element[LANGUAGE_NONE]['#entity']->language;
+
+  $machine_name = preg_replace('@[^a-z0-9-]+@', '_', strtolower($title));
+
+  $results = db_select('node', 'n')
+    ->fields('n')
+    ->condition('language', $lang)
+    ->condition('type', $machine_name)
+    ->execute()
+    ->fetchAll();
+
+  $options = array('_none' => 'None');
+  foreach ($results as $node) {
+    $video = node_load($node->nid);
+    $video_status = isset($video->status) ? $video->status : 0;
+    if($video_status) {
+      $options[$node->nid] = $node->title;
+    }
+  }
+
+  if(count($options) > 1) {
+    $element[LANGUAGE_NONE]['#options'] = $options;
+  } else {
+    $element[LANGUAGE_NONE]['#options'] = array();
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_form_validate().
+ */
+function babybel_common_slider_validate(&$form, &$form_state) {
+  $sliders_value = $form_state['input']['field_slides'][LANGUAGE_NONE];
+  if ($sliders_value) {
+    foreach ($sliders_value as $key => $slider) {
+      if (!$slider['field_picture']['und'][0]['fid']) {
+        form_set_error('field_slides][und][' . $key . '][field_picture', 'Image Slider field #' . $key . ' is required. Please upload the image for slider');
+      }
+      if ($slider['field_cta_link'][LANGUAGE_NONE][0]['url']) {
+        if (!$slider['field_cta_link'][LANGUAGE_NONE][0]['title']) {
+          form_set_error('field_slides][und][' . $key . '][field_cta_link][und][0][title', 'You should fill title in slider #' . $key . ' when url was filled');
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_validate().
+ */
+function babybel_common_video_player_validate(&$form, &$form_state) {
+  if ($form_state['input']['field_youtube_channel_page_url'][LANGUAGE_NONE][0]['url']) {
+    if (!$form_state['input']['field_youtube_channel_page_url'][LANGUAGE_NONE][0]['title']) {
+      form_set_error('field_youtube_channel_page_url][und][0][title', 'You should fill title when url was filled');
+    }
+  }
+}
+
+/**
+ * Filter and unset params not necessary for Filed Video Player.
+ */
+function babybel_common_filter_field_video($array) {
+  if ($array) {
+    unset($array['#theme']);
+    unset($array['#field_name']);
+    unset($array['#cardinality']);
+    unset($array['#title']);
+    unset($array['#required']);
+    unset($array['#description']);
+    unset($array['#prefix']);
+    unset($array['#suffix']);
+    unset($array['add_more']);
+    unset($array['#after_build']);
+    unset($array['#language']);
+    unset($array['#max_delta']);
+    unset($array['#field_parents']);
+    return $array;
+  }
+}
+
+/**
+ * Get image from youtube when cover_image not fill.
+ */
+function baybybel_common_get_img_youtube($video, $style) {
+  if ($video->field_youtube_video_url) {
+    if ($video->field_video_cover_image) {
+      return image_style_url($style, $video->field_video_cover_image[LANGUAGE_NONE][0]['uri']);
+    } else {
+      return 'https://img.youtube.com/vi/' . $video->field_youtube_video_url[LANGUAGE_NONE][0]['video_id'] . '/maxresdefault.jpg';
+    }
+  }
+}
+
+/**
+ * Check Logo App-link.
+ */
+function babybel_common_check_file($path, $lang) {
+  $lang_default = 'en';
+  $theme_path = drupal_get_path('theme', 'babybel');
+  return '/' . $theme_path . '/images/' . $path;
+}
+
+/**
+ * Implement hook_admin_nodes() for user role manager single country.
+ */
+function babybel_common_admin_nodes() {
+  global $user;
+  if (in_array('Single Country Manager', $user->roles)) {
+    $admin_access = user_access('administer nodes');
+
+    // Build the 'Update options' form.
+    $form['options'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Update options'),
+      '#attributes' => array('class' => array('container-inline')),
+      '#access' => $admin_access,
+    );
+    $options = array();
+    foreach (module_invoke_all('node_operations') as $operation => $array) {
+      $options[$operation] = $array['label'];
+    }
+    $form['options']['operation'] = array(
+      '#type' => 'select',
+      '#title' => t('Operation'),
+      '#title_display' => 'invisible',
+      '#options' => $options,
+      '#default_value' => 'approve',
+    );
+    $form['options']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Update'),
+      '#validate' => array('node_admin_nodes_validate'),
+      '#submit' => array('node_admin_nodes_submit'),
+    );
+
+    // Enable language column if translation module is enabled or if we have any
+    // node with language.
+    $multilanguage = (module_exists('translation') || db_query_range("SELECT 1 FROM {node} WHERE language <> :language", 0, 1, array(':language' => LANGUAGE_NONE))->fetchField());
+
+    // Build the sortable table header.
+    $header = array(
+      'title' => array('data' => t('Title'), 'field' => 'n.title'),
+      'type' => array('data' => t('Type'), 'field' => 'n.type'),
+      'author' => t('Author'),
+      'status' => array('data' => t('Status'), 'field' => 'n.status'),
+      'changed' => array('data' => t('Updated'), 'field' => 'n.changed', 'sort' => 'desc')
+    );
+    if ($multilanguage) {
+      $header['language'] = array('data' => t('Language'), 'field' => 'n.language');
+    }
+    $header['operations'] = array('data' => t('Operations'));
+
+    $query = db_select('node', 'n')->extend('PagerDefault')->extend('TableSort');
+    $query->addTag('node_admin_filter');
+    node_build_filter_query($query);
+
+    if (!user_access('bypass node access')) {
+      // If the user is able to view their own unpublished nodes, allow them
+      // to see these in addition to published nodes. Check that they actually
+      // have some unpublished nodes to view before adding the condition.
+      if (user_access('view own unpublished content') && $own_unpublished = db_query('SELECT nid FROM {node} WHERE uid = :uid AND status = :status', array(':uid' => $GLOBALS['user']->uid, ':status' => 0))->fetchCol()) {
+        $query->condition(db_or()
+            ->condition('n.status', 1)
+            ->condition('n.nid', $own_unpublished, 'IN')
+        );
+      } else {
+        // If not, restrict the query to published nodes.
+        $query->condition('n.status', 1);
+      }
+    }
+    $nids = $query
+      ->fields('n', array('nid'))
+      ->condition('language', $user->language)
+      ->limit(50)
+      ->orderByHeader($header)
+      ->addTag('node_access')
+      ->execute()
+      ->fetchCol();
+    $nodes = node_load_multiple($nids);
+
+    // Prepare the list of nodes.
+    $languages = language_list();
+    $destination = drupal_get_destination();
+    $options = array();
+    foreach ($nodes as $node) {
+      $langcode = entity_language('node', $node);
+      $l_options = $langcode != LANGUAGE_NONE && isset($languages[$langcode]) ? array('language' => $languages[$langcode]) : array();
+      $options[$node->nid] = array(
+        'title' => array(
+          'data' => array(
+            '#type' => 'link',
+            '#title' => $node->title,
+            '#href' => 'node/' . $node->nid,
+            '#options' => $l_options,
+            '#suffix' => ' ' . theme('mark', array('type' => node_mark($node->nid, $node->changed))),
+          ),
+        ),
+        'type' => check_plain(node_type_get_name($node)),
+        'author' => theme('username', array('account' => $node)),
+        'status' => $node->status ? t('published') : t('not published'),
+        'changed' => format_date($node->changed, 'short'),
+      );
+      if ($multilanguage) {
+        if ($langcode == LANGUAGE_NONE || isset($languages[$langcode])) {
+          $options[$node->nid]['language'] = $langcode == LANGUAGE_NONE ? t('Language neutral') : t($languages[$langcode]->name);
+        } else {
+          $options[$node->nid]['language'] = t('Undefined language (@langcode)', array('@langcode' => $langcode));
+        }
+      }
+      // Build a list of all the accessible operations for the current node.
+      $operations = array();
+      if (node_access('update', $node)) {
+        $operations['edit'] = array(
+          'title' => t('edit'),
+          'href' => 'node/' . $node->nid . '/edit',
+          'query' => $destination,
+        );
+      }
+      if (node_access('delete', $node)) {
+        $operations['delete'] = array(
+          'title' => t('delete'),
+          'href' => 'node/' . $node->nid . '/delete',
+          'query' => $destination,
+        );
+      }
+      $options[$node->nid]['operations'] = array();
+      if (count($operations) > 1) {
+        // Render an unordered list of operations links.
+        $options[$node->nid]['operations'] = array(
+          'data' => array(
+            '#theme' => 'links__node_operations',
+            '#links' => $operations,
+            '#attributes' => array('class' => array('links', 'inline')),
+          ),
+        );
+      } elseif (!empty($operations)) {
+        // Render the first and only operation as a link.
+        $link = reset($operations);
+        $options[$node->nid]['operations'] = array(
+          'data' => array(
+            '#type' => 'link',
+            '#title' => $link['title'],
+            '#href' => $link['href'],
+            '#options' => array('query' => $link['query']),
+          ),
+        );
+      }
+    }
+
+    // Only use a tableselect when the current user is able to perform any
+    // operations.
+    if ($admin_access) {
+      $form['nodes'] = array(
+        '#type' => 'tableselect',
+        '#header' => $header,
+        '#options' => $options,
+        '#empty' => t('No content available.'),
+      );
+    }
+    // Otherwise, use a simple table.
+    else {
+      $form['nodes'] = array(
+        '#theme' => 'table',
+        '#header' => $header,
+        '#rows' => $options,
+        '#empty' => t('No content available.'),
+      );
+    }
+
+    $form['pager'] = array('#markup' => theme('pager'));
+    return $form;
+  }
+}
+
+/**
+ * Get nodes by content type.
+ */
+function babybel_common_get_content_type($bundle, $type = 'node', $status = 1, $get = 1) {
+  global $language;
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', $type)
+    ->entityCondition('bundle', $bundle)
+    ->propertyCondition('status', $status);
+  if ($get == 1) {
+    $query->propertyCondition('language', $language->language);
+  }
+  $result = $query->execute();
+  $nodes = node_load_multiple(array_keys($result['node']));
+  return $nodes;
+}
+
+/**
+ * Get multi domain by language code.
+ */
+function babybel_common_url_get_multi_domain($lang_code, $prefix = 'en-gb', $url) {
+  global $base_url;
+  // It would be TRUE on production only, while dev, staging will be set to FALSE.
+  $mode = variable_get('language_multi_domains', FALSE);
+  if ($mode) {
+    if($lang_code) {
+      $host_name = variable_get('domain_lang_' . $lang_code);
+    } else {
+      $host_name = '';
+    }
+    if ($url == '<front>' || $url == '<nolink>') {
+      if ($host_name) {
+        $protocol = baybel_common_get_protocol();
+        $path = $protocol . '://' . $host_name . '/' . $prefix;
+      } else {
+        $path = $base_url . '/' . $prefix;
+      }
+    }
+    else {
+      $external = url_is_external($url);
+      if ($external) {
+        $path = $url;
+      }
+      else {
+        if ($host_name) {
+          $protocol = baybel_common_get_protocol();
+          $path = $protocol . '://' . $host_name . '/' . $prefix . '/' . $url;
+        } else {
+          $path = $base_url . '/' . $prefix . '/' . $url;
+        }
+      }
+    }
+  }
+  else {
+    if ($url == '<front>' || $url == '<nolink>') {
+      $path = $base_url . '/' . $prefix;
+    }
+    else {
+      $external = url_is_external($url);
+      if ($external) {
+        $path = $url;
+      }
+      else {
+        $path = $base_url . '/' . $prefix . '/' . $url;
+      }
+    }
+  }
+  return $path;
+}
+
+/**
+ * Get current protocol.
+ */
+function baybel_common_get_protocol() {
+  if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {
+    $protocol = "https";
+  } else {
+    $protocol = "http";
+  }
+  return $protocol;
+}
+
+function baybel_common_token_token_info() {
+  $info['tokens']['field_collection_item']['parent-node'] = array(
+    'name' => t('Field Collection Parent Node NID'),
+    'description' => t("Parent node NID."),
+    'type' => 'format',
+  );
+  return $info;
+}
+
+function baybel_common_token_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $replacements = array();
+  $sanitize = !empty($options['sanitize']);
+
+  if ($type == 'field_collection_item' && !empty($data[$type])) {
+    $item = $data[$type];
+
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'parent-node':
+          $fc=entity_load('field_collection_item', array($item->item_id));
+          $host_entity = $fc[$item->item_id]->hostEntity();
+          $replacements[$original] = $host_entity->nid;
+          break;
+      }
+    }
+  }
+  return $replacements;
+}

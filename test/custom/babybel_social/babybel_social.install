@@ -1,0 +1,81 @@
+<?php
+
+/**
+ * @file
+ * Social Feeds installation functions.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function babybel_social_requirements($phase) {
+  $requirements = $library = array();
+
+  // Ensure translations don't break at install time.
+  $t = get_t();
+  if ($phase == 'runtime') {
+    $library['facebook'] = libraries_detect('facebook');
+    foreach ($library as $key => $value) {
+      $error_type = isset($library[$key]['error']) ? drupal_ucfirst($library[$key]['error']) : '';
+      $error_message = isset($library[$key]['error message']) ? $library[$key]['error message'] : '';
+    }
+
+    if (!function_exists('curl_init')) {
+      $requirements['curl']['title'] = $t('cURL library');
+      $requirements['curl']['value'] = $t('Not installed');
+      $requirements['curl']['severity'] = REQUIREMENT_ERROR;
+      $requirements['curl']['description'] = $t('The cURL library is not installed. Please check the <a href="@url">PHP cURL documentation</a> for information on how to correct this.', array('@url' => 'http://www.php.net/manual/en/curl.setup.php'));
+    }
+
+    if (!function_exists('json_decode')) {
+      $requirements['json']['title'] = $t('JSON extension');
+      $requirements['json']['value'] = $t('Not installed');
+      $requirements['json']['severity'] = REQUIREMENT_ERROR;
+      $requirements['json']['description'] = $t('The JSON library is not installed. Facebook needs the JSON PHP extension');
+    }
+
+    if (empty($library['facebook']['installed'])) {
+      $requirements['facebook'] = array(
+        'title' => $t('PHP SDK for Facebook APIs'),
+        'value' => $t('@e: At least @a', array('@e' => $error_type, '@a' => SOCIAL_FACEBOOK_SDK_MIN_PLUGIN_VERSION)),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => $t('!error You need to download the !facebook, 
+        place the facebook directory in the %path directory on your server 
+        and extract the archive
+        .', array(
+          '!error' => $error_message,
+          '!facebook' => l($t('PHP SDK for Facebook APIs'),
+            $library['facebook']['download url']
+          ),
+          '%path' => 'sites/all/libraries',
+        )),
+      );
+    }
+    elseif (version_compare($library['facebook']['version'], SOCIAL_FACEBOOK_SDK_MIN_PLUGIN_VERSION, '>=')) {
+      $requirements['facebook'] = array(
+        'title' => $t('PHP SDK for Facebook APIs'),
+        'severity' => REQUIREMENT_OK,
+        'value' => 'v' . $library['facebook']['version'] . ' installed',
+      );
+    }
+    else {
+      $requirements['facebook'] = array(
+        'title' => $t('PHP SDK for Facebook APIs'),
+        'value' => $t('At least @a', array('@a' => SOCIAL_FACEBOOK_SDK_MIN_PLUGIN_VERSION)),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => $t('You need to download a later version of the 
+        !facebook and replace the old version located in the %path directory 
+        on your server.', array(
+          '!facebook' => l($t('PHP SDK for Facebook APIs'),
+            $library['facebook']['download url']
+          ),
+          '%path' => $library['facebook']['library path'],
+        )),
+      );
+    }
+
+  }
+
+  return $requirements;
+}
+

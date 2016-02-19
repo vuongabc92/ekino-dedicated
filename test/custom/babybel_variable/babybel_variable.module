@@ -1,0 +1,652 @@
+<?php
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/**
+ * Implements hook_menu()
+ */
+function babybel_variable_menu() {
+  $items = array();
+
+  $items['admin/babybel-settings'] = array(
+    'title' => 'Babybel settings',
+    'description' => 'Babybel variable settings',
+    'page callback' => 'babybel_settings_page',
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+  );
+
+  $items['admin/babybel-settings/error-page-variable'] = array(
+    'title' => 'Error page',
+    'description' => 'Manage error page',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_error_page_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.errorpage.admin.inc',
+  );
+  $items['admin/babybel-settings/dispatch-variable'] = array(
+    'title' => 'Dispatch',
+    'description' => 'Manage dispatch',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_dispatch_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.dispatch.admin.inc',
+  );
+
+  $items['admin/babybel-settings/social-network-variable'] = array(
+    'title' => 'Social networks',
+    'description' => 'Manage social networks',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_social_network_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.socialnetwork.admin.inc',
+  );
+
+  $items['admin/babybel-settings/homepage-variable'] = array(
+    'title' => 'Homepage',
+    'description' => 'Manage homepage',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_homepage_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.homepage.admin.inc',
+  );
+
+  $items['admin/babybel-settings/products-variable'] = array(
+    'title' => 'Products',
+    'description' => 'Manage products',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_products_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.products.admin.inc',
+  );
+
+  $items['admin/babybel-settings/our-secret-variable'] = array(
+    'title' => 'Our secret recipe',
+    'description' => 'Manage our secret',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_our_secret_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.oursecret.admin.inc',
+  );
+
+  $items['admin/babybel-settings/fun-stuff-variable'] = array(
+    'title' => 'Fun stuff',
+    'description' => 'Manage fun stuff',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_fun_stuff_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.funstuff.admin.inc',
+  );
+
+  $items['admin/babybel-settings/news-variable'] = array(
+    'title' => 'News',
+    'description' => 'Manage news',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_news_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.news.admin.inc',
+  );
+
+  $items['admin/babybel-settings/basic-page-variable'] = array(
+    'title' => 'Basic page',
+    'description' => 'Manage basic page',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_basicpage_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.basicpage.admin.inc',
+  );
+
+  $items['admin/babybel-settings/newsletter-variable'] = array(
+    'title' => 'Newsletter',
+    'description' => 'Manage newsletter',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_newsletter_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.newsletter.admin.inc',
+  );
+
+  $items['admin/babybel-settings/banner-cookies-variable'] = array(
+    'title' => 'Banner cookies',
+    'description' => 'Manage banner cookies',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_banner_cookies_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.bannercookies.admin.inc',
+  );
+  $items['admin/babybel-settings/term-conditions-variable'] = array(
+    'title' => 'Term conditions',
+    'description' => 'Manage term conditions',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_term_conditions_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.termconditions.admin.inc',
+  );
+
+  $items['admin/babybel-settings/privacy-variable'] = array(
+    'title' => 'Privacy',
+    'description' => 'Manage privacy',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_privacy_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.privacy.admin.inc',
+  );
+
+  $items['admin/babybel-settings/list-pages-variable'] = array(
+    'title' => 'List pages',
+    'description' => 'Manage list pages',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_list_pages_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.listpages.admin.inc',
+  );
+  
+  $items['admin/babybel-settings/charity-variable'] = array(
+    'title' => 'Charity',
+    'description' => 'Manage Charity',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_charity_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.charity.admin.inc',
+  );
+  
+  $items['admin/babybel-settings/contact-form-variable'] = array(
+    'title' => 'Contact Us Webform',
+    'description' => 'Manage Message Error for Contact Us Webform',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('babybel_variable_contact_us_webform_settings_form'),
+    'access callback' => 'babybel_variable_user_check',
+    'access arguments' => array('administrator babybel settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'babybel_variable.contact_us_webform.admin.inc',
+  );
+  
+  $items['admin/babybel-settings/variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/products-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/homepage-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/social-network-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/fun-stuff-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+  
+  $items['admin/babybel-settings/charity-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+  
+  $items['admin/babybel-settings/social-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+  
+  $items['admin/babybel-settings/our-secret-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/newsletter-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/news-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/dispatch-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/error-page-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/banner-cookies-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/term-conditions-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/babybel-settings/privacy-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+  
+  $items['admin/babybel-settings/contact-us-variable/%'] = array(
+    'title' => 'Edit variable',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'access callback' => TRUE,
+  );
+
+  $items['error/404'] = array(
+    'title' => 'Page Error 404',
+    'access callback' => TRUE,
+    'page callback' => 'babybel_variable_404',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['linkit_field/autocomplete'] = array(
+    'title' => 'Link to node',
+    'page callback' => 'linkit_field_autocomplete',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'page arguments' => array(2),
+  );
+
+  return $items;
+}
+
+/**
+ *  Render page 404.
+ */
+function babybel_variable_404() {
+  drupal_not_found();
+  drupal_exit();
+}
+
+/**
+ * Implementation of hook_element_info_alter()
+ */
+function babybel_variable_element_info_alter(&$type) {
+  if (!empty($type['link_field'])) {
+    $type['link_field']['#process'][] = 'linkit_field_process_element';
+  }
+}
+
+/**
+ * Rewrite the autocomplete so that it is a drupal
+ * path, and not a linkit path.
+ */
+function linkit_field_autocomplete($string = NULL) {
+  global $language;
+
+//  $query = new EntityFieldQuery();
+//  $query->entityCondition('entity_type', 'node')
+//    ->entityCondition('bundle', array('article', 'tips', 'products'))
+//    ->propertyCondition('status', NODE_PUBLISHED)
+//    ->propertyCondition('language', $language->language)
+//    ->propertyCondition('title', "%" . $string . "%", "LIKE");
+//
+//  $result = $query->execute();
+//
+//  if (isset($result['node'])) {
+//    $news_items_nids = array_keys($result['node']);
+//    $news_items = entity_load('node', $news_items_nids);
+//  }
+//
+//  $values = array();
+//  foreach ($news_items as $nid => $item) {
+//    $path = 'node/' . $nid . '/abcd';
+//    $values[$path] = $item->title;
+//  }
+
+  $list_url = variable_get('babybel_variable_list_pages_url', '');
+  $arr_list_url = explode("\n", $list_url);
+  $input = preg_quote(strtolower($string), '~');
+
+  $values = array();
+  foreach($arr_list_url as $key => $url) {
+    $values[$url] = $url;
+  }
+
+  $results = preg_grep('~' . $input . '~', $values);
+
+  drupal_json_output($results);
+}
+
+/**
+ * Preprocess the link admin element.
+ */
+function linkit_field_process_element($element, $form_state, $complete_form) {
+
+  $element['url']['#autocomplete_path'] = 'linkit_field/autocomplete';
+  $element['url']['#description'] = 'Search for your internal content OR type the URL (www.example.com)';
+  $imce = module_invoke('imce', 'access');
+  if ($imce) {
+    $imce_url = ((url('imce', array('query' => array('app' => 'Linkit|url@' . $element['#id'] . '-url')))));
+    $element['url']['#description'] .= '<br /><a href="javascript:;" onclick="window.open(\'' . $imce_url . '\', \'\', \'width=760,height=560,resizable=1\');return false;">Browse the server</a>';
+  }
+
+  return $element;
+}
+
+function babybel_settings_page() {
+  $item = menu_get_item();
+  $content = system_admin_menu_block($item);
+  if ($content) {
+    $output = theme('admin_block_content', array('content' => $content));
+  }
+  else {
+    $output = t('You do not have any administrative items.');
+  }
+  return $output;
+}
+
+/**
+ * Get value from Form and put to function managed_file_upload
+ */
+function babybel_variable_settings_form_update_status_managed_filed(&$form, &$form_state) {
+  $settings_language = babybel_variable_get_settings_language();
+  $field_uploads = $form['#field_uploads'];
+  foreach ($field_uploads as $field) {
+    $fid_form = $form_state['values'][$field . $settings_language . ''];
+    $fid_variable = variable_get($field . $settings_language . '', FALSE);
+    $module_name = 'babybel_variable';
+    $type = substr($field, 0, -1);
+    managed_file_upload($fid_form, $fid_variable, $module_name, $type);
+  }
+}
+
+/**
+ * Managed file when users upload or delete.
+ */
+function managed_file_upload($fid_form, $fid_variable, $module_name, $type) {
+  $settings_language = babybel_variable_get_settings_language();
+  if ($fid_form != 0 && $fid_form != $fid_variable) {
+    $file = file_load($fid_form);
+    $file->status = FILE_STATUS_PERMANENT;
+    file_save($file);
+    file_usage_add($file, $module_name, $type, 1);
+  }
+  elseif ($fid_form == 0) {
+    if ($fid_variable) {
+      $delete_file = file_load($fid_variable);
+      if($delete_file) {
+        file_usage_delete($delete_file, $module_name, $type, 1);
+        $status = file_delete($delete_file);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function babybel_variable_theme() {
+  return array(
+    'babybel_variable_background_upload' => array(
+      'render element' => 'element',
+    ),
+  );
+}
+
+/**
+ * Implements babybel_variable_background_upload theme callback.
+ */
+function theme_babybel_variable_background_upload($variables) {
+
+  $element = $variables['element'];
+
+  $css = "body.page-admin div.form-type-managed-file .file img {
+    width: auto;
+    height: auto;
+    max-width: 300px;
+    max-height: 125px;
+    margin-right: 10px;
+  }";
+
+  drupal_add_css($css, 'inline');
+
+
+  if (isset($element['#file']->uri)) {
+    $output = '<div id="edit-logo-ajax-wrapper"><div class="form-item form-type-managed-file form-item-logo"><span class="file">';
+    $output .= '<img src="' . file_create_url($element['#file']->uri) . '" />';
+    $output .= '</span><input type="submit" id="edit-' . $element['#name'] . '-remove-button" name="' . $element['#name'] . '_remove_button" value="Remove" class="form-submit ajax-processed">';
+    $output .= '<input type="hidden" name="' . $element['#name'] . '[fid]" value="' . $element['#file']->fid . '"></div></div>';
+    return $output;
+  }
+}
+
+/**
+ * @param object $account A Drupal user object.
+ * @return string|null     A Drupal language identifier.
+ */
+function babybel_variable_get_settings_language($account = NULL) {
+  global $user;
+  global $language;
+
+  if (!$account) {
+    $account = $user;
+  }
+
+  if (array_key_exists(4, $user->roles)) {
+    return $user->language;
+  }
+
+  if (in_array('administrator', $account->roles) || array_key_exists(5, $user->roles)) {
+    return $language->language;
+  }
+
+  if (in_array('content uploader', $account->roles)) {
+    return $account->language;
+  }
+}
+
+/**
+ * Get and render list language.
+ */
+function babybel_variable_settings_language_switcher() {
+  global $user;
+  if (in_array('content uploader', $GLOBALS['user']->roles)) {
+    return '';
+  }
+
+  $uri = current_path();
+  $languages = language_list();
+  $links = array();
+
+  foreach ($languages as $lang) {
+    $link = sprintf('<a href="%s/%s/%s">%s</a>', $GLOBALS['base_url'], $lang->prefix, $uri, $lang->name);
+    if ($GLOBALS['language']->language == $lang->language) {
+      $link = sprintf('<strong>%s</strong>', $link);
+    }
+    $links[$lang->language] = $link;
+  }
+
+  if (array_key_exists(4, $user->roles)) {
+    $links = array('<strong>' . $links[$user->language] . '</strong>');
+    return sprintf('<div id="edit-select-key" class="form-item form-type-item">%s</div>', implode(' | ', $links));
+  }
+
+  return sprintf('<div id="edit-select-key" class="form-item form-type-item">%s</div>', implode(' | ', $links));
+}
+
+/**
+ * Set language warning message and show to form.
+ */
+function babybel_variable_set_language_warning_message($language_code = NULL, $account = NULL) {
+  if ($account == NULL) {
+    global $user;
+    $account = $user;
+  }
+  if ($language_code == NULL) {
+    $language_code = babybel_variable_get_settings_language($account);
+  }
+
+  if (in_array('administrator', $account->roles)) {
+    $languages = language_list();
+    $message = sprintf('You are currently performing changes for %s (%s).', $languages[$language_code]->name, $language_code);
+    drupal_set_message(t($message), 'warning');
+  }
+}
+
+function babybel_variable_get($name, $language, $no_value = TRUE) {
+  if ($name && $language) {
+    $value_language = variable_get($name . '_' . $language);
+    $value_default = ($no_value != TRUE) ? $no_value : variable_get($name . '_en');
+
+    return ($value_language) ? $value_language : $value_default;
+  }
+  return '';
+}
+
+function babybel_variable_permission() {
+  return array(
+    'babybel settings' => array(
+      'title' => t('babybel settings'),
+      'description' => t('Perform administration tasks for babybel settings.'),
+    ),
+  );
+}
+
+function babybel_variable_user_check() {
+  global $user, $language;
+
+  if (array_key_exists(4, $user->roles)) {
+    if ($user->language == $language->language) {
+      return user_access('babybel settings', $user);
+    }
+    return FALSE;
+  }
+
+  return user_access('babybel settings', $user);
+}
+
+function babybel_variable_get_nid_translated($key) {
+  global $language;
+  $current_lang = $language->language;
+  if ($key) {
+    $nid = variable_get($key . '_' . $current_lang);
+    if ($nid) {
+      $origin_node = node_load($nid);
+      if ($origin_node) {
+        if ($origin_node->language == $current_lang) {
+          return $nid;
+        }
+        else {
+          $translated = translation_node_get_translations($origin_node->tnid);
+          if ($translated && $translated[$current_lang]) {
+            variable_set($key . '_' . $current_lang, $translated[$current_lang]->nid);
+            return $translated[$current_lang]->nid;
+          }
+          else {
+            variable_set($key . '_' . $current_lang, '');
+            return false;
+          }
+        }
+      }
+      else {
+        variable_set($key . '_' . $current_lang, '');
+        return false;
+      }
+    }
+  }
+}
+
+function babybel_variable_get_nid_node_translated($nid, $article_nid) {
+  global $language;
+  $current_lang = $language->language;
+  if($nid) {
+    $origin_node = node_load($nid);
+    if($origin_node) {
+      if ($origin_node->language == $current_lang) {
+        return $nid;
+      }
+      else {
+        $translated = translation_node_get_translations($origin_node->tnid);
+        if ($translated && $translated[$current_lang]) {
+          $article = node_load($article_nid);
+
+          if($article) {
+            $article->field_video_player[LANGUAGE_NONE][0]['nid'] = $translated[$current_lang]->nid;
+            node_save($article);
+          }
+
+          return $translated[$current_lang]->nid;
+        } else {
+          return false;
+        }
+      }
+    } else {
+      return false;
+    }
+  }
+}
